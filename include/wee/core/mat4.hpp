@@ -3,7 +3,7 @@
 #include <core/mat4.h>
 
 namespace wee {
-
+    struct vec3;
     struct mat4 {
         union {
             struct {
