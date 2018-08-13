@@ -40,7 +40,7 @@ a research document exploring the state-of-the-art of the subject matter.
 [CakePHP]
 [MySQL]
 
-##references
+## references
 [Game level generation with recurrent neural networks](https://esc.fnwi.uva.nl/thesis/centraal/files/f1727262514.pdf)
 [Super Mario Bros. Level Generation Using Torch-RNN](https://medium.com/@justin_michaud/super-mario-bros-level-generation-using-torch-rnn-726ddea7e9b7)
 [Machine Learning is Fun! Part 2](https://medium.com/@ageitgey/machine-learning-is-fun-part-2-a26a10b68df3)
