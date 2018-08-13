@@ -42,9 +42,14 @@ a research document exploring the state-of-the-art of the subject matter.
 
 ## references
 [Game level generation with recurrent neural networks](https://esc.fnwi.uva.nl/thesis/centraal/files/f1727262514.pdf)
+
 [Super Mario Bros. Level Generation Using Torch-RNN](https://medium.com/@justin_michaud/super-mario-bros-level-generation-using-torch-rnn-726ddea7e9b7)
+
 [Machine Learning is Fun! Part 2](https://medium.com/@ageitgey/machine-learning-is-fun-part-2-a26a10b68df3)
+
 [Game Level Generation Using Neural Networks](https://www.gamasutra.com/blogs/SeungbackShin/20180227/315017/Game_Level_Generation_Using_Neural_Networks.php)
+
 [textgenrnn](https://github.com/minimaxir/textgenrnn)
 
 [MarioNet: generating realistic game levels through deep learning](https://lib.ugent.be/fulltxt/RUG01/002/367/384/RUG01-002367384_2017_0001_AC.pdf)
+
