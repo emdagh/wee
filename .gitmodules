@@ -19,3 +19,6 @@
 [submodule "vendor/enet"]
 	path = vendor/enet
 	url = https://github.com/lsalzman/enet.git
+[submodule "vendor/poco"]
+	path = vendor/poco
+	url = https://github.com/pocoproject/poco.git
