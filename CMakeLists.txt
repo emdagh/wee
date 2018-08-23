@@ -54,6 +54,11 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/include/wee/config.h
 )
 
+LINK_DIRECTORIES(
+    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
 ADD_SUBDIRECTORY(vendor)
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(tests)
 

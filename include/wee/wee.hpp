@@ -29,3 +29,9 @@ TypeName(const TypeName&) = delete;        \
 void operator=(TypeName) = delete
 
 
+#if defined(__cplusplus)
+#define APICALL extern "C" 
+#else 
+#define APICALL 
+#endif
+

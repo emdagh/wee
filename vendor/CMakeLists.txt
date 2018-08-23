@@ -1,0 +1,1 @@
+INCLUDE(SDL2.cmake)
