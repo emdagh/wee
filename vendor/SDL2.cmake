@@ -1,0 +1,4 @@
+set(SDL_CMAKE_DEBUG_POSTFIX "d"
+    CACHE STRING "Name suffix for debug builds" FORCE)
+
+ADD_SUBDIRECTORY(SDL2)
