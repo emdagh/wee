@@ -1,7 +1,10 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/wee
+    ${CMAKE_SOURCE_DIR}/vendor/date/include
 )
+
+
 file( GLOB APP_SOURCES *.cpp )
 foreach( testsourcefile ${APP_SOURCES} )
     string( REPLACE ".cpp" "" testname ${testsourcefile} )
