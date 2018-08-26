@@ -29,6 +29,11 @@ namespace wee {
         event_handler<int(const application_event&)> on_stop;
         event_handler<int(const application_event&)> on_destroy;
         event_handler<int(const application_event&)> on_restart;
+    public:
+        event_handler<int(int, int)> on_resize;
+        event_handler<int(int)> on_key_pressed;
+        event_handler<int(int)> on_key_released;
+
     };
 }
 

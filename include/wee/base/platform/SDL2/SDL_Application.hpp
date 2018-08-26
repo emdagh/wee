@@ -19,6 +19,9 @@ namespace wee {
             virtual int pause();
             virtual int stop();
             virtual int destroy();
+        public:
+            event_handler<int(int)> on_update;
+            event_handler<void(void)> on_render;
         };
     }
 }

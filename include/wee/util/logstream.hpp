@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <date/date.h>
+#include <fmt/format.h>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -20,78 +21,8 @@
 
 namespace wee {
 
-    enum class loglevel : uint8_t {
-        quiet = 0,
-        error,
-        warn,
-        info,
-        debug,
-        all,
-        none
-    };
-
-    class logstream : public std::ostringstream {
-        std::ostream& _out;
-        std::string _dtstring;
-        std::string _context;
-        loglevel _curlevel;
-        loglevel _loglevel;
-        static std::size_t _depth;
-    public:
-        logstream(std::ostream& out, const std::string& context, loglevel logl=loglevel::all) 
-        : _out(out)
-        , _dtstring("%F %T) //%Y%m%d %H:%M:%S") 
-        , _context(context)
-        , _curlevel(loglevel::none)
-        , _loglevel(logl)
-        {
-            _out << logline((RED "+" RESET) + _context) << std::endl;
-            _depth++;
-        }
-
-        virtual ~logstream() {
-            flush();
-            _depth--;
-            _out << logline((RED "-" RESET) + _context) << std::endl;
-        }
-
-        static std::string logline(const std::string& what) {
-            std::stringstream os;
-            os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
-            os << std::string(_depth, ' ');
-            //os << std::setfill(' ') << std::setw(1) << " ";
-            os << what;
-            return os.str();
-            //os.flush();
-        }
-
-        void flush() {
-            if(_curlevel <= _loglevel) {
-                _out << logline(str());
-            }
-            str("");
-            _curlevel = loglevel::none;
-        }
-
-        template <typename T>
-        inline logstream& operator << (const T& t)
-        {
-            (*(std::ostringstream*)this) << t;
-            return *this;
-        }
-
-        
-        logstream& operator << (const loglevel& l) {
-            _curlevel = l;
-            return *this;
-        }
-
-        typedef logstream & (*logstream_manip)(logstream &);
-        logstream & operator<<(logstream_manip manip) { return manip(*this); }
-    };
-
     template <typename R>
-    static std::string value_of(const std::string& name, const R& val, bool print_type=false) {
+    std::string value_of(const std::string& name, const R& val, bool print_type=false) {
         std::stringstream ss;
         ss << RESET << name;
         if(print_type) {
@@ -104,13 +35,53 @@ namespace wee {
         return ss.str();
     }
 
+    template <typename T>
+    void logline(std::ostream& os, const T& what) {
+        os << what;
+    }
 
-    //logstream& operator << (logstream& out, logstream::level lvl);
-}
-namespace std { 
-    wee::logstream& endl(wee::logstream& out);
-}
 
+    struct log{
+        std::ostream& _os;
+        
+        log(std::ostream& os, const std::string& context) 
+        : _os(os)
+        {
+            os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
+            os << context << RED "> " << RESET;
+        }
+
+        virtual ~log() {
+            _os << std::endl;
+        }
+
+
+        template <typename T, typename... Args>
+        void write(const T& t, const Args&... rest) {
+            logline(_os, t);
+            _os << " ";
+            write(rest...);//std::forward<Args>(rest)...);
+        }
+        template <typename T>
+        void write(const T& t) {
+            logline(_os, t);
+        }
+        void write() {
+        }
+
+
+
+    };
+}
+#define DEBUG_METHOD()              wee::log(std::cout, __FUNCTION__).write(__FUNCTION__) 
+#define DEBUG_LOG(...)              wee::log(std::cout, __FUNCTION__).write(fmt::format(__VA_ARGS__))
+#define DEBUG_VALUE_OF(x)           wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, false))
+#define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, true))
+#define TRACE(...)                  wee::log(std::cout, __FILE__##":"##__LINE__).write(__VA_ARGS__)
+
+
+/*
 #define DEBUG_METHOD()              wee::logstream __logstream(std::cout, __FUNCTION__) //; DEBUG_VALUE_OF(__FUNCTION__)
 #define DEBUG_VALUE_OF(x)           __logstream << wee::loglevel::debug << wee::value_of(#x, x, false) << std::endl
 #define DEBUG_VALUE_AND_TYPE_OF(x)  __logstream << wee::loglevel::debug << wee::value_of(#x, x, true) << std::endl
+#define DEBUG_LOG(...)              __logstream << wee::loglevel::info << __VA_ARGS__ << std::endl;*/

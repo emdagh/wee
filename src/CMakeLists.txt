@@ -1,9 +1,3 @@
-INCLUDE_DIRECTORIES(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/wee
-    ${CMAKE_SOURCE_DIR}/vendor/date/include
-    ${CMAKE_BINARY_DIR}/
-)
 
 
 ADD_SUBDIRECTORY(core)

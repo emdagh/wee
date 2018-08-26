@@ -13,9 +13,6 @@
 [submodule "vendor/cxx-prettyprint"]
 	path = vendor/cxx-prettyprint
 	url = https://github.com/louisdx/cxx-prettyprint.git
-[submodule "vendor/Box2D"]
-	path = vendor/Box2D
-	url = https://github.com/erincatto/Box2D.git
 [submodule "vendor/enet"]
 	path = vendor/enet
 	url = https://github.com/lsalzman/enet.git
@@ -25,3 +22,9 @@
 [submodule "vendor/json"]
 	path = vendor/json
 	url = https://github.com/nlohmann/json.git
+[submodule "vendor/fmt"]
+	path = vendor/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "vendor/liquidfun"]
+	path = vendor/liquidfun
+	url = https://github.com/google/liquidfun.git

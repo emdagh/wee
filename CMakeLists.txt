@@ -54,6 +54,24 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/include/wee/config.h
 )
 
+INCLUDE_DIRECTORIES(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/wee
+    ${CMAKE_BINARY_DIR}/include/wee
+    ${CMAKE_SOURCE_DIR}/vendor/cxx-prettyprint
+    ${CMAKE_SOURCE_DIR}/vendor/date/include
+    ${CMAKE_SOURCE_DIR}/vendor/enet/include
+    ${CMAKE_SOURCE_DIR}/vendor/fmt/include
+    ${CMAKE_SOURCE_DIR}/vendor/json
+    ${CMAKE_SOURCE_DIR}/vendor/liquidfun/liquidfun/Box2D/Box2D
+    ${CMAKE_SOURCE_DIR}/vendor/json/include
+    ${CMAKE_SOURCE_DIR}/vendor/poco
+    ${CMAKE_SOURCE_DIR}/vendor/SDL2/include
+    ${CMAKE_BINARY_DIR}/vendor/SDL2/include
+    ${CMAKE_SOURCE_DIR}/vendor/SDL2_image
+    ${CMAKE_SOURCE_DIR}/vendor/SDL2_mixer
+
+)
 LINK_DIRECTORIES(
     ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
 )

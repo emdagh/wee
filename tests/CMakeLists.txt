@@ -1,8 +1,3 @@
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/wee
-    ${CMAKE_SOURCE_DIR}/vendor/date/include
-)
 
 
 file( GLOB APP_SOURCES *.cpp )
@@ -16,10 +11,11 @@ foreach( testsourcefile ${APP_SOURCES} )
     add_executable( ${barename} ${testsourcefile} )
     target_link_libraries(
         ${barename}
-        wee_core
+        wee_engine
         wee_base
         wee_base_SDL2
         wee_gfx
+        wee_core
 
         pthread
         dl

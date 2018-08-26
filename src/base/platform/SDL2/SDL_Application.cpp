@@ -12,109 +12,69 @@ namespace wee {
             SDL_Window*     _window;
             SDL_Renderer*   _renderer;
 
-
-            void callbacks(SDL_Application* app) {
-
-            }
             
             void internal_WindowEvent(const SDL_WindowEvent& window) {
+                DEBUG_METHOD();
                 switch(window.event) {
                     case SDL_WINDOWEVENT_SHOWN:
-                        SDL_Log("Window %d shown", window.windowID);
+                        DEBUG_LOG("Window {0} shown", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_HIDDEN:
-                        SDL_Log("Window %d hidden", window.windowID);
+                        DEBUG_LOG("Window {} hidden", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_EXPOSED:
-                        SDL_Log("Window %d exposed", window.windowID);
+                        DEBUG_LOG("Window {} exposed", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_MOVED:
-                        SDL_Log("Window %d moved to %d,%d",
+                        DEBUG_LOG("Window {} moved to {},{}",
                                 window.windowID, window.data1,
                                 window.data2);
                         break;
                     case SDL_WINDOWEVENT_RESIZED:
-                        SDL_Log("Window %d resized to %dx%d",
+                        DEBUG_LOG("Window {} resized to {}x{}",
                                 window.windowID, window.data1,
                                 window.data2);
                         //resize(window.data1, window.data2);
                         break;
                     case SDL_WINDOWEVENT_SIZE_CHANGED:
-                        SDL_Log("Window %d size changed to %dx%d",
+                        DEBUG_LOG("Window {} size changed to {}x{}",
                                 window.windowID, window.data1,
                                 window.data2);
                         break;
                     case SDL_WINDOWEVENT_MINIMIZED:
-                        SDL_Log("Window %d minimized", window.windowID);
+                        DEBUG_LOG("Window {} minimized", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_MAXIMIZED:
-                        SDL_Log("Window %d maximized", window.windowID);
+                        DEBUG_LOG("Window {} maximized", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_RESTORED:
-                        SDL_Log("Window %d restored", window.windowID);
+                        DEBUG_LOG("Window {} restored", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_ENTER:
-                        SDL_Log("Mouse entered window %d",
+                        DEBUG_LOG("Mouse entered window {}",
                                 window.windowID);
                         break;
                     case SDL_WINDOWEVENT_LEAVE:
-                        SDL_Log("Mouse left window %d", window.windowID);
+                        DEBUG_LOG("Mouse left window {}", window.windowID);
                         break;
                     case SDL_WINDOWEVENT_FOCUS_GAINED:
-                        SDL_Log("Window %d gained keyboard focus",
+                        DEBUG_LOG("Window {} gained keyboard focus",
                                 window.windowID);
                         break;
                     case SDL_WINDOWEVENT_FOCUS_LOST:
-                        SDL_Log("Window %d lost keyboard focus",
+                        DEBUG_LOG("Window {0} lost keyboard focus",
                                 window.windowID);
                         break;
                     case SDL_WINDOWEVENT_CLOSE:
-                        SDL_Log("Window %d closed", window.windowID);
+                        DEBUG_LOG("Window {} closed", window.windowID);
                         break;
                     default:
-                        SDL_Log("Window %d got unknown event %d",
+                        DEBUG_LOG("Window {0} got unknown event {1}",
                                 window.windowID, window.event);
                         break;
                 }
             }
 
-            int _input(SDL_Application* app, const SDL_Event& ev) {
-                switch(ev.type) {
-                    case SDL_QUIT:
-                        SDL_Log("SDL_QUIT");
-                        SDL_Quit();
-                        return 1;
-                    case SDL_WINDOWEVENT:
-                        internal_WindowEvent(ev.window);
-                        break;
-                    case SDL_KEYDOWN:
-                    case SDL_KEYUP:
-                        internal_KeyboardEvent(ev.key);
-                        break;
-                    case SDL_TEXTINPUT:
-                        internal_TextInputEvent(ev.text);
-                        break;
-                    case SDL_TEXTEDITING:
-                        internal_TextEditingEvent(ev.edit);
-                        break;
-                    case SDL_MULTIGESTURE:
-                        internal_GestureEvent(ev.mgesture);
-                        break;
-                    case SDL_FINGERDOWN:
-                    case SDL_FINGERUP:
-                    case SDL_FINGERMOTION:
-                        internal_FingerEvent(ev.tfinger);
-                        break;
-                    case SDL_MOUSEMOTION:
-                        internal_MouseMotionEvent(ev.motion);
-                        break;
-                    case SDL_MOUSEBUTTONDOWN:
-                    case SDL_MOUSEBUTTONUP:
-                        internal_MouseButtonEvent(ev.button);
-                        break;
-                }
-                return 0;
-            }
             void internal_MouseButtonEvent(const SDL_MouseButtonEvent& button) {
                 //if(button.type == SDL_MOUSEBUTTONDOWN)
                     //OnMouseDown(button.x, button.y);
@@ -150,18 +110,59 @@ namespace wee {
             void internal_MouseMotionEvent(const SDL_MouseMotionEvent& motion) {
                 //OnMouseMove(motion.x, motion.y, motion.xrel, motion.yrel);
             }
+            
+            int _input(SDL_Application* app, const SDL_Event& ev) {
+                switch(ev.type) {
+                    case SDL_QUIT: {
+                        DEBUG_METHOD();
+                        DEBUG_LOG("SDL_QUIT");
+                        SDL_Quit();
+                        return 1;
+                    }
+                    case SDL_WINDOWEVENT:
+                        internal_WindowEvent(ev.window);
+                        break;
+                    case SDL_KEYDOWN:
+                    case SDL_KEYUP:
+                        internal_KeyboardEvent(ev.key);
+                        break;
+                    case SDL_TEXTINPUT:
+                        internal_TextInputEvent(ev.text);
+                        break;
+                    case SDL_TEXTEDITING:
+                        internal_TextEditingEvent(ev.edit);
+                        break;
+                    case SDL_MULTIGESTURE:
+                        internal_GestureEvent(ev.mgesture);
+                        break;
+                    case SDL_FINGERDOWN:
+                    case SDL_FINGERUP:
+                    case SDL_FINGERMOTION:
+                        internal_FingerEvent(ev.tfinger);
+                        break;
+                    case SDL_MOUSEMOTION:
+                        internal_MouseMotionEvent(ev.motion);
+                        break;
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_MOUSEBUTTONUP:
+                        internal_MouseButtonEvent(ev.button);
+                        break;
+                }
+                return 0;
+            }
 
             impl(SDL_Application* app) 
                 : _events(new SDL_EventLoop(
                     [&] (const SDL_Event& ev) {
                         return this->_input(app, ev);
-                        /*switch(ev.type) {
-                            case SDL_QUIT:
-                                return 1;
-                            }
-                        return 0;*/
                     },
-                    [&] (void) {
+                    [&] (long int* acc, long int dt) {
+
+                        while(*acc >= dt) {
+                            *acc -= dt;
+                            app->on_update(dt);
+                        }
+                        app->on_render();
                     }
                 ))
             {

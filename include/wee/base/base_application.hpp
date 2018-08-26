@@ -16,6 +16,6 @@ namespace wee {
         virtual int stop();
         virtual int destroy();
     public:
-        event_handler<int(const std::string&)> on_text_input;
+        //event_handler<int(const std::string&)> on_text_input;
     };
 }
