@@ -1,0 +1,52 @@
+#include <engine/assets.hpp>
+#include <util/logstream.hpp>
+#include <SDL.h>
+#include <SDL_mixer.h>
+using namespace wee;
+
+#ifdef _WIN32
+#define PATH_SEP "\\"
+#else
+#define PATH_SEP  "/"
+#endif
+
+#if defined(__IOS__)
+extern "C" const char* iOS_getDataPath();
+#endif
+
+std::string assets::get_resource_path(const std::string& subDir) {
+#if !defined(__IOS__)
+    static std::string baseRes;
+    if (baseRes.empty()){
+        //
+        //SDL_GetBasePath will return NULL if something went wrong in retrieving the path
+        //
+        char *basePath = SDL_GetBasePath();
+        if (basePath){
+            baseRes = basePath;
+            SDL_free(basePath);
+        }
+        else {
+            //std::cerr << "Error getting resource path: " << SDL_GetError() << std::endl;
+            return DEBUG_LOG(SDL_GetError()), "";
+        }
+    }
+    //If we want a specific subdirectory path in the resource directory
+    //append it to the base path. This would be something like Lessons/res/Lesson0
+    return subDir.empty() ? baseRes : baseRes + subDir + PATH_SEP;
+#else
+    return std::string(iOS_getDataPath());
+#endif
+}
+std::istream& operator >> (std::istream& is, SDL_Surface*) {
+    return is;
+}
+std::istream& operator >> (std::istream& is, SDL_Texture*) {
+    return is;
+}
+std::istream& operator >> (std::istream& is, Mix_Chunk*) {
+    return is;
+}
+std::istream& operator >> (std::istream& is, Mix_Music*) {
+    return is;
+}

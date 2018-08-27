@@ -21,7 +21,7 @@ ADD_LIBRARY(
 )
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}
-    SDL2d
+    SDL2
     wee_base
 )
 

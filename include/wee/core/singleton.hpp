@@ -2,7 +2,7 @@
 
 #include <wee.hpp>
 
-namespace atom {
+namespace wee {
 
 template <typename T>
 struct singleton {
