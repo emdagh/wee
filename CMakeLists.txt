@@ -60,6 +60,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/wee
     ${CMAKE_SOURCE_DIR}/vendor/SDL2/include
+    ${CMAKE_SOURCE_DIR}/vendor/SDL2_image
     ${CMAKE_SOURCE_DIR}/vendor/date/include
     ${CMAKE_SOURCE_DIR}/vendor/json/include
 )

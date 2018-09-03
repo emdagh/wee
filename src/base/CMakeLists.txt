@@ -1,6 +1,6 @@
 
 
-PROJECT(wee_base)
+PROJECT(wee_base C CXX)
 
 
 FILE(GLOB SOURCES

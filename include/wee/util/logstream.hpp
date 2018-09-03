@@ -48,7 +48,7 @@ namespace wee {
         : _os(os)
         {
             os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
-            os << context << RED "> " << RESET;
+            os << RED "> " << RESET;
         }
 
         virtual ~log() {

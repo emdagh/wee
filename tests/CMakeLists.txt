@@ -13,9 +13,9 @@ foreach( testsourcefile ${APP_SOURCES} )
         ${barename}
         wee_engine
         wee_base
-        wee_base_SDL2
         wee_gfx
         wee_core
+        SDL_image
         SDL2
         pthread
         dl
