@@ -1,3 +1,4 @@
+
 #ifndef _SDL_COLOR_EXT_H_
 #define _SDL_COLOR_EXT_H_
 

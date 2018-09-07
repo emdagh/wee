@@ -1,6 +1,7 @@
 #include <util/logstream.hpp>
 #include <base/SDL_Application.h>
-#include <base/SDL_ColorEXT.hpp>
+#include <gfx/SDL_ColorEXT.hpp>
+#include <gfx/SDL_RendererEXT.hpp>
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -22,13 +23,6 @@ T random(T lower, T upper) {
 
 
 
-APICALL void SDL_RenderCopyEXT(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect& src, const SDL_Rect& dst) {
-    SDL_RenderCopy(renderer, texture, &src, &dst);
-}
-
-APICALL void SDL_SetRenderDrawColorEXT(SDL_Renderer* renderer, const SDL_Color* color) {
-    SDL_SetRenderDrawColor(renderer, color->r, color->g, color->b, color->a);
-}
 
 
 SDL_Rect SDL_ScaleRect(const SDL_Rect& r, float scale) {

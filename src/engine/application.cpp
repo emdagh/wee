@@ -19,6 +19,9 @@ application::application(applet* a)
     };
 
     SDL_SetApplicationUserData(_handle, this);
+    int w, h;
+    SDL_GetWindowSize(SDL_GetApplicationWindow(_handle), &w, &h);
+    SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_STARTED, [&] (const SDL_Application* app, const void* ) {
         application* a = static_cast<application*>(SDL_GetApplicationUserData(app));

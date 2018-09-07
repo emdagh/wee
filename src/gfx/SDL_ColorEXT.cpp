@@ -1,4 +1,4 @@
-#include <base/SDL_ColorEXT.hpp>
+#include <gfx/SDL_ColorEXT.hpp>
 #include <SDL.h>
 
 SDL_Color SDL_CreateColorRGB(uint8_t r, uint8_t g, uint8_t b) {
