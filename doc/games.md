@@ -50,6 +50,8 @@ a research document exploring the state-of-the-art of the subject matter.
 
 [Machine Learning is Fun! Part 2](https://medium.com/@ageitgey/machine-learning-is-fun-part-2-a26a10b68df3)
 
+
+
 [Game Level Generation Using Neural Networks](https://www.gamasutra.com/blogs/SeungbackShin/20180227/315017/Game_Level_Generation_Using_Neural_Networks.php)
 
 [textgenrnn](https://github.com/minimaxir/textgenrnn)
