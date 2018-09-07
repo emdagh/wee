@@ -32,7 +32,7 @@ namespace wee {
         delegate<void(const particle&)> on_draw;
         update_callback _on_update;
 
-        circular_buffer<particle> _particles;
+        circular_array<particle> _particles;
     public:
         emitter(size_t capacity, update_callback on_update) 
         : _on_update(on_update)

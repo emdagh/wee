@@ -26,8 +26,8 @@
  *
  *****************************************************************************/
 
-#ifndef CIRCULAR_BUFFER_H
-#define CIRCULAR_BUFFER_H
+#ifndef circular_array_H
+#define circular_array_H
 
 #include <exception>
 #include <iterator>
@@ -41,23 +41,23 @@ namespace wee {
      *****************************************************************************/
 
     /**
-     * Iterator type for the circular_buffer class.
+     * Iterator type for the circular_array class.
      *
      * This one template class provides all variants of forward/reverse
      * const/non const iterators through plentiful template magic.
      *
      * You don't need to instantiate it directly, use the good public functions
-     * availble in circular_buffer.
+     * availble in circular_array.
      */
-    template <typename T,                                  //circular_buffer type
+    template <typename T,                                  //circular_array type
                                                            //(incl const)
               typename T_nonconst,                         //with any consts
               typename elem_type = typename T::value_type> //+ const for const iter
-    class circular_buffer_iterator
+    class circular_array_iterator
     {
         public:
 
-            typedef circular_buffer_iterator<T,T_nonconst,elem_type> self_type;
+            typedef circular_array_iterator<T,T_nonconst,elem_type> self_type;
 
             typedef T                                   cbuf_type;
             typedef std::random_access_iterator_tag     iterator_category;
@@ -69,16 +69,16 @@ namespace wee {
             typedef typename cbuf_type::const_reference const_reference;
             typedef typename cbuf_type::difference_type difference_type;
 
-            circular_buffer_iterator(cbuf_type *b, size_type p)
+            circular_array_iterator(cbuf_type *b, size_type p)
                 : buf_(b), pos_(p) {}
 
             // Converting a non-const iterator to a const iterator
-            circular_buffer_iterator
-               (const circular_buffer_iterator<T_nonconst, T_nonconst,
+            circular_array_iterator
+               (const circular_array_iterator<T_nonconst, T_nonconst,
                                                typename T_nonconst::value_type>
                 &other)
                 : buf_(other.buf_), pos_(other.pos_) {}
-            friend class circular_buffer_iterator<const T, T, const elem_type>;
+            friend class circular_array_iterator<const T, T, const elem_type>;
 
             // Use compiler generated copy ctor, copy assignment operator and dtor
 
@@ -169,25 +169,25 @@ namespace wee {
             size_type  pos_;
     };
 
-    template <typename circular_buffer_iterator_t>
-    circular_buffer_iterator_t operator+
-        (const typename circular_buffer_iterator_t::difference_type &a,
-         const circular_buffer_iterator_t                           &b)
+    template <typename circular_array_iterator_t>
+    circular_array_iterator_t operator+
+        (const typename circular_array_iterator_t::difference_type &a,
+         const circular_array_iterator_t                           &b)
     {
-        return circular_buffer_iterator_t(a) + b;
+        return circular_array_iterator_t(a) + b;
     }
 
-    template <typename circular_buffer_iterator_t>
-    circular_buffer_iterator_t operator-
-        (const typename circular_buffer_iterator_t::difference_type &a,
-         const circular_buffer_iterator_t                           &b)
+    template <typename circular_array_iterator_t>
+    circular_array_iterator_t operator-
+        (const typename circular_array_iterator_t::difference_type &a,
+         const circular_array_iterator_t                           &b)
     {
-        return circular_buffer_iterator_t(a) - b;
+        return circular_array_iterator_t(a) - b;
     }
 
 
     /******************************************************************************
-     * circular_buffer
+     * circular_array
      *****************************************************************************/
 
     /**
@@ -212,7 +212,7 @@ namespace wee {
      */
     template <typename T,
               typename Alloc                        = std::allocator<T> >
-    class circular_buffer
+    class circular_array
     {
         public:
 
@@ -223,7 +223,7 @@ namespace wee {
             };
 
             // Typedefs
-            typedef circular_buffer<T, Alloc>         self_type;
+            typedef circular_array<T, Alloc>         self_type;
             typedef Alloc                             allocator_type;
             typedef typename Alloc::value_type        value_type;
             typedef typename Alloc::pointer           pointer;
@@ -233,14 +233,14 @@ namespace wee {
             typedef typename Alloc::size_type         size_type;
             typedef typename Alloc::difference_type   difference_type;
 
-            typedef circular_buffer_iterator<self_type, self_type> iterator;
-            typedef circular_buffer_iterator<const self_type, self_type, const value_type> const_iterator;
+            typedef circular_array_iterator<self_type, self_type> iterator;
+            typedef circular_array_iterator<const self_type, self_type, const value_type> const_iterator;
             typedef std::reverse_iterator<iterator>       reverse_iterator;
             typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
             // Lifetime
             enum { default_capacity = 128 };
-            explicit circular_buffer(size_type capacity = default_capacity)
+            explicit circular_array(size_type capacity = default_capacity)
             : array_(alloc_.allocate(capacity))
             , capacity_(capacity)
             , head_(1)
@@ -248,7 +248,7 @@ namespace wee {
             , size_(0)
             {
             }
-            circular_buffer(const circular_buffer &other)
+            circular_array(const circular_array &other)
             : array_(alloc_.allocate(other.capacity_)),
               capacity_(other.capacity_),
               head_(other.head_), tail_(other.tail_),
@@ -266,26 +266,26 @@ namespace wee {
                 }
             }
             template <class InputIterator>
-            circular_buffer(InputIterator from, InputIterator to)
+            circular_array(InputIterator from, InputIterator to)
             : array_(alloc_.allocate(1)), capacity_(1),
               head_(1), tail_(0), size_(0)
             {
-                circular_buffer tmp;
+                circular_array tmp;
                 tmp.assign_into_reserving(from, to);
                 swap(tmp);
             }
-            ~circular_buffer()
+            ~circular_array()
             {
                 destroy_all_elements();
                 alloc_.deallocate(array_, capacity_);
             }
-            circular_buffer &operator=(const self_type &other)
+            circular_array &operator=(const self_type &other)
             {
-                circular_buffer tmp(other);
+                circular_array tmp(other);
                 swap(tmp);
                 return *this;
             }
-            void swap(circular_buffer &other)
+            void swap(circular_array &other)
             {
                 std::swap(array_,         other.array_);
                 std::swap(capacity_,      other.capacity_);
@@ -326,7 +326,7 @@ namespace wee {
             {
                 if (capacity() < new_size)
                 {
-                    circular_buffer tmp(new_size);
+                    circular_array tmp(new_size);
                     tmp.assign_into(begin(), end());
                     swap(tmp);
                 }
@@ -474,30 +474,30 @@ namespace wee {
 
     template <typename T,
               typename Alloc>
-    bool operator==(const circular_buffer<T, Alloc> &a,
-                    const circular_buffer<T, Alloc> &b)
+    bool operator==(const circular_array<T, Alloc> &a,
+                    const circular_array<T, Alloc> &b)
     {
         return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
     }
 
     template <typename T,
               typename Alloc>
-    bool operator!=(const circular_buffer<T, Alloc> &a,
-                    const circular_buffer<T, Alloc> &b)
+    bool operator!=(const circular_array<T, Alloc> &a,
+                    const circular_array<T, Alloc> &b)
     {
         return a.size() != b.size() || !std::equal(a.begin(), a.end(), b.begin());
     }
 
     template <typename T,
               typename Alloc>
-    bool operator<(const circular_buffer<T, Alloc> &a,
-                   const circular_buffer<T, Alloc> &b)
+    bool operator<(const circular_array<T, Alloc> &a,
+                   const circular_array<T, Alloc> &b)
     {
         return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
     }
 
     template <typename T, typename Alloc>
-    std::ostream& operator << (std::ostream& os, const circular_buffer<T, Alloc>& buf) {
+    std::ostream& operator << (std::ostream& os, const circular_array<T, Alloc>& buf) {
         std::copy(buf.begin(), buf.end(), std::ostream_iterator<T>(os, ","));
         return os;
     }

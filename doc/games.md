@@ -6,8 +6,10 @@ The idea behind the graduation project is as follows:
 
 ## deliverables
 For the project, several deliverables will be produced.
+
+### P0
 ### engine/framework
-The wee engine(c) will be a minimalistic prototyping engine. Nothing fancy.
+The wee engine(c) will be a minimalistic prototyping engine. Nothing fancy; essentially it will be an extension / wrapper library for SDL2.
 ### games
 The games that will be produced using the wee engine are basic, proof of concept games that will serve as 
 examples on the use of the middleware.
@@ -18,6 +20,7 @@ angry birds meets pinball, get your ball as high as possible. This serve as an e
 applying more complexity to the use-cases of the neural net.
 #### skiing adventure
 sport arcade game
+### P1
 ### neural network middleware
 The neural network is expected to be an A.I. middleware that will serve as a generic algorithm
 to generate level data for generic games. This will include but shouldn't be limited to the games above. The deliverable

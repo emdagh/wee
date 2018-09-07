@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <Box2D/Box2D.h>
 #include <SDL.h>
+#include <core/circular_array.hpp>
 
 #ifndef PTM_RATIO
 #define PTM_RATIO   (40.f)
@@ -13,6 +14,14 @@
 
 using nlohmann::json;
 using kult::entity;
+
+struct vec2 {
+    float x, y;
+};
+
+std::ostream& operator << (std::ostream& os, const vec2& vec) {
+    return os << vec.x << ", " << vec.y;
+}
 
 std::ostream& operator << (std::ostream& os, const b2Transform& tx) {
     return os << tx.p.x << ", " << tx.p.y;
@@ -50,6 +59,36 @@ public:
     }
 };
 
+enum class collision_filter : uint16_t {
+    environment = 1 << 0,
+    any = 0xffff
+};
+
+struct terrain {
+
+    b2Body* body_;
+    
+    struct slice {
+        static int width;
+        b2Fixture* fixture_;
+    };
+
+    circular_array<slice> slices_;
+
+    void create(b2World* world, size_t n) {
+        std::generate(slices_.begin(), slices_.end(), [this] (void) {
+            b2EdgeShape shape;
+            b2FixtureDef info;
+            info.shape = &shape;
+            
+            slice res;
+            res.fixture_ = body_->CreateFixture(&info);
+
+            return { body_->CreateFixture(&info) };
+        });
+    }
+
+};
 
 entity create_player(b2World* world, float x, float y) {
     entity res;
