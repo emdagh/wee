@@ -1,5 +1,5 @@
 
-
+#INCLUDE(poco.cmake)
 INCLUDE(SDL2.cmake)
 INCLUDE(SDL_mixer.cmake)
 INCLUDE(SDL_image.cmake)

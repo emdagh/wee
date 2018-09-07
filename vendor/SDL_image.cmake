@@ -63,7 +63,7 @@ file(GLOB SDL_IMAGE_SOURCES_PLATFORM
 endif(ATOM_PLATFORM_IOS)
 
 add_library(z ${SRC_LIBZ})
-add_library(png ${SRC_LIBPNG})
+#add_library(png ${SRC_LIBPNG})
 
 add_library(SDL_image ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 

@@ -1,12 +1,8 @@
 #pragma once
 
-#ifndef _DEBUG
 #cmakedefine _DEBUG
-#endif
 
-#ifndef NDEBUG
 #cmakedefine NDEBUG
-#endif
 
 #define SYSTEM_NAME     "@CMAKE_SYSTEM_NAME@"
 #define PACKAGE_NAME    "@PROJECT_NAME@"
@@ -14,4 +10,8 @@
 
 #define WEE_PLATFORM_UNDEFINED  -1
 
-#define WEE_PLATFORM WEE_PLATFORM_UNDEFINED
+#cmakedefine        UNIX
+#cmakedefine        ANDROID
+#cmakedefine        IOS
+#cmakedefine        WINRT
+#cmakedefine        ANDROID_NDK_API_LEVEL   ${ANDROID_NDK_API_LEVEL}

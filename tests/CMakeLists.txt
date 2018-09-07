@@ -15,6 +15,7 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_base
         wee_gfx
         wee_core
+        liquidfun
         SDL_image
         SDL2
         pthread

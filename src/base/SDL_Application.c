@@ -13,9 +13,20 @@ typedef struct SDL_Application{
     SDL_Texture* fb;
     int is_running;
     int is_paused;
+    void* userdata;
 
 
 } SDL_Application;
+
+
+void SDL_SetApplicationUserData(struct SDL_Application* ptr, const void* userdata) {
+    ptr->userdata = userdata;
+}
+
+void* SDL_GetApplicationUserData(const struct SDL_Application* ptr) {
+    return ptr->userdata;
+}
+
 
 int SDL_ApplicationHandleWindowEvent(struct SDL_Application* ptr, const SDL_WindowEvent* e) {
     switch(e->event) {
@@ -109,12 +120,16 @@ struct SDL_Application* SDL_CreateApplication() {
     {
         SDL_DisplayMode dm;
         SDL_GetDesktopDisplayMode(0, &dm);
-        SDL_Window* _win = SDL_CreateWindow(NULL, 0, 0, dm.w, dm.h, SDL_WINDOW_OPENGL  
-#if defined(IOS) || defined(ANDROID)
-                | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS
-#else
+        SDL_Window* _win = SDL_CreateWindow(NULL, 
+                0, 0, 
+                640, //dm.w, 
+                480, //dm.h, 
+                SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI 
+//#if defined(IOS) || defined(ANDROID)
+//                | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS
+//#else
                 | SDL_WINDOW_RESIZABLE
-#endif
+//#endif
                 );
 
         res->window = _win;
@@ -195,6 +210,12 @@ int SDL_StartApplication(struct SDL_Application* ptr) {
     if(ptr->callback[SDL_APPLICATION_CALLBACK_STARTED]) 
         ptr->callback[SDL_APPLICATION_CALLBACK_STARTED](ptr, NULL);
 
+    int dt = 1000 / 60;
+    int timeCurrentMs = 0;
+    int timeAccumulatedMs = 0;
+    int timeDeltaMs = 0;
+    int timeLastMs = SDL_GetTicks();
+
     SDL_Event event;
     while(ptr->is_running) {
         if(ptr->is_paused)
@@ -204,9 +225,17 @@ int SDL_StartApplication(struct SDL_Application* ptr) {
             if(SDL_ApplicationHandleEvent(ptr, &event)) {
                 return 0;
             }
-            ptr->callback[SDL_APPLICATION_CALLBACK_UPDATE](ptr, NULL);
         }
+        timeCurrentMs = SDL_GetTicks();
+        timeDeltaMs = timeCurrentMs - timeLastMs;
+        timeAccumulatedMs += timeDeltaMs;
+        while(timeAccumulatedMs >= dt) {
+            ptr->callback[SDL_APPLICATION_CALLBACK_UPDATE](ptr, &dt);
+            timeAccumulatedMs -= dt;
+        }
+
         ptr->callback[SDL_APPLICATION_CALLBACK_RENDER](ptr, NULL);
+        timeLastMs = timeCurrentMs;
 
     }
 }

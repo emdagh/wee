@@ -28,3 +28,6 @@
 [submodule "vendor/liquidfun"]
 	path = vendor/liquidfun
 	url = https://github.com/google/liquidfun.git
+[submodule "vendor/SDL2_ttf"]
+	path = vendor/SDL2_ttf
+	url = https://github.com/davidsiaw/SDL2_ttf.git

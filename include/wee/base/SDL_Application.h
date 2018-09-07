@@ -1,7 +1,7 @@
 #ifndef _SDL_APPLICATION_H_
 #define _SDL_APPLICATION_H_
 
-#include <wee/wee.hpp>
+#include <wee/wee.h>
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -9,8 +9,6 @@ struct SDL_Application;
 struct SDL_EventLoop;
 
 typedef int(*SDL_ApplicationCallback)(const struct SDL_Application*, const void*);
-//typedef void(*SDL_UpdateCallback)(int);
-//typedef void(*SDL_RenderCallback)(void);
 
 typedef enum {
     SDL_APPLICATION_CALLBACK_CREATED,
@@ -45,5 +43,7 @@ APICALL int SDL_StartApplication(struct SDL_Application*);
 APICALL void SDL_StopApplication(struct SDL_Application*);
 APICALL void SDL_PauseApplication(struct SDL_Application*);
 APICALL void SDL_ResumeApplication(struct SDL_Application*);
+APICALL void SDL_SetApplicationUserData(struct SDL_Application*, const void*);
+APICALL void* SDL_GetApplicationUserData(const struct SDL_Application*);
 
 #endif

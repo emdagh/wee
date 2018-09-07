@@ -352,20 +352,15 @@ private:
         using delegate_type = delegate<R(A...)>;
         std::vector<delegate_type> _list;
     public:
-        R operator () (const A&... args) {
+        void operator () (const A&... args) {
             size_t n = _list.size();
             if( n > 0 )
                 for(auto& i : _list)
                     i(args...);
         }
         
-        void add(const delegate_type& ptr) {
-            _list.push_back(ptr);
-        }
-        
         const event_handler& operator += (const delegate_type& ptr) {
-            add(ptr);
-            return *this;
+            return *this, _list.push_back(ptr);
         }
         
         void clear() {

@@ -1,9 +1,10 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
-PROJECT(wee C CXX)
+PROJECT(wee VERSION 0.1.0.0 LANGUAGES C CXX)
 
 IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Debug)
+    SET(_DEBUG True)
 ENDIF()
 
 IF(UNIX)
@@ -59,10 +60,14 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/include/wee
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/wee
+    ${CMAKE_SOURCE_DIR}/vendor/liquidfun/liquidfun/Box2D
     ${CMAKE_SOURCE_DIR}/vendor/SDL2/include
     ${CMAKE_SOURCE_DIR}/vendor/SDL2_image
+    ${CMAKE_SOURCE_DIR}/vendor/SDL2_ttf
+    ${CMAKE_SOURCE_DIR}/vendor/SDL2_mixer
     ${CMAKE_SOURCE_DIR}/vendor/date/include
     ${CMAKE_SOURCE_DIR}/vendor/json/include
+    ${CMAKE_SOURCE_DIR}/vendor/kult
 )
 LINK_DIRECTORIES(
     ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}

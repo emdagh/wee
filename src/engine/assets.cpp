@@ -2,7 +2,6 @@
 #include <util/logstream.hpp>
 #include <SDL.h>
 #include <SDL_mixer.h>
-using namespace wee;
 
 #ifdef _WIN32
 #define PATH_SEP "\\"
@@ -13,31 +12,35 @@ using namespace wee;
 #if defined(__IOS__)
 extern "C" const char* iOS_getDataPath();
 #endif
-
-std::string assets::get_resource_path(const std::string& subDir) {
+namespace wee {
+    std::string get_resource_path(const std::string& subDir) {
 #if !defined(__IOS__)
-    static std::string baseRes;
-    if (baseRes.empty()){
-        //
-        //SDL_GetBasePath will return NULL if something went wrong in retrieving the path
-        //
-        char *basePath = SDL_GetBasePath();
-        if (basePath){
-            baseRes = basePath;
-            SDL_free(basePath);
+        static std::string baseRes;
+        if (baseRes.empty()){
+            //
+            //SDL_GetBasePath will return NULL if something went wrong in retrieving the path
+            //
+            char *basePath = SDL_GetBasePath();
+            if (basePath){
+                baseRes = basePath;
+                SDL_free(basePath);
+            }
+            else {
+                //std::cerr << "Error getting resource path: " << SDL_GetError() << std::endl;
+                return DEBUG_LOG(SDL_GetError()), "";
+            }
         }
-        else {
-            //std::cerr << "Error getting resource path: " << SDL_GetError() << std::endl;
-            return DEBUG_LOG(SDL_GetError()), "";
-        }
-    }
-    //If we want a specific subdirectory path in the resource directory
-    //append it to the base path. This would be something like Lessons/res/Lesson0
-    return subDir.empty() ? baseRes : baseRes + subDir + PATH_SEP;
+        //If we want a specific subdirectory path in the resource directory
+        //append it to the base path. This would be something like Lessons/res/Lesson0
+        return subDir.empty() ? baseRes : baseRes + subDir + PATH_SEP;
 #else
-    return std::string(iOS_getDataPath());
+        return std::string(iOS_getDataPath());
 #endif
+    }
 }
+
+using namespace wee;
+
 std::istream& operator >> (std::istream& is, SDL_Surface*) {
     return is;
 }

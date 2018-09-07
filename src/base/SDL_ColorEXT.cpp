@@ -1,6 +1,32 @@
 #include <base/SDL_ColorEXT.hpp>
 #include <SDL.h>
 
+SDL_Color SDL_CreateColorRGB(uint8_t r, uint8_t g, uint8_t b) {
+    return (SDL_Color) {
+        r, g, b, 255
+    };
+}
+
+SDL_Color SDL_CreateColorHSV(uint8_t h, uint8_t s, uint8_t v) {
+    if(s == 0)
+        return SDL_CreateColorRGB(v, v, v);
+    uint8_t region  = h / 43;
+    uint8_t fpart   = (h - (region * 43)) * 6;
+    uint8_t p       = (v * (255 - s)) >> 8;
+    uint8_t q       = (v * (255 - ((s * fpart) >> 8))) >> 8;
+    uint8_t t       = (v * (255 - ((s * (255 - fpart)) >> 8))) >> 8;
+    
+    switch(region) {
+        case 0: return  SDL_CreateColorRGB(v, t, p);
+        case 1: return  SDL_CreateColorRGB(q, v, p);
+        case 2: return  SDL_CreateColorRGB(p, v, t);
+        case 3: return  SDL_CreateColorRGB(p, q, v);
+        case 4: return  SDL_CreateColorRGB(t, p, v);
+        default: return SDL_CreateColorRGB(v, p, q);
+    }
+    return SDL_CreateColorRGB(0, 0, 0);
+}
+
 C_API void SDL_CreateColorEXT(uint32_t i, struct SDL_Color* res) {
     res->a = (i & 0xff000000) >> 24;
     res->r = (i & 0x00ff0000) >> 16;

@@ -24,7 +24,11 @@
 #define __declare_aligned(T, n)     T __aligned_type(n)
 #define __export                    __public_type
 
-
+#if defined(UNIX)
+#define PATH_SEP "/"
+#else
+#define PATH SEP "\\"
+#endif
 
 
 #if defined(__cplusplus)

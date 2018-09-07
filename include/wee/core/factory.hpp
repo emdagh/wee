@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 
-namespace atom {
+namespace wee {
 
 
 template <typename T, typename ClassId = std::string>
