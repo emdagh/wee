@@ -45,18 +45,31 @@ namespace wee {
 
             DEBUG_METHOD();
             DEBUG_VALUE_OF(name);
-            if(resources.count(name) > 0)
-                return resources[name];
+            if(resources.count(name) == 0) {
 
 
-            std::istreambuf_iterator<char> eos;
-            std::string contents(std::istreambuf_iterator<char>(is),
-                                 (std::istreambuf_iterator<char>()));
+                std::istreambuf_iterator<char> eos;
+                std::string contents(std::istreambuf_iterator<char>(is),
+                                     (std::istreambuf_iterator<char>()));
 
-            SDL_RWops* ops = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-            SDL_Surface* surface = IMG_Load_RW(ops, 0);
-            return after(surface);
+                SDL_RWops* ops = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+                SDL_Surface* surface = IMG_Load_RW(ops, 0);
+                resources[name] = after(surface);
+            }
+            return resources[name];
         }
+        
+        SDL_Texture* from_surface(const std::string& name,
+                SDL_Surface* surface) {
+            resources[name] = after(surface);
+            return resources[name];
+        }
+
+        SDL_Texture* get(const std::string& name) {
+            if(resources.count(name) == 0) throw std::out_of_range(name);
+            return resources[name];
+        }
+
         delegate<SDL_Texture*(SDL_Surface*)> after;
     };
 

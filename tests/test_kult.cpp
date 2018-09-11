@@ -1,100 +1,120 @@
 #undef KULT_BUILD_TESTS
 #include <kult.hpp>
-#include <nlohmann/json.hpp>
+
 #include <Box2D/Box2D.h>
+#if 1
+
+#include <nlohmann/json.hpp>
 #include <SDL.h>
 #include <core/circular_array.hpp>
 #include <util/logstream.hpp>
+#include <engine/assets.hpp>
+#include <engine/application.hpp>
+#include <engine/applet.hpp>
+#include <gfx/SDL_ColorEXT.hpp>
+#include <gfx/SDL_RendererEXT.hpp>
+
+#include "vec2.h"
+#include "Box2DEXT.hpp"
+#include "terrain.hpp"
 
 using namespace wee;
 
-#ifndef PTM_RATIO
-#define PTM_RATIO   (40.f)
-#endif
-
-#define WORLD_TO_SCREEN(x)  ((x) * (PTM_RATIO))
-#define SCREEN_TO_WORLD(x)  ((x) / (PTM_RATIO))
 
 using nlohmann::json;
 using kult::entity;
 
-struct vec2 {
-    float x, y;
-
-    vec2 operator - (const vec2& other) const {
-        vec2 copy(*this);
-        copy -= other;
-        return copy;
-    }
-
-    vec2& operator -= (const vec2& other) {
-        x -= other.x;
-        y -= other.y;
-        return *this;
-    }
-
-    static vec2 from_angle(float rad) {
-        return { std::cos(rad), std::sin(rad) };
-    }
-
-    static float to_angle(const vec2& a) {
-        return std::atan2(a.x, -a.y);
-    }
-
-    static float dot(const vec2& a, const vec2& b) {
-        return a.x * b.x + a.y * b.y;
-    }
-
-    static float length(const vec2& a) {
-        return std::sqrt(dot(a, a));
-    }
-
-    static vec2 normalize(const vec2& a) {
-        float len_r = 1.0f / length(a);
-        return { a.x * len_r, a.y * len_r };
-    }
-
-    static vec2 normal_of(const vec2& a) { // normal is to the left of direction
-        vec2 n = normalize(a);
-        return { -n.y, n.x };
-    }
-};
-
-std::ostream& operator << (std::ostream& os, const vec2& vec) {
-    return os << vec.x << ", " << vec.y;
-}
-
-std::ostream& operator << (std::ostream& os, const b2Transform& tx) {
-    return os << tx.p.x << ", " << tx.p.y;
+float sigmoid(float x, float k) {
+    return (x - x * k) / (k - std::abs(x) * 2 * k + 1);
 }
 
 typedef struct {
-    b2Body* body_;
+    b2Fixture* fixture;
+    std::function<void(kult::type, kult::type, const vec2&)>enter;
+    std::function<void(kult::type, kult::type, const vec2&)> leave;
+} collider_t;
+
+std::ostream& operator << (std::ostream& os, const collider_t& c) {
+    return os;
+}
+
+
+typedef struct {
+    b2Body* body;
 } rigidbody_t;
 
 std::ostream& operator << (std::ostream& os, const rigidbody_t& rb) {
-    return os << rb.body_;
+    return os << rb.body;
 }
 
 typedef struct {
-    b2Fixture* fixture_;
-    std::function<void(entity*, entity*)> enter;
-    std::function<void(entity*, entity*)> leave;
-} collider_t;
+    vec2 p;
+    float t;
+} transform_t;
 
-
-std::ostream& operator << (std::ostream& os, const collider_t& c) {
-    return os << c.fixture_;
+std::ostream& operator << (std::ostream& os, const transform_t& tx) {
+    return os;
 }
 
-kult::component<1 << 0, rigidbody_t> rigidbody;
-kult::component<1 << 1, collider_t> collider;
+typedef struct {
+    kult::type parent;
+} nested_t;
+
+std::ostream& operator << (std::ostream& os, const nested_t& tx) {
+    return os;
+}
+
+typedef struct {
+    SDL_Texture* tex;
+    SDL_Rect     src;
+    SDL_Rect     dst;
+    SDL_Color    color;
+} visual_t;
+
+std::ostream& operator << (std::ostream& os, const visual_t& tx) {
+    return os;
+}
+
+typedef struct {
+    float* dst;
+    std::function<float(float, float, float)> easing;
+} tween_t;
+
+typedef struct {
+    int time;
+    int timeout;
+} timeout_t;
+
+
+using collider  = kult::component<1 << 0, collider_t>;
+using rigidbody = kult::component<1 << 1, rigidbody_t>;
+using nested    = kult::component<1 << 2, nested_t>;
+using transform = kult::component<1 << 3, transform_t>;
+using visual    = kult::component<1 << 4, visual_t>;
 
 
 class collisions : public b2ContactListener {
 public:
     collisions() {}
-    virtual void BeginContact(b2Contact*) {
+    virtual void BeginContact(b2Contact* contact) {
+
+        const b2Fixture* fA = contact->GetFixtureA();
+        const b2Fixture* fB = contact->GetFixtureB();
+        
+        auto objA = (kult::type)fA->GetUserData(); 
+        auto objB = (kult::type)fB->GetUserData();
+
+        b2WorldManifold man;
+        contact->GetWorldManifold(&man);
+        if(kult::has<collider>(objA)) {
+            kult::get<collider>(objA).enter(objA, objB, {man.normal.x, man.normal.y});
+        }
+        
+        if(kult::has<collider>(objB)) {
+            kult::get<collider>(objB).enter(objB, objA, {man.normal.x, man.normal.y});
+        }
+        
+        
     }
     virtual void EndContact(b2Contact*) {
     }
@@ -102,183 +122,162 @@ public:
 
 enum class collision_filter : uint16_t {
     environment = 1 << 0,
+    player = 1 << 1,
+    collectable = 1 << 2,
     any = 0xffff
 };
 
 
-float randf(float scale_) {
-    return scale_ * (static_cast<float>(rand()) / RAND_MAX);
-}
+struct terrain_chunk {
 
-
-void fractal(const vec2& v0, const vec2& v1, std::vector<vec2>& res) {
-    vec2 d = vec2::normalize(v1 - v0);
-    float len = vec2::length(v1 - v0);
-    float slen = len / res.size();
-
-
-    for(size_t i=0; i < res.size(); i++) {
-        float m = slen * i;
-        auto& vec = res[i];
-        vec.x = v0.x + d.x * m;
-        vec.y = v0.y + d.y * m;
-    }
-
-    for(size_t i=0; i < res.size() - 1; i++) {
-        auto& a = res[i];
-        auto& b = res[i + 1];
-
-        vec2 n = vec2::normal_of(b - a);
-        a.x += n.x * randf(slen);
-        a.y += n.y * randf(slen);
-    }
-    res.front() = v0;
-    res.back()  = v1;
-}
-
-void sloped(float angle, float len, std::vector<vec2>& res) {
-    
-    float slen = len / res.size();
-
-    for(size_t i=0; i < res.size(); i++) {
-        vec2& vec = res[i];
-        vec.x = SCREEN_TO_WORLD(i * slen);
-        vec.y = SCREEN_TO_WORLD(std::sin(M_2_PI / slen * i)) * 10.0f;
-    }
-}
-
-//helper
-void fractal(float angle, std::vector<vec2>& res) {
-    return fractal({0.0f, 0.0f}, vec2::from_angle(angle), res);
-}
-
-struct terrain {
-
-    struct slice {
-        b2Fixture* fixture_;
-        b2EdgeShape shape_;
-    };
-
-    struct chunk {
-        b2Body* body_;
-        std::vector<slice> slices_;
-
-        static void random(chunk& ref, int) {
-            //float sliceWidth = (float)w / ref.slices_.size();
-
-            std::vector<vec2> r(ref.slices_.size());
-#ifdef FRACTAL_TERRAIN
-            vec2 start = { 0, 0 };
-            vec2 end = { 10, 2 };
-            fractal(start, end, r);
-#else
-            sloped(0.0f, 128.0f, r);
-#endif
-
-            //DEBUG_VALUE_OF(r);
-
-            for(size_t i=0; i < ref.slices_.size() - 1; i++) {
-                auto& s = ref.slices_[i];
-
-
-                b2EdgeShape* edge = static_cast<b2EdgeShape*>(s.fixture_->GetShape());
-                edge->Set({r[i    ].x, r[i    ].y},
-                          {r[i + 1].x, r[i + 1].y});
-            }
-        }
-        static void from_json(const json&, chunk&);
-    };
-
-    std::vector<chunk> chunks_;
-
-    static void create(terrain& self, b2World* world, size_t n, size_t chunksize) {
-        self.chunks_.resize(n);
-        for(size_t i=0; i < n; i++) {
-            chunk& res = self.chunks_[i];
-            b2BodyDef info;
-            info.type = b2_staticBody;
-            info.position.Set(0.0f, 0.0f);
-            res.body_ = world->CreateBody(&info); 
-        }
-
+    static kult::type create(b2World* world, int nhills, int pixelStep, int w) {
         
-        for(auto it=self.chunks_.begin(); it != self.chunks_.end(); ++it) {
-            chunk& c = (*it);
-            c.slices_.resize(chunksize);
-            std::generate(c.slices_.begin(), c.slices_.end(), [c] (void) {
-                slice s;
-                b2FixtureDef info;
-                info.shape = &s.shape_;
-                s.fixture_ = c.body_->CreateFixture(&info);
-                return s;
-            });
-        }
-    }
+        intptr_t id = kult::entity();
 
-    static void init_random(terrain& self) {
-        for(auto& it : self.chunks_) {
-            chunk::random(it, 128);
+        std::vector<vec2> hill;
+        hills(nhills, pixelStep, w, hill);
+        
+        b2BodyDef info;
+        info.type = b2_staticBody;
+        info.position.Set(0.0f, 0.0f);
+        
+        kult::add<rigidbody>(id).body = world->CreateBody(&info);
+
+        for(size_t i=0; i < hill.size() - 1; i++) {
+
+            vec2 a_W = SCREEN_TO_WORLD(hill[i]);
+            vec2 b_W = SCREEN_TO_WORLD(hill[i + 1]);
+
+            b2EdgeShape shape;
+            shape.Set(
+                {a_W.x, a_W.y},
+                {b_W.x, b_W.y}
+            );
+            
+            b2FixtureDef info;
+            info.filter.categoryBits    = (uint16_t)collision_filter::environment;
+            info.filter.maskBits        = (uint16_t)collision_filter::player;
+            info.userData               = (void*)id;
+
+            info.shape = &shape;
+            kult::add<collider>(id).fixture = kult::get<rigidbody>(id).body->CreateFixture(&info);
+            kult::get<collider>(id).enter = [&](kult::type self, kult::type other, const vec2& n) {
+                //DEBUG_VALUE_OF(n);
+            };
         }
+        return id;
     }
 };
 
-#include <engine/application.hpp>
-#include <engine/applet.hpp>
-#include <gfx/SDL_ColorEXT.hpp>
-#include <gfx/SDL_RendererEXT.hpp>
+struct player {
+    static kult::type create(b2World* world, const vec2& at) {
+
+        kult::type self = kult::entity();
+        
+        {
+            b2BodyDef bd;
+            bd.type = b2_dynamicBody; 
+            kult::add<rigidbody>(self) = { world->CreateBody(&bd) };
+        }
+
+        kult::add<transform>(self) = {at, 0.0f};
+
+        {
+            b2CircleShape shape;
+            shape.m_p.Set(0.0f, 0.0f);
+            shape.m_radius = SCREEN_TO_WORLD(10.0f);
+            b2FixtureDef fd;
+            fd.filter.categoryBits = (uint16_t)collision_filter::player;
+            fd.filter.maskBits = (uint16_t)collision_filter::any;
+            fd.density = 1.0f;
+            fd.restitution = 0.0f;
+            fd.shape = &shape;
+            fd.userData = (void*)self;
+
+            kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
+            kult::get<collider>(self).enter = [&] (kult::type self, kult::type other, const vec2& n) {
+                //b2Body* body = kult::get<rigidbody>(self).body;
+                //b2Vec2 tangent = { -n.y, n.x };
+
+                //body->ApplyForce(tangent * 5.0f, body->GetWorldCenter(), true);
+            };
+        }
+        return self;
+    }
+
+    static void limit_velocity(kult::type _player) {
+        b2Vec2 vel = kult::get<rigidbody>(_player).body->GetLinearVelocity();
+        const float MIN_VELOCITY_X = 3.0f;
+        const float MAX_VELOCITY_X = 18.0f;
+        const float MIN_VELOCITY_Y = -40.0f;
+        const float MAX_VELOCITY_Y = 8.0f;
+        vel.x = std::max(std::min(vel.x, MAX_VELOCITY_X), MIN_VELOCITY_X);
+        vel.y = std::max(std::min(vel.y, MAX_VELOCITY_Y), MIN_VELOCITY_Y);
+        kult::get<rigidbody>(_player).body->SetLinearVelocity(vel);
+    }
+};
 
 using namespace wee;
 
-void b2DebugDraw(b2World* world, SDL_Renderer* renderer, const SDL_Rect& camera, float zoom) {
-
-    int cx = camera.x + (camera.w >> 1);
-    int cy = camera.y + (camera.h >> 1);
-
-    for(b2Body* body = world->GetBodyList(); body; body = body->GetNext()) {
-        for(b2Fixture* fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
-            b2Shape::Type shapeType = fixture->GetType();
-
-            if ( shapeType == b2Shape::e_circle ){
-                b2CircleShape* circleShape = (b2CircleShape*)fixture->GetShape();
-            } else if ( shapeType == b2Shape::e_polygon ) {
-                b2PolygonShape* polygonShape = (b2PolygonShape*)fixture->GetShape();
-            } else if(shapeType == b2Shape::e_edge) {
-                b2EdgeShape* edgeShape = static_cast<b2EdgeShape*>(fixture->GetShape());
-                const b2Vec2& a = WORLD_TO_SCREEN(edgeShape->m_vertex1);
-                const b2Vec2& b = WORLD_TO_SCREEN(edgeShape->m_vertex2);
-
-                SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::IndianRed);
-
-                SDL_RenderDrawLine(renderer, 
-                    cx + (int)(a.x + 0.5f), 
-                    cy + (int)(a.y + 0.5f), 
-                    cx + (int)(b.x + 0.5f), 
-                    cy + (int)(b.y + 0.5f)
-                );
-            }
-        }
+auto copy_transform_to_physics = [] () {
+    for(auto& e : kult::join<transform, rigidbody>()) {
+        const vec2& p = kult::get<transform>(e).p;
+        float r = kult::get<transform>(e).t;
+        kult::get<rigidbody>(e).body->SetTransform({ 
+                SCREEN_TO_WORLD(p.x), 
+                SCREEN_TO_WORLD(p.y) 
+            }, r
+        );
     }
-}
+};
+
+auto copy_physics_to_transform = [] () {
+    for(auto& e : kult::join<transform, rigidbody>()) {
+        const b2Transform b2t = kult::get<rigidbody>(e).body->GetTransform();
+        const b2Vec2& vec = b2t.p;
+        
+        kult::get<transform>(e).p.x = WORLD_TO_SCREEN(vec.x);
+        kult::get<transform>(e).p.y = WORLD_TO_SCREEN(vec.y);
+        kult::get<transform>(e).t   = kult::get<rigidbody>(e).body->GetAngle();
+    }
+};
 
 struct game : applet {
     SDL_Rect camera_;
     float zoom_;
     b2World* world_;
-    terrain t_;
+    kult::type _player;
+    kult::type _chunks[128];
+
+    circular_array<kult::type> _active_chunks;
 
     virtual int load_content() { 
         world_ = new b2World({0.0f, 9.8f});
+
         world_->SetContactListener(new collisions);
-        terrain::create(t_, world_, 10, 32);
-        terrain::init_random(t_);
+
+        _player = player::create(world_, { 320.0f, -100 });
+        for(int i=0; i < 128; i++) {
+            _chunks[i] = terrain_chunk::create(world_, 2, 10, 640);
+        }
+            
 
         camera_ = {
-            0, 0, 0, 0
+            320, 240, 0, 0
         };
         return 0; 
     }
-    virtual int update(int) { 
-        
+    virtual int update(int dt) { 
+        copy_transform_to_physics();
+        world_->Step(1.0f / dt, 8, 3, 4);
+        copy_physics_to_transform();
+
+        const transform_t& tx = kult::get<transform>(_player);
+        camera_.x = tx.p.x;
+        camera_.y = tx.p.y;
+
+        player::limit_velocity(_player);
+
         return 0; 
     }
     virtual int draw(SDL_Renderer* renderer) { 
@@ -290,7 +289,8 @@ struct game : applet {
             SDL_RenderClear(renderer);
 
 
-            b2DebugDraw(world_, renderer, camera_, zoom_);
+            b2DebugDrawEXT(world_, renderer, camera_);
+
 
             SDL_RenderPresent(renderer);
         }
@@ -310,3 +310,10 @@ int main(int, char* []) {
     }*/
     return app.start();
 }
+
+#else
+
+
+
+
+#endif
