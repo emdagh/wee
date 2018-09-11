@@ -130,6 +130,10 @@ enum class collision_filter : uint16_t {
 
 struct terrain_chunk {
 
+    static void reset(kult::type id) {
+        std::vector<vec2> vertices;
+    }
+
     static kult::type create(b2World* world, int nhills, int pixelStep, int w) {
         
         intptr_t id = kult::entity();
