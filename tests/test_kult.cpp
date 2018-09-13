@@ -145,6 +145,43 @@ enum class collision_filter : uint16_t {
 #define HILLS_VERTEX_COUNT      HILLS_PER_CHUNK * HILLS_WIDTH / HILLS_PIXELSTEP
 
 
+struct terrain_chunk {
+    static kult::type create(b2World* world) {
+        kult::type self = kult::entity();
+
+        {
+            b2BodyDef bd;
+            bd.type = b2_staticBody;
+            kult::add<rigidbody>(self).body = world->CreateBody(&bd);
+        }
+
+        {
+            b2ChainShape shape;
+            b2FixtureDef fd;
+            fd.shape =  &shape;
+            kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
+        }
+
+        kult::add<terrain>(self);
+    }
+
+    static void reset(kult::type self, const vec2& startPosition) {
+
+        static const int n = 10;
+        static const vec2 step = {10.0f, 0.0f};
+
+        std::vector<b2Vec2> vertices;
+
+        for(int i=0; i < n; i++) {
+            vec2 pos = startPosition + i * step;
+            vertices[i] = { SCREEN_TO_WORLD(pos.x), SCREEN_TO_WORLD(pos.y) };
+            kult::get<terrain>(self).last = pos;
+        }
+
+        b2ChainShape* shape = dynamic_cast<b2ChainShape*>(kult::get<collider>(self).fixture->GetShape());
+        shape->CreateChain(&vertices[0], n);
+    }
+};
 
 struct player {
     static kult::type create(b2World* world, const vec2& at) {
@@ -164,8 +201,8 @@ struct player {
             shape.m_p.Set(0.0f, 0.0f);
             shape.m_radius = SCREEN_TO_WORLD(10.0f);
             b2FixtureDef fd;
-            fd.filter.categoryBits = (uint16_t)collision_filter::player;
-            fd.filter.maskBits = (uint16_t)collision_filter::any;
+            //fd.filter.categoryBits = (uint16_t)collision_filter::player;
+            //fd.filter.maskBits = (uint16_t)collision_filter::any;
             fd.density = 1.0f;
             fd.restitution = 0.0f;
             fd.shape = &shape;
