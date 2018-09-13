@@ -2,7 +2,8 @@
 #include <kult.hpp>
 
 #include <Box2D/Box2D.h>
-#if 1
+
+#define DEFAULT_COLLIDER_CALLBACK [] (kult::type, kult::type, const vec2&) {}
 
 #include <nlohmann/json.hpp>
 #include <SDL.h>
@@ -20,7 +21,6 @@
 
 using namespace wee;
 
-
 using nlohmann::json;
 using kult::entity;
 
@@ -29,15 +29,14 @@ float sigmoid(float x, float k) {
 }
 
 typedef struct {
-    b2Fixture* fixture;
-    std::function<void(kult::type, kult::type, const vec2&)>enter;
-    std::function<void(kult::type, kult::type, const vec2&)> leave;
-} collider_t;
+    b2Fixture* fixture = NULL;
+    std::function<void(kult::type, kult::type, const vec2&)> enter = DEFAULT_COLLIDER_CALLBACK;
+    std::function<void(kult::type, kult::type, const vec2&)> leave = DEFAULT_COLLIDER_CALLBACK;
+} collider_t; 
 
 std::ostream& operator << (std::ostream& os, const collider_t& c) {
     return os;
 }
-
 
 typedef struct {
     b2Body* body;
@@ -58,6 +57,7 @@ std::ostream& operator << (std::ostream& os, const transform_t& tx) {
 
 typedef struct {
     kult::type parent;
+    vec2 offset;
 } nested_t;
 
 std::ostream& operator << (std::ostream& os, const nested_t& tx) {
@@ -85,12 +85,23 @@ typedef struct {
     int timeout;
 } timeout_t;
 
+typedef struct {
+    //vec2 last;
+    //float max_x;
+    //float len;
+} terrain_t;
+
+std::ostream& operator << (std::ostream& os, const terrain_t& t) {
+    return os;
+}
+
 
 using collider  = kult::component<1 << 0, collider_t>;
 using rigidbody = kult::component<1 << 1, rigidbody_t>;
 using nested    = kult::component<1 << 2, nested_t>;
 using transform = kult::component<1 << 3, transform_t>;
 using visual    = kult::component<1 << 4, visual_t>;
+using terrain   = kult::component<1 << 5, terrain_t>;
 
 
 class collisions : public b2ContactListener {
@@ -128,50 +139,12 @@ enum class collision_filter : uint16_t {
 };
 
 
-struct terrain_chunk {
+#define HILLS_PER_CHUNK         2
+#define HILLS_PIXELSTEP         10
+#define HILLS_WIDTH             640
+#define HILLS_VERTEX_COUNT      HILLS_PER_CHUNK * HILLS_WIDTH / HILLS_PIXELSTEP
 
-    static void reset(kult::type id) {
-        std::vector<vec2> vertices;
-    }
 
-    static kult::type create(b2World* world, int nhills, int pixelStep, int w) {
-        
-        intptr_t id = kult::entity();
-
-        std::vector<vec2> hill;
-        hills(nhills, pixelStep, w, hill);
-        
-        b2BodyDef info;
-        info.type = b2_staticBody;
-        info.position.Set(0.0f, 0.0f);
-        
-        kult::add<rigidbody>(id).body = world->CreateBody(&info);
-
-        for(size_t i=0; i < hill.size() - 1; i++) {
-
-            vec2 a_W = SCREEN_TO_WORLD(hill[i]);
-            vec2 b_W = SCREEN_TO_WORLD(hill[i + 1]);
-
-            b2EdgeShape shape;
-            shape.Set(
-                {a_W.x, a_W.y},
-                {b_W.x, b_W.y}
-            );
-            
-            b2FixtureDef info;
-            info.filter.categoryBits    = (uint16_t)collision_filter::environment;
-            info.filter.maskBits        = (uint16_t)collision_filter::player;
-            info.userData               = (void*)id;
-
-            info.shape = &shape;
-            kult::add<collider>(id).fixture = kult::get<rigidbody>(id).body->CreateFixture(&info);
-            kult::get<collider>(id).enter = [&](kult::type self, kult::type other, const vec2& n) {
-                //DEBUG_VALUE_OF(n);
-            };
-        }
-        return id;
-    }
-};
 
 struct player {
     static kult::type create(b2World* world, const vec2& at) {
@@ -199,12 +172,8 @@ struct player {
             fd.userData = (void*)self;
 
             kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
-            kult::get<collider>(self).enter = [&] (kult::type self, kult::type other, const vec2& n) {
-                //b2Body* body = kult::get<rigidbody>(self).body;
-                //b2Vec2 tangent = { -n.y, n.x };
-
-                //body->ApplyForce(tangent * 5.0f, body->GetWorldCenter(), true);
-            };
+            kult::get<collider>(self).enter = DEFAULT_COLLIDER_CALLBACK;
+            
         }
         return self;
     }
@@ -246,12 +215,14 @@ auto copy_physics_to_transform = [] () {
     }
 };
 
+#define MAX_CHUNKS  3
+
 struct game : applet {
     SDL_Rect camera_;
     float zoom_;
     b2World* world_;
     kult::type _player;
-    kult::type _chunks[128];
+    kult::type _chunks[MAX_CHUNKS];
 
     circular_array<kult::type> _active_chunks;
 
@@ -261,19 +232,17 @@ struct game : applet {
         world_->SetContactListener(new collisions);
 
         _player = player::create(world_, { 320.0f, -100 });
-        for(int i=0; i < 128; i++) {
-            _chunks[i] = terrain_chunk::create(world_, 2, 10, 640);
-        }
-            
+
+
 
         camera_ = {
-            320, 240, 0, 0
+            0, 240, 0, 0
         };
         return 0; 
     }
     virtual int update(int dt) { 
         copy_transform_to_physics();
-        world_->Step(1.0f / dt, 8, 3, 4);
+        world_->Step(1.0f / 60.0f, 6, 3);
         copy_physics_to_transform();
 
         const transform_t& tx = kult::get<transform>(_player);
@@ -315,9 +284,3 @@ int main(int, char* []) {
     return app.start();
 }
 
-#else
-
-
-
-
-#endif

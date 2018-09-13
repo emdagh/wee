@@ -12,6 +12,9 @@ void b2DebugDrawEXT(b2World* world, SDL_Renderer* renderer, const SDL_Rect& came
     int cy = -camera.y + (camera.h >> 1);
 
     for(b2Body* body = world->GetBodyList(); body; body = body->GetNext()) {
+        if(!body->IsActive()) {
+            continue;
+        }
         for(b2Fixture* fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
             b2Shape::Type shapeType = fixture->GetType();
 
@@ -26,6 +29,22 @@ void b2DebugDrawEXT(b2World* world, SDL_Renderer* renderer, const SDL_Rect& came
                         radius
                 );
 
+            } else if ( shapeType == b2Shape::e_chain ) {
+                b2ChainShape* chainShape = (b2ChainShape*)fixture->GetShape();
+
+                for(int i=0; i < chainShape->m_count - 1; i++) {
+                    const b2Vec2& a = WORLD_TO_SCREEN(chainShape->m_vertices[i]);
+                    const b2Vec2& b = WORLD_TO_SCREEN(chainShape->m_vertices[i + 1]);
+                    SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
+
+                    SDL_RenderDrawLine(renderer, 
+                        cx + (int)(a.x + 0.5f), 
+                        cy + (int)(a.y + 0.5f), 
+                        cx + (int)(b.x + 0.5f), 
+                        cy + (int)(b.y + 0.5f)
+                    );
+
+                }
             } else if ( shapeType == b2Shape::e_polygon ) {
                 b2PolygonShape* polygonShape = (b2PolygonShape*)fixture->GetShape();
             } else if(shapeType == b2Shape::e_edge) {

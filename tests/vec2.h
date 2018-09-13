@@ -5,6 +5,17 @@
 struct vec2 {
     float x, y;
 
+    vec2 operator + (const vec2& other) const {
+        vec2 copy(*this);
+        copy += other;
+        return copy;
+    }
+
+    vec2& operator += (const vec2& other) {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
     vec2 operator - (const vec2& other) const {
         vec2 copy(*this);
         copy -= other;
