@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wee/wee.hpp>
 #include <core/singleton.hpp>
 #include <iosfwd>
 #include <map>
@@ -21,20 +22,14 @@ namespace wee {
 
     
 
-    struct not_implemented : std::exception {
-    };
 
     std::string get_resource_path(const std::string&);
 
     template <typename T>
     struct assets : singleton<assets<T> > {
- 
         T* load(const std::string&, std::istream&) { 
             throw not_implemented();
         }
-
-
-
     };
 
     template <>

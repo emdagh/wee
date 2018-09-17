@@ -6,6 +6,7 @@
 #include <engine/gui/layout.hpp>
 #include <util/logstream.hpp>
 #include <SDL.h>
+#include <SDL_ttf.h>
 
 #define GEN_ID  __LINE__
 
@@ -50,7 +51,7 @@ namespace imgui {
             (uistate.mousex >= r.x) && 
             (uistate.mousex < r.x + r.w) &&
             (uistate.mousey >= r.y) &&
-            (uistate.mousey < r.h + r.h);
+            (uistate.mousey < r.y + r.h);
     }
 
     int _before(int id, const SDL_Rect& r) {
@@ -103,30 +104,20 @@ namespace imgui {
         uistate._draw(id, r);
         
         int w = std::min(r.w, r.h) >> 1;
-        SDL_Rect grip = { 0, 0, w, w };
+        SDL_Rect grip;
 
         if(horizontal) {
-            grip = {
-                r.x + static_cast<int>((r.w - r.h) * val_n),
-                r.y,
-                r.h, 
-                r.h
-            };
+            grip = { r.x + static_cast<int>((r.w - r.h) * val_n), r.y, r.h, r.h };
         } else {
-            grip = {
-                r.x,
-                (r.y + r.h) - r.w - static_cast<int>((r.h - r.w) * val_n),
-                r.w, 
-                r.w
-            };
+            grip = { r.x, (r.y + r.h) - r.w - static_cast<int>((r.h - r.w) * val_n), r.w, r.w };
         }
 
         _after(id, r);
 
-        if(uistate.active || uistate.hot) {
+        if(uistate.active == id || uistate.hot == id) {
             uistate._draw_active(id, grip);
         } else {
-            uistate._draw(id, grip);
+            uistate._draw_hot(id, grip);
         }
 
         if(uistate.active == id) {
@@ -136,6 +127,9 @@ namespace imgui {
                 *value = mouse_rel / (r.w - grip.w) * value_max;
                 return 1;
             } else {
+                float mouse_rel = uistate.mousey - (r.y + grip.h / 2);
+                mouse_rel = std::max(0.f, std::min(mouse_rel, (float)r.h - grip.h));
+                *value = value_max - mouse_rel / (r.h - grip.h) * value_max;
                 return 1;
             }
         }
@@ -147,17 +141,35 @@ namespace imgui {
 
 using namespace wee;
 
+SDL_Rect SDL_GrowRect(const SDL_Rect& r, int s) {
+    SDL_Rect res;
+    res.x = r.x - (s >> 1);
+    res.y = r.y - (s >> 1);
+    res.w = r.w + s;// + (s >> 1);
+    res.h = r.h + s;// + (s >> 1);
+    return res;
+}
+
 struct game : applet {
     std::vector<SDL_Rect*> _rects;
     border_layout _layout;
     SDL_Renderer* _renderer;
+    float _value;
     
     void set_callbacks(application* app) {
         app->on_mousemove += [&] (int x, int y) {
-            DEBUG_LOG("mouse={},{}", x, y);
+            imgui::uistate.mousex = x;
+            imgui::uistate.mousey = y;
             return 0;
         };
-
+        app->on_mousedown += [&] (uint16_t btn) {
+            imgui::uistate.mousedown = 1;
+            return 0;
+        };
+        app->on_mouseup += [&] (uint16_t btn) {
+            imgui::uistate.mousedown = 0;
+            return 0;
+        };
     }
 
     virtual int load_content() {
@@ -169,23 +181,31 @@ struct game : applet {
             _layout.add(r, (border_layout::location)i);
         }
         _layout.apply({0, 0, 640, 480});
+        _value = 0.0f;
     } 
-    virtual int update(int) {
 
+    virtual int update(int) {
     }
+
     virtual int draw(SDL_Renderer* renderer) {
         if(!_renderer) {
             _renderer = renderer;
             imgui::uistate._draw = [&] (int, const SDL_Rect& r) {
-                SDL_RenderDrawRect(_renderer, &r);
+                SDL_SetRenderDrawColorEXT(_renderer, SDL_ColorPresetEXT::DarkGrey);
+                SDL_RenderFillRect(_renderer, &r);
             };
             imgui::uistate._draw_hot = [&] (int, const SDL_Rect& r) {
-                SDL_RenderDrawRect(_renderer, &r);
+                auto rbig = SDL_GrowRect(r, -6);
+                SDL_SetRenderDrawColorEXT(_renderer, SDL_ColorPresetEXT::IndianRed);
+                SDL_RenderDrawRect(_renderer, &rbig);
             };
             imgui::uistate._draw_active = [&] (int, const SDL_Rect& r) {
-                SDL_RenderDrawRect(_renderer, &r);
+                auto rbig = SDL_GrowRect(r, 2);
+                SDL_SetRenderDrawColorEXT(_renderer, SDL_ColorPresetEXT::GreenYellow);
+                SDL_RenderDrawRect(_renderer, &rbig);
             };
             imgui::uistate._draw_hot_and_active = [&] (int, const SDL_Rect& r) {
+                SDL_SetRenderDrawColorEXT(_renderer, SDL_ColorPresetEXT::Fuchsia);
                 SDL_RenderDrawRect(_renderer, &r);
             };
         }
@@ -200,7 +220,8 @@ struct game : applet {
         }
 
         imgui::prepare();
-        imgui::button(GEN_ID, { 0, 0, 64, 32 });
+        imgui::button(GEN_ID, { 128, 128, 64, 32 });
+        imgui::slider(GEN_ID, { 256, 128, 16, 128}, 100.0f, &_value, false);
 
         SDL_RenderPresent(renderer);
     }

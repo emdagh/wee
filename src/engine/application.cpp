@@ -33,13 +33,22 @@ application::application(applet* a)
         application* self = static_cast<application*>(SDL_GetApplicationUserData(app));
         self->on_mousemove(event->x, event->y);
         return 0;
+    });
 
+    SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_MOUSEBUTTON, [&] (const SDL_Application* app, const void* userdata) {
+        const SDL_MouseButtonEvent* event = static_cast<const SDL_MouseButtonEvent*>(userdata);
+        application* self = static_cast<application*>(SDL_GetApplicationUserData(app));
+        if(event->type == SDL_MOUSEBUTTONDOWN) {
+            self->on_mousedown(event->button);
+        } else if(event->type == SDL_MOUSEBUTTONUP) {
+            self->on_mouseup(event->button);
+        }
+        return 0;
     });
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_UPDATE, [&] (const SDL_Application* app, const void* userdata) {
         application* _ = static_cast<application*>(SDL_GetApplicationUserData(app));
         return _->_applet->update(*(static_cast<const int*>(userdata)));
-        //return 0;
     });
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_RENDER, [&] (const SDL_Application* app, const void* ) {

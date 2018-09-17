@@ -2,6 +2,7 @@
 
 #include <wee/wee.hpp>
 #include <SDL.h>
+#include <vector>
 
 namespace wee {
 
@@ -15,6 +16,75 @@ namespace wee {
          * a parent rect
          */
         virtual void apply(const SDL_Rect&) = 0;
+    };
+
+    struct flow_layout : layout {
+        enum alignment {
+            CENTER,
+            LEFT,
+            RIGHT,
+            ALIGNMENT_MAX
+        };
+
+        alignment _a;
+        std::vector<SDL_Rect*> _r;
+
+
+        virtual void add(SDL_Rect* r) {
+            _r.push_back(r);
+        }
+
+        virtual void apply(const SDL_Rect& parent) {
+            int y = parent.y;
+
+            std::vector<SDL_Rect*> row;
+            SDL_Point rowdim = { 0, 0 };
+
+            for(auto* r : _r) {
+                row.push_back(r);
+                rowdim.y = std::max(rowdim.y, r->h);
+                rowdim.x += r->w;
+
+                if(rowdim.x > parent.w) {
+                    align(row, y, rowdim, parent);
+                    row.clear();
+
+                    y += rowdim.y;
+                    rowdim.x = rowdim.y = 0;
+                }
+            }
+            align(row, y, rowdim, parent);
+        }
+
+        void align(const std::vector<SDL_Rect*>& row,
+                int y, 
+                const SDL_Point& rowdim,
+                const SDL_Rect& parent) {
+            SDL_Point location = {
+                0, 0
+            };
+
+            switch(_a) {
+                case alignment::CENTER:
+                    location.x = (parent.x - rowdim.x) / 2;
+                    break;
+                case alignment::LEFT:
+                    location.x = 0;
+                    break;
+                case alignment::RIGHT:
+                    location.x = (parent.x - rowdim.x);
+                    break;
+                default:
+                    break;
+            }
+
+            for(auto* i : row) {
+                location.y = y + (parent.y / 2) - (i->h / 2);
+                i->x = location.x;
+                i->y = location.y;
+                location.x += i->w;
+            }
+        }
     };
 
     struct border_layout : layout {
@@ -49,6 +119,10 @@ namespace wee {
             r->y = y;
             r->w = w;
             r->h = h;
+        }
+
+        const SDL_Rect* get(const location ix) {
+            return _r[ix];
         }
 
         virtual void apply(const SDL_Rect& parent) {
@@ -94,4 +168,6 @@ namespace wee {
             }
         }
     };
+
+
 }

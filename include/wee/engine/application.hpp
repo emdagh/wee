@@ -22,8 +22,8 @@ namespace wee {
         event_handler<int(uint16_t)> on_keypress;
         event_handler<int(uint16_t)> on_keyrelease;
 
-        event_handler<int(uint16_t)> on_mousepress;
-        event_handler<int(uint16_t)> on_mouserelease;
+        event_handler<int(uint8_t)> on_mousedown;
+        event_handler<int(uint8_t)> on_mouseup;
         event_handler<int(int, int)> on_mousemove;
     };
 
