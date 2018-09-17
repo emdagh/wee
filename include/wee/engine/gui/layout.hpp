@@ -21,12 +21,14 @@ namespace wee {
     struct flow_layout : layout {
         enum alignment {
             CENTER,
+            LEADING,
             LEFT,
             RIGHT,
+            TRAILING,
             ALIGNMENT_MAX
         };
 
-        alignment _a;
+        alignment _a = alignment::CENTER;
         std::vector<SDL_Rect*> _r;
 
 
@@ -90,10 +92,10 @@ namespace wee {
     struct border_layout : layout {
 
         enum location{
-            NORTH,
-            EAST,
-            SOUTH,
-            WEST,
+            PAGE_START,
+            LINE_END,
+            PAGE_END,
+            LINE_START,
             CENTER,
             MAX_LOCATION
         };

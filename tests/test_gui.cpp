@@ -136,7 +136,9 @@ namespace imgui {
         return 0;
 
     }
-    int textfield();
+    int textfield(int id, const SDL_Rect& rc);
+
+    int graph(int id, const SDL_Rect& rc);
 }
 
 using namespace wee;
@@ -150,11 +152,26 @@ SDL_Rect SDL_GrowRect(const SDL_Rect& r, int s) {
     return res;
 }
 
+
 struct game : applet {
     std::vector<SDL_Rect*> _rects;
-    border_layout _layout;
+    border_layout _borderlayout;
+    flow_layout _flowlayout;
     SDL_Renderer* _renderer;
     float _value;
+
+    SDL_Rect* _create_rect(int x, int y, int w, int h) {
+        SDL_Rect* rc = new SDL_Rect;
+        rc->x = x;
+        rc->y = y;
+        rc->w = w;
+        rc->h = h;
+        _rects.push_back(rc);
+        return rc;
+    }
+
+    void _debug_rects(SDL_Renderer* renderer) {
+    }
     
     void set_callbacks(application* app) {
         app->on_mousemove += [&] (int x, int y) {
@@ -178,9 +195,11 @@ struct game : applet {
             r->w = 128;
             r->h = 64;
             _rects.push_back(r);
-            _layout.add(r, (border_layout::location)i);
+            _borderlayout.add(r, (border_layout::location)i);
         }
-        _layout.apply({0, 0, 640, 480});
+        _borderlayout.apply({0, 0, 640, 480});
+
+
         _value = 0.0f;
     } 
 

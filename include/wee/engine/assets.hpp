@@ -68,10 +68,6 @@ namespace wee {
         delegate<SDL_Texture*(SDL_Surface*)> after;
     };
 
-    struct file_not_found : public std::runtime_error {
-        explicit file_not_found(const std::string& what) : std::runtime_error("file not found: " + what) {
-        }
-    };
 
     namespace asset_helper {
         template <typename T>

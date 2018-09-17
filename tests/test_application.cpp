@@ -1,3 +1,4 @@
+#include <wee/wee.hpp>
 #include <util/logstream.hpp>
 #include <base/SDL_Application.h>
 #include <gfx/SDL_ColorEXT.hpp>

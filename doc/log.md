@@ -1,6 +1,13 @@
 #Development diary
 
-##2018-09-17 (8hrs)
+##2018-09-17 (10hrs)
+finished up most of the prototype of the imgui for now. Buttons and sliders are in there; now I need to
+get some nice textures for it. Tomorrow I'll work on the gameplay of the Tiny Wings clone.
+
+Also, a couple more layouts would be nice to have, Java has some nice examples. FlowLayout, BorderLayout
+and GridLayout to name a few. Got to find a nice way to incorporate that into the imgui though.
+
+Now might be a good idea to look for a spline editor I can use to create level chunks. If it doesn't exist, I'll have to create one.
 
 ##2018-09-16 (4hrs)
 Started work on GUI (layout mostly)

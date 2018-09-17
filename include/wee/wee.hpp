@@ -14,4 +14,8 @@ namespace { // prevent cluttering of global namespace
         not_implemented() : std::logic_error("function or method not implemented") {
         }
     };
+
+    struct file_not_found : std::runtime_error {
+        file_not_found(const std::string& what) : std::runtime_error("file not found: " + what) {}
+    };
 }

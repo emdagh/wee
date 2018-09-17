@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-project(SDL2_ttf C)
+project(SDL_ttf C)
 
 include_directories(
     SDL2_ttf/external/freetype-2.4.12/include
@@ -14,87 +14,56 @@ file(GLOB SDL_TTF_SOURCES
     #SDL2_ttf/glfont.c
 )
 
+SET(FT2_BASE SDL2_ttf/external/freetype-2.4.12)
 FILE(GLOB SRC_FREETYPE
-    #SDL2_ttf/external/freetype-2.4.12/src/autofit/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afangles.c 
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afcjk.c    
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afdummy.c  
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afglobal.c 
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afhints.c  
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afindic.c  
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/aflatin.c  
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afloader.c 
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afmodule.c 
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afpic.c    
-    SDL2_ttf/external/freetype-2.4.12/src/autofit/afwarp.c
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftadvanc.c 
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftbitmap.c
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftcalc.c   
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftdbgmem.c 
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftgloadr.c
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftglyph.c
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftinit.c 
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftobjs.c   
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftoutln.c  
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftrfork.c  
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftsnames.c 
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftstroke.c
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftstream.c 
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftsystem.c
-    SDL2_ttf/external/freetype-2.4.12/src/base/fttrigon.c 
-    SDL2_ttf/external/freetype-2.4.12/src/base/ftutil.c
-    #SDL2_ttf/external/freetype-2.4.12/src/base/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/bdf/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/bzip2/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/cache/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/cff/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/cid/*.c
-    #SDL2_ttf/external/freetype-2.4.12/src/gxvalid/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvcommn.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvfeat.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvbsln.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvtrak.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvopbd.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvprop.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvjust.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmort.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmort0.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmort1.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmort2.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmort4.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmort5.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmorx.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmorx0.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmorx1.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmorx2.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmorx4.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmorx5.c 
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvlcar.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvkern.c  
-    SDL2_ttf/external/freetype-2.4.12/src/gxvalid/gxvmod.c
-    SDL2_ttf/external/freetype-2.4.12/src/gzip/ftgzip.c
-    SDL2_ttf/external/freetype-2.4.12/src/lzw/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/otvalid/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/pcf/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/pfr/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/psaux/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/pshinter/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/psnames/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/raster/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/sfnt/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/smooth/*.c
-    #SDL2_ttf/external/freetype-2.4.12/src/tools/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/truetype/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/type1/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/type42/*.c
-    SDL2_ttf/external/freetype-2.4.12/src/winfonts/*.c
+	${FT2_BASE}/src/autofit/autofit.c
+	${FT2_BASE}/src/base/ftbase.c
+	${FT2_BASE}/src/base/ftbbox.c
+	${FT2_BASE}/src/base/ftbdf.c
+	${FT2_BASE}/src/base/ftbitmap.c
+	${FT2_BASE}/src/base/ftcid.c
+	${FT2_BASE}/src/base/ftfntfmt.c
+	${FT2_BASE}/src/base/ftfstype.c
+	${FT2_BASE}/src/base/ftgasp.c
+	${FT2_BASE}/src/base/ftglyph.c
+	${FT2_BASE}/src/base/ftgxval.c
+	${FT2_BASE}/src/base/ftinit.c
+	${FT2_BASE}/src/base/ftlcdfil.c
+	${FT2_BASE}/src/base/ftmm.c
+	${FT2_BASE}/src/base/ftotval.c
+	${FT2_BASE}/src/base/ftpatent.c
+	${FT2_BASE}/src/base/ftpfr.c
+	${FT2_BASE}/src/base/ftstroke.c
+	${FT2_BASE}/src/base/ftsynth.c
+	${FT2_BASE}/src/base/ftsystem.c
+	${FT2_BASE}/src/base/fttype1.c
+	${FT2_BASE}/src/base/ftwinfnt.c
+	${FT2_BASE}/src/bdf/bdf.c
+	${FT2_BASE}/src/bzip2/ftbzip2.c
+	${FT2_BASE}/src/cache/ftcache.c
+	${FT2_BASE}/src/cff/cff.c
+	${FT2_BASE}/src/cid/type1cid.c
+	${FT2_BASE}/src/gzip/ftgzip.c
+	${FT2_BASE}/src/lzw/ftlzw.c
+	${FT2_BASE}/src/pcf/pcf.c
+	${FT2_BASE}/src/pfr/pfr.c
+	${FT2_BASE}/src/psaux/psaux.c
+	${FT2_BASE}/src/pshinter/pshinter.c
+	${FT2_BASE}/src/psnames/psnames.c
+	${FT2_BASE}/src/raster/raster.c
+	${FT2_BASE}/src/sfnt/sfnt.c
+	${FT2_BASE}/src/smooth/smooth.c
+	${FT2_BASE}/src/truetype/truetype.c
+	${FT2_BASE}/src/type1/type1.c
+	${FT2_BASE}/src/type42/type42.c
+	${FT2_BASE}/src/winfonts/winfnt.c
 )
 
 add_library(freetype2 ${SRC_FREETYPE})
-add_library(SDL2_ttf ${SDL_TTF_SOURCES})
+add_library(SDL_ttf ${SDL_TTF_SOURCES})
 
 if(IOS)
-    set_target_properties(SDL2_ttf PROPERTIES
+    set_target_properties(SDL_ttf PROPERTIES
         COMPILE_FLAGS ${SDL_COMPILE_FLAGS}
         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
         XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
@@ -106,4 +75,4 @@ if(IOS)
 #set_xcode_property (SDL2 IPHONEOS_DEPLOYMENT_TARGET "7.1")
 endif()
 
-target_link_libraries(SDL2_ttf freetype2)
+target_link_libraries(SDL_ttf freetype2)
