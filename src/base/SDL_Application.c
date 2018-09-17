@@ -155,6 +155,8 @@ struct SDL_Application* SDL_CreateApplication() {
     if(!res->renderer) 
         return NULL;
 
+    if(res->callback[SDL_APPLICATION_CALLBACK_CREATED]) 
+        res->callback[SDL_APPLICATION_CALLBACK_CREATED](res, NULL);
 
     return res;
 }

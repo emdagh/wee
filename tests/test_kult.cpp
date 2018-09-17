@@ -15,14 +15,29 @@
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 
-#include "vec2.h"
+#include <core/vec2.hpp>
 #include "Box2DEXT.hpp"
 #include "terrain.hpp"
 
-using namespace wee;
-
 using nlohmann::json;
 using kult::entity;
+
+namespace wee {
+    void to_json(json& j, const vec2& v) {
+        j = {
+            { "x" , v.x },
+            { "y" , v.y }
+        };
+    }
+
+    void from_json(const json& j, vec2& v) {
+        v.x = j["x"];
+        v.y = j["y"];
+    }
+}
+
+using namespace wee;
+
 
 float sigmoid(float x, float k) {
     return (x - x * k) / (k - std::abs(x) * 2 * k + 1);
@@ -86,15 +101,17 @@ typedef struct {
 } timeout_t;
 
 typedef struct {
-    //vec2 last;
-    //float max_x;
-    //float len;
+    vec2 last;
+    kult::type next;
 } terrain_t;
 
 std::ostream& operator << (std::ostream& os, const terrain_t& t) {
-    return os;
+    json j = {
+        {"last", t.last},
+        {"next", t.next}
+    };
+    return os << j;
 }
-
 
 using collider  = kult::component<1 << 0, collider_t>;
 using rigidbody = kult::component<1 << 1, rigidbody_t>;
@@ -143,45 +160,6 @@ enum class collision_filter : uint16_t {
 #define HILLS_PIXELSTEP         10
 #define HILLS_WIDTH             640
 #define HILLS_VERTEX_COUNT      HILLS_PER_CHUNK * HILLS_WIDTH / HILLS_PIXELSTEP
-
-
-struct terrain_chunk {
-    static kult::type create(b2World* world) {
-        kult::type self = kult::entity();
-
-        {
-            b2BodyDef bd;
-            bd.type = b2_staticBody;
-            kult::add<rigidbody>(self).body = world->CreateBody(&bd);
-        }
-
-        {
-            b2ChainShape shape;
-            b2FixtureDef fd;
-            fd.shape =  &shape;
-            kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
-        }
-
-        kult::add<terrain>(self);
-    }
-
-    static void reset(kult::type self, const vec2& startPosition) {
-
-        static const int n = 10;
-        static const vec2 step = {10.0f, 0.0f};
-
-        std::vector<b2Vec2> vertices;
-
-        for(int i=0; i < n; i++) {
-            vec2 pos = startPosition + i * step;
-            vertices[i] = { SCREEN_TO_WORLD(pos.x), SCREEN_TO_WORLD(pos.y) };
-            kult::get<terrain>(self).last = pos;
-        }
-
-        b2ChainShape* shape = dynamic_cast<b2ChainShape*>(kult::get<collider>(self).fixture->GetShape());
-        shape->CreateChain(&vertices[0], n);
-    }
-};
 
 struct player {
     static kult::type create(b2World* world, const vec2& at) {
@@ -254,30 +232,122 @@ auto copy_physics_to_transform = [] () {
 
 #define MAX_CHUNKS  3
 
+
+struct terrain_chunk {
+
+    constexpr static const int n = 64;
+    constexpr static const float step = 10.0f;
+
+    static kult::type create(b2World* world, kult::type prev) {
+        kult::type res = kult::entity();
+        
+
+        b2BodyDef bd;
+        b2Body* body = world->CreateBody(&bd);
+        
+        kult::add<collider>(res);
+        kult::add<terrain>(res);
+        kult::add<rigidbody>(res).body = body;
+
+        kult::get<terrain>(res).last = { -1024.f, 0.f };
+        
+        if(prev != kult::none())
+            kult::get<terrain>(prev).next = res;
+
+        return res;
+    }
+
+    static void b2DestroyAllFixtures(b2Body* body) {
+        for(auto* f=body->GetFixtureList(); f; ) {
+            auto* ptr = f;
+            f = f->GetNext();
+            body->DestroyFixture(ptr);
+        }
+    }
+
+    static void reset(kult::type self,  const vec2& start) {
+
+
+        auto* body = kult::get<rigidbody>(self).body;
+        
+        b2DestroyAllFixtures(body);
+
+        std::vector<b2Vec2> vertices(n);
+        b2Vec2 finish;
+
+        float r = randf(150.f);
+
+        for(int i=0; i < n; i++) {
+
+            float x = i * step;
+            float y = std::cos(2 * M_PI * ((float)i / n)) * r; 
+
+            b2Vec2& vec = vertices[i];
+            vec.x = start.x + x;
+            vec.y = start.y + y - r;
+
+            finish = { vec.x, vec.y };
+        }
+
+        kult::get<terrain>(self).last = { finish.x, finish.y };
+
+        std::transform(vertices.begin(), vertices.end(), vertices.begin(), [&] (const b2Vec2& x) {
+            return SCREEN_TO_WORLD(x);
+        });
+        
+        b2ChainShape shape;
+        shape.CreateChain(&vertices[0], vertices.size());
+
+        b2FixtureDef fdef;
+        fdef.shape = &shape;
+
+        kult::get<collider>(self).fixture = body->CreateFixture(&fdef);
+    }
+
+};
+
 struct game : applet {
     SDL_Rect camera_;
     float zoom_;
     b2World* world_;
     kult::type _player;
-    kult::type _chunks[MAX_CHUNKS];
 
-    circular_array<kult::type> _active_chunks;
+    std::vector<kult::type> chunks;
+
+    constexpr static const int NUM_CHUNKS = 2;
+
+    void set_callbacks(application* app) {
+        app->on_mousemove += [&] (int x, int y) {
+            DEBUG_LOG("mouse={},{}", x, y);
+            return 0;
+        };
+
+    }
 
     virtual int load_content() { 
         world_ = new b2World({0.0f, 9.8f});
 
         world_->SetContactListener(new collisions);
 
-        _player = player::create(world_, { 320.0f, -100 });
+        _player = player::create(world_, { 5.0f, -150 });
 
-
+        vec2 lastPosition = { 0.0f, 0.0f };
+        kult::type prev = kult::none();
+        for(int i=0; i < NUM_CHUNKS; i++) {
+            kult::type id = terrain_chunk::create(world_, prev);
+            prev = id;
+            chunks.push_back(id);
+        }
+        kult::get<terrain>(chunks.back()).next = chunks.front();
 
         camera_ = {
             0, 240, 0, 0
         };
         return 0; 
     }
-    virtual int update(int dt) { 
+    virtual int update(int dt) {
+        static float t = 0.f;
+        t += (float)dt;
         copy_transform_to_physics();
         world_->Step(1.0f / 60.0f, 6, 3);
         copy_physics_to_transform();
@@ -287,6 +357,15 @@ struct game : applet {
         camera_.y = tx.p.y;
 
         player::limit_velocity(_player);
+        {
+            for(auto& id : kult::join<terrain>()) {
+                terrain_t& t = kult::get<terrain>(id);
+
+                if((camera_.x - camera_.w / 2) > t.last.x) {
+                    terrain_chunk::reset(id, kult::get<terrain>(t.next).last);
+                }
+            }
+        }
 
         return 0; 
     }
@@ -295,12 +374,10 @@ struct game : applet {
         SDL_RenderGetLogicalSize(renderer, &camera_.w, &camera_.h);
         {
             SDL_SetRenderTarget(renderer, NULL);
-            SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);//IndianRed);
+            SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
             SDL_RenderClear(renderer);
 
-
             b2DebugDrawEXT(world_, renderer, camera_);
-
 
             SDL_RenderPresent(renderer);
         }
@@ -312,12 +389,7 @@ int main(int, char* []) {
 
     applet* let = new game;
     application app(let);
-
-
-    /*while(1) {
-        simulation->Step(fDt, 8, 3, 4);
-
-    }*/
+    ((game*)let)->set_callbacks(&app);
     return app.start();
 }
 

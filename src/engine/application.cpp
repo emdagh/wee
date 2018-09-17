@@ -42,9 +42,6 @@ application::application(applet* a)
         //return 0;
     });
 
-
-
-
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_RENDER, [&] (const SDL_Application* app, const void* ) {
         application* self = static_cast<application*>(SDL_GetApplicationUserData(app));
         SDL_Renderer* renderer = SDL_GetApplicationRenderer(app);

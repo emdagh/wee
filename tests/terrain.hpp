@@ -1,5 +1,6 @@
 #pragma once
 
+using wee::vec2;
 
 float randf(float scale_ = 1.0f) {
     return scale_ * (static_cast<float>(rand()) / RAND_MAX);

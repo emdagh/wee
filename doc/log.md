@@ -1,5 +1,16 @@
 #Development diary
 
+##2018-09-17 (8hrs)
+
+##2018-09-16 (4hrs)
+Started work on GUI (layout mostly)
+
+##2018-09-15: 4 hrs
+Same as yesterday
+
+##2018-09-14: 7 hrs
+Today, I worked mainly on terran genetation
+
 ##2018-09-13 (8 hrs)
 Created game concept for second game. Also, Box2D alongside cmake / g++ is giving some weird behaviour..
 Checking tomorrow. Tired now.

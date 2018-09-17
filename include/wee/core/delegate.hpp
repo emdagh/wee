@@ -360,7 +360,7 @@ private:
         }
         
         const event_handler& operator += (const delegate_type& ptr) {
-            return *this, _list.push_back(ptr);
+            return _list.push_back(ptr), *this;
         }
         
         void clear() {
