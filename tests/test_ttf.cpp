@@ -89,20 +89,7 @@ namespace packer {
     }
 }
 
-struct glyph_info {
-    int minx = 0;
-    int maxx = 0;
-    int miny = 0;
-    int maxy = 0;
-    int advance = 0;
-};
 
-struct font_info {
-    int height;
-    int ascent;
-    int descent;
-    int lineskip;
-};
 
 template <typename T = int>
 struct sprite_sheet {
@@ -126,43 +113,83 @@ struct sprite_sheet {
 };
 
 namespace math {
+
+    constexpr int log2(int n) {
+        return ( (n<2) ? 0 : 1 + log2(n>>1));
+    }
+
     template <typename T>
     T npot(const T& n) {
-        return 1 << (std::log2(n - 1) + 1);
+        return 1 << (log2(n - 1) + 1);
     }
 }
 
-int TTF_GlyphSize(TTF_Font* font, Uint16 c, int* w, int* h, int* advance) {
+int TTF_GlyphSize(TTF_Font* font, Uint16 c, int* w, int* h) {
     if(!TTF_GlyphIsProvided(font, c)) {
         return -1;
     }
+
+    int minx, miny;
+    int maxx, maxy;
     
-    TTF_GlyphMetrics(font, c, &minx, &maxx, &miny, &maxy, advance);
+    TTF_GlyphMetrics(font, c, &minx, &maxx, &miny, &maxy, NULL);
     if(w != NULL) 
-        w = maxx - minx;
+        *w = maxx - minx;
 
     if(h != NULL) 
-        h = maxy - miny;
+        *h = maxy - miny;
 
     return 0;
 }
+
+struct font_info {
+    int height;
+    int ascent;
+    int descent;
+    int lineskip;
+};
+
+struct glyph_info {
+    int minx    = 0;
+    int maxx    = 0;
+    int miny    = 0;
+    int maxy    = 0;
+    int advance = 0;
+};
 
 template <typename T = char>
 struct sprite_font : sprite_sheet<T> {
 
     TTF_Font* _font;
+    std::string _name;
+    font_info _info;
+    std::map<T, glyph_info> _ginfo;
 
-    static void _texture_size(int n, int maxw, int maxh, int* w) {
+    void _texture_size(int n, int maxw, int maxh, int* w) {
         float a = n * maxw * maxh; 
-        float d = std::round(std::sqrt(a) * maxw > maxh ? maxw : maxh); 
-        *w = math::npot((int)d);
+        float x = std::sqrt(a);// * maxw > maxh ? maxw : maxh;
+        x *= std::max(maxw, maxh);
+        float d = std::round(x); 
+        *w = math::npot(((int)d));
     }
 
-    static sprite_font* build(const std::string& name, std::istream& is) {
+    sprite_font(const std::string& name, TTF_Font* font) 
+        : _font(font) 
+        , _name(name)
+    {
+        _info.height    = TTF_FontHeight(font);
+        _info.ascent    = TTF_FontAscent(font);
+        _info.descent   = TTF_FontDescent(font);
+        _info.lineskip  = TTF_FontLineSkip(font);
+        build();
+    }
+
+
+    void build() {
         int maxw = 0, maxh = 0;
         int w, h;
         for(unsigned char a=32; a < 255; a++) {
-            TTF_GlyphSize(_font, (uint16_t)a, &w, &h, NULL);
+            TTF_GlyphSize(_font, (uint16_t)a, &w, &h);
             maxw = std::max(w, maxw);
             maxh = std::max(h, maxh);
         }
@@ -179,25 +206,32 @@ struct sprite_font : sprite_sheet<T> {
         root->left = root->right = NULL;
         root->rc = { 0, 0, d, d };
         for(unsigned char a=32; a < 255; a++) {
-            TTF_GlyphSize(_font, (uint16_t)a, &n->rc.w, &n->rc.h, NULL);
+            //TTF_GlyphSize(_font, (uint16_t)a, &n->rc.w, &n->rc.h, NULL);
+            glyph_info gi;
+            TTF_GlyphMetrics(_font, (uint16_t)a,
+                    &gi.minx,
+                    &gi.maxx,
+                    &gi.miny,
+                    &gi.maxy,
+                    &gi.advance);
+            _ginfo[a] = gi;
 
-            SDL_Surface* tmp = TTF_RenderGlyph_Blended(_font, c, {0xff, 0xff, 0xff});
+            SDL_Surface* tmp = TTF_RenderGlyph_Blended(_font, a, {0xff, 0xff, 0xff, 0xff});
             packer::node* n = packer::insert(root, {0, 0, tmp->w, tmp->h});
             n->id = (int)a;
 
-            sprite_sheet<T>::add(c, n->rc);
+            sprite_sheet<T>::add(a, n->rc);
             SDL_BlitSurface(tmp, NULL, surface, &n->rc);
             SDL_FreeSurface(tmp);
             
         }
-        wee::assets<SDL_Texture>::instance().from_surface(name, surface);
+        wee::assets<SDL_Texture>::instance().from_surface(_name, surface);
 
         SDL_FreeSurface(surface);
     }
-
-    
-
 };
+
+
 
 
 
@@ -254,36 +288,8 @@ void foo() {
 
     TTF_Font* font = TTF_OpenFontRW(rw, 0, 16);
 
-    int height = TTF_FontHeight(font);
-    int ascent = TTF_FontAscent(font);
-    int descent = TTF_FontDescent(font);
-    int lineskip = TTF_FontLineSkip(font);
+    sprite_font<int>* sf = new sprite_font<int>("@foofont", font);
 
-    int minx = 0;
-    int maxx = 0;
-    int miny = 0;
-    int maxy = 0;
-    int advance = 0;
-
-    packer::node* root = new packer::node;
-    root->rc = { 0, 0, 1024, 1024 };
-
-    for(unsigned char a=32; a < 128; a++) {// 0...255
-        DEBUG_VALUE_OF(a);
-        int success = TTF_GlyphMetrics(font, a, &minx, &maxx, &miny, &maxy, &advance);
-        DEBUG_VALUE_OF(minx);
-        DEBUG_VALUE_OF(miny);
-        DEBUG_VALUE_OF(maxx);
-        DEBUG_VALUE_OF(maxy);
-        DEBUG_VALUE_OF(advance);
-        //TTF_RenderGlyph_Solid(font, (uint16_t)a, (SDL_Color) { 0xff, 0xff, 0xff, 0xff });
-        //
-        packer::node* n = new packer::node;
-        n->id = a;
-        n->rc.x = n->rc.y = 0;
-        n->rc.w = maxx - minx;
-        n->rc.h = maxy - miny;
-    }
 
     TTF_Quit();
 }
