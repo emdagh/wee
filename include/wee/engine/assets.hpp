@@ -41,21 +41,21 @@ namespace wee {
             DEBUG_METHOD();
             DEBUG_VALUE_OF(name);
             if(resources.count(name) == 0) {
-
-
                 std::istreambuf_iterator<char> eos;
                 std::string contents(std::istreambuf_iterator<char>(is),
                                      (std::istreambuf_iterator<char>()));
 
                 SDL_RWops* ops = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
                 SDL_Surface* surface = IMG_Load_RW(ops, 0);
-                resources[name] = after(surface);
+                return from_surface(name, surface);//resources[name] = after(surface);
             }
             return resources[name];
         }
         
-        SDL_Texture* from_surface(const std::string& name,
-                SDL_Surface* surface) {
+        SDL_Texture* from_surface(const std::string& name, SDL_Surface* surface) {
+            if(!after) {
+                throw std::logic_error("no callback defined for asset manager");
+            }
             resources[name] = after(surface);
             return resources[name];
         }
@@ -84,18 +84,5 @@ namespace wee {
         }
     };
 
-
-    /*uintptr_t load_surface(std::istream&);
-    uintptr_t load_texture();
-    uintptr_t load_sound();
-    uintptr_t load_music();*/
-
-
-    /*
-     * usage::
-     * std::ifstream is("foo/path");
-     * SDL_Texture* my_image;
-     * is >> my_image;
-     */
 
 }

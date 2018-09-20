@@ -7,6 +7,28 @@
 //std::map<uint16_t, SDL_Rect> index;
 //
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define SDL_RMASK   0xff000000
+#define SDL_GMASK   0x00ff0000
+#define SDL_BMASK   0x0000ff00
+#define SDL_AMASK   0x000000ff
+#else
+#define SDL_AMASK   0xff000000
+#define SDL_BMASK   0x00ff0000
+#define SDL_GMASK   0x0000ff00
+#define SDL_RMASK   0x000000ff
+#endif
+std::ostream& operator << (std::ostream& os, const SDL_Rect& rc) {
+    using nlohmann::json;
+    json j = {
+        "x", rc.x,
+        "y", rc.y,
+        "w", rc.w,
+        "h", rc.h
+    };
+    return os << j;
+}
+
 float SDL_GetRectArea(const SDL_Rect& r) {
     return (float)r.w * r.h;
 }
@@ -23,8 +45,8 @@ int operator == (const SDL_Rect& a, const SDL_Rect& b) {
 namespace packer {
     constexpr static const int INVALID = -1;
     struct node {
-        node* left, *right;
-        int id;
+        node* left = nullptr, *right = nullptr;
+        int id = -1;
         SDL_Rect rc;
     };
 
@@ -158,7 +180,7 @@ struct glyph_info {
 };
 
 template <typename T = char>
-struct sprite_font : sprite_sheet<T> {
+struct basic_sprite_font : sprite_sheet<T> {
 
     TTF_Font* _font;
     std::string _name;
@@ -167,13 +189,12 @@ struct sprite_font : sprite_sheet<T> {
 
     void _texture_size(int n, int maxw, int maxh, int* w) {
         float a = n * maxw * maxh; 
-        float x = std::sqrt(a);// * maxw > maxh ? maxw : maxh;
-        x *= std::max(maxw, maxh);
+        float x = std::sqrt(a);
         float d = std::round(x); 
         *w = math::npot(((int)d));
     }
 
-    sprite_font(const std::string& name, TTF_Font* font) 
+    basic_sprite_font(const std::string& name, TTF_Font* font) 
         : _font(font) 
         , _name(name)
     {
@@ -188,25 +209,33 @@ struct sprite_font : sprite_sheet<T> {
     void build() {
         int maxw = 0, maxh = 0;
         int w, h;
+        int num = 0;
         for(unsigned char a=32; a < 255; a++) {
-            TTF_GlyphSize(_font, (uint16_t)a, &w, &h);
-            maxw = std::max(w, maxw);
-            maxh = std::max(h, maxh);
+            if(TTF_GlyphIsProvided(_font, a)) {
+
+                TTF_GlyphSize(_font, (uint16_t)a, &w, &h);
+                maxw = std::max(w, maxw);
+                maxh = std::max(h, maxh);
+                num++;
+            }
         }
 
         int d = 0;
-        _texture_size(255-32, maxw, maxh, &d);
+        _texture_size(num, maxw, maxh, &d);
 
         SDL_Surface* surface = SDL_CreateRGBSurface(0, d, d, 32,
-                0, 0, 0, 0);
+                SDL_RMASK, SDL_GMASK, SDL_BMASK, SDL_AMASK);
 
         
         packer::node* root = new packer::node;
-        root->id = 0;
+        root->id = -1;
         root->left = root->right = NULL;
         root->rc = { 0, 0, d, d };
-        for(unsigned char a=32; a < 255; a++) {
+        for(unsigned char a=32; a < 128; a++) {
             //TTF_GlyphSize(_font, (uint16_t)a, &n->rc.w, &n->rc.h, NULL);
+            if(!TTF_GlyphIsProvided(_font, a)) 
+                continue;
+
             glyph_info gi;
             TTF_GlyphMetrics(_font, (uint16_t)a,
                     &gi.minx,
@@ -216,23 +245,24 @@ struct sprite_font : sprite_sheet<T> {
                     &gi.advance);
             _ginfo[a] = gi;
 
-            SDL_Surface* tmp = TTF_RenderGlyph_Blended(_font, a, {0xff, 0xff, 0xff, 0xff});
+            SDL_Surface* tmp = TTF_RenderGlyph_Blended(_font, a, {0xff, 0xff, 0xff, 0x00});
             packer::node* n = packer::insert(root, {0, 0, tmp->w, tmp->h});
             n->id = (int)a;
 
             sprite_sheet<T>::add(a, n->rc);
+            DEBUG_VALUE_OF(n->rc);
             SDL_BlitSurface(tmp, NULL, surface, &n->rc);
             SDL_FreeSurface(tmp);
             
         }
-        wee::assets<SDL_Texture>::instance().from_surface(_name, surface);
+        this->_texture = wee::assets<SDL_Texture>::instance().from_surface(_name, surface);
 
         SDL_FreeSurface(surface);
     }
 };
 
 
-
+typedef basic_sprite_font<char> sprite_font;
 
 
 namespace json_helper {
@@ -269,35 +299,105 @@ void test_spritefont(const std::string& pt) {
 }
 
 void foo() {
-    if(!TTF_WasInit()) {
-        TTF_Init();
-    }
-
-	std::string pt = wee::get_resource_path("assets") + "ttf/Boxy-Bold.ttf";
-    std::ifstream is;
-    is.open(pt);
-    if(!is.is_open()) {
-        throw ::file_not_found(pt);
-    }
-    std::istreambuf_iterator<char> eos;
-    std::string contents(std::istreambuf_iterator<char>(is),
-        (std::istreambuf_iterator<char>())
-    );
-
-    SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-
-    TTF_Font* font = TTF_OpenFontRW(rw, 0, 16);
-
-    sprite_font<int>* sf = new sprite_font<int>("@foofont", font);
-
-
-    TTF_Quit();
 }
+
+#include <engine/application.hpp>
+#include <engine/applet.hpp>
+#include <gfx/SDL_RendererEXT.hpp>
+#include <gfx/SDL_ColorEXT.hpp>
+struct game : wee::applet {
+    sprite_font* _sf;
+
+    game() {
+        if(!TTF_WasInit()) {
+            TTF_Init();
+        }
+    }
+
+    virtual ~game() {
+
+        TTF_Quit();
+    }
+
+    int load_content() {
+
+        std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
+        //std::string pt = wee::get_resource_path("assets") + "ttf/Boxy-Bold.ttf";
+        std::ifstream is;
+        is.open(pt);
+        if(!is.is_open()) {
+            throw ::file_not_found(pt);
+        }
+        std::istreambuf_iterator<char> eos;
+        std::string contents(std::istreambuf_iterator<char>(is),
+            (std::istreambuf_iterator<char>())
+        );
+
+        SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+
+        TTF_Font* font = TTF_OpenFontRW(rw, 0, 32);
+
+        _sf = new sprite_font("@foofont", font);
+
+
+        return 0;
+    }
+    int update(int dt) {
+        return 0;
+    }
+    int draw(SDL_Renderer* renderer) {
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
+        SDL_RenderClear(renderer);
+
+        /*SDL_Rect r = { 0, 0, 0, 0 };
+        SDL_QueryTexture(_sf->_texture, NULL, NULL, &r.w, &r.h);
+        SDL_RenderCopy(renderer, _sf->_texture, &r, &r);*/
+
+        const std::string test = "The quick brown fox jumps over the lazy dog.";
+        const font_info& finfo = _sf->_info;
+        int x = 0;
+        int y = 240;
+        
+
+
+        int yy = y - finfo.height - finfo.descent;// + (finfo.ascent + finfo.descent);
+        
+
+        for(auto c : test) {
+            const glyph_info& info = _sf->_ginfo[c];
+            SDL_Rect src = *_sf->get(c);
+            SDL_Rect dst = {
+                x + info.minx, 
+                yy,// - info.maxy,
+                src.w, src.h
+            };
+            SDL_RenderCopy(renderer, _sf->_texture, &src, &dst);
+            x += info.advance;
+        }
+
+        SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::LightGrey);
+        SDL_RenderDrawLine(renderer, 0, y, 640, y);
+        SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Red);
+        SDL_RenderDrawLine(renderer, 0, y - finfo.height, 640, y - finfo.height);
+        SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Lime);
+        SDL_RenderDrawLine(renderer, 0, y - finfo.ascent, 640, y - finfo.ascent);
+        SDL_RenderDrawLine(renderer, 0, y - finfo.descent, 640, y - finfo.descent);
+
+
+        SDL_RenderPresent(renderer);
+        return 0;
+    }
+};
 
 int main(int, char* []) {
 	
 	try {
+        wee::application app(new game);
+
         foo();
+
+        return app.start();
     } catch(const std::exception& e) {
         LOGE(e.what());
     }

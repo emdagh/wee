@@ -28,7 +28,7 @@ SDL_Color SDL_CreateColorHSV(uint8_t h, uint8_t s, uint8_t v) {
 }
 
 C_API void SDL_CreateColorEXT(uint32_t i, struct SDL_Color* res) {
-    res->a = (i & 0xff000000) >> 24;
+    res->a = 0xff;//(i & 0xff000000) >> 24;
     res->r = (i & 0x00ff0000) >> 16;
     res->g = (i & 0x0000ff00) >> 8;
     res->b = (i & 0x000000ff) >> 0;
