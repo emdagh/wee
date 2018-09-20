@@ -14,7 +14,7 @@
 #include <iostream>
 #include <fstream>
 
-SDL_RWops* SDL_RWFromStream(std::istream& is);
+SDL_RWops* SDL_RWFromStream(std::istream&);
 
 namespace wee {
 
@@ -39,7 +39,8 @@ namespace wee {
     struct assets<TTF_Font> : singleton<assets<TTF_Font> > {
         typename dictionary<TTF_Font*>::type resources;
 
-        TTF_Font* load(const std::string& name, std::istream& is) {
+        TTF_Font* load(const std::string& name, int size, std::istream& is) {
+            DEBUG_METHOD();
             return NULL;
         }
     };

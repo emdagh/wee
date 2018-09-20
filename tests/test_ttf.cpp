@@ -319,10 +319,18 @@ struct game : wee::applet {
         TTF_Quit();
     }
 
+    template <typename T>
+    T& lvalue(T&& t) {
+        return t;
+    }
 
     int load_content() {
 
-        wee::asset_helper::from_file<TTF_Font>("@debug", "assets/ttf/pzim3x5.ttf");
+        wee::assets<TTF_Font>::instance().load("@debug", 16, 
+            lvalue(std::ifstream(
+                wee::get_resource_path("assets/ttf") + "pzim3x5.ttf"
+            ))
+        );
 
         //std::ifstream is(wee::get_resource_path("assets/ttf") + "pzim3x5.ttf");
 
