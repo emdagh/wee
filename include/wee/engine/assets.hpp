@@ -41,6 +41,7 @@ namespace wee {
 
         TTF_Font* load(const std::string& name, int size, std::istream& is) {
             DEBUG_METHOD();
+
             return NULL;
         }
     };
