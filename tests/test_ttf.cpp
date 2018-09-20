@@ -319,7 +319,12 @@ struct game : wee::applet {
         TTF_Quit();
     }
 
+
     int load_content() {
+
+        wee::asset_helper::from_file<TTF_Font>("@debug", "assets/ttf/pzim3x5.ttf");
+
+        //std::ifstream is(wee::get_resource_path("assets/ttf") + "pzim3x5.ttf");
 
         std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
         //std::string pt = wee::get_resource_path("assets") + "ttf/Boxy-Bold.ttf";

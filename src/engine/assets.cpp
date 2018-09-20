@@ -12,6 +12,17 @@
 #if defined(__IOS__)
 extern "C" const char* iOS_getDataPath();
 #endif
+
+
+SDL_RWops* SDL_RWFromStream(std::istream& is) {
+    std::istreambuf_iterator<char> eos;
+    std::string contents(std::istreambuf_iterator<char>(is),
+        (std::istreambuf_iterator<char>())
+    );
+
+    return SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+}
+
 namespace wee {
     std::string get_resource_path(const std::string& subDir) {
 #if !defined(__IOS__)
