@@ -298,9 +298,6 @@ void test_spritefont(const std::string& pt) {
     is.close();
 }
 
-void foo() {
-}
-
 #include <engine/application.hpp>
 #include <engine/applet.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
@@ -319,20 +316,20 @@ struct game : wee::applet {
         TTF_Quit();
     }
 
-    template <typename T>
-    T& lvalue(T&& t) {
-        return t;
-    }
 
     int load_content() {
 
         wee::assets<TTF_Font>::instance().load("@debug", 16, 
-            lvalue(std::ifstream(
+            ::as_lvalue(std::ifstream(
                 wee::get_resource_path("assets/ttf") + "pzim3x5.ttf"
             ))
         );
 
-        //std::ifstream is(wee::get_resource_path("assets/ttf") + "pzim3x5.ttf");
+        wee::assets<SDL_Texture>::instance().load("@sample", ::as_lvalue(std::ifstream(
+                wee::get_resource_path("") + "assets/img/foo.png"
+            ))
+        );
+
 
         std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
         //std::string pt = wee::get_resource_path("assets") + "ttf/Boxy-Bold.ttf";
@@ -407,8 +404,6 @@ int main(int, char* []) {
 	
 	try {
         wee::application app(new game);
-
-        foo();
 
         return app.start();
     } catch(const std::exception& e) {

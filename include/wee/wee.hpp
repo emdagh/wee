@@ -18,4 +18,10 @@ namespace { // prevent cluttering of global namespace
     struct file_not_found : std::runtime_error {
         file_not_found(const std::string& what) : std::runtime_error("file not found: " + what) {}
     };
+
+
+    template <typename T>
+    T& as_lvalue(T&& t) {
+        return t;
+    }
 }

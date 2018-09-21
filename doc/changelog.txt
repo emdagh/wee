@@ -1,0 +1,537 @@
+commit adf778e14d2e1b4604c5a6162b919b2a20bfdd4b
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 20 23:29:28 2018 +0200
+
+    enough for now
+
+:100644 100644 38a9fc9... addc27b... M	include/wee/engine/assets.hpp
+
+commit c606affbd81ad0bd8bb349f6bfccf4d3a232c69d
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 20 23:11:26 2018 +0200
+
+    rvalue to lvalue converter
+
+:100644 100644 6babef7... 38a9fc9... M	include/wee/engine/assets.hpp
+:100644 100644 c861ed1... 370d053... M	tests/test_ttf.cpp
+
+commit b0500176b866d1f70b9fb2b82972c6becae1b156
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 20 22:47:20 2018 +0200
+
+    ok, now make this pretty...
+
+:100644 100644 ffdef1d... 6babef7... M	include/wee/engine/assets.hpp
+:100644 100644 081c264... ebe2924... M	src/engine/assets.cpp
+:100644 100644 88cb1d3... c861ed1... M	tests/test_ttf.cpp
+
+commit 9a29d7f0ef1a100726eca6c27cf7217d4b5e3e79
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 20 17:30:25 2018 +0200
+
+    spritefonts are done! now refactor to engine
+
+:100644 100644 5bfb43d... ffdef1d... M	include/wee/engine/assets.hpp
+:100644 100644 ac530ae... 318e82c... M	src/gfx/SDL_ColorEXT.cpp
+:100644 100644 cdd5426... 88cb1d3... M	tests/test_ttf.cpp
+
+commit f68171c4016a91470a83d307b92e0a8186b1d256
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Wed Sep 19 22:32:31 2018 +0200
+
+    sprites again, sleepy time now
+
+:100644 100644 768f9cf... cdd5426... M	tests/test_ttf.cpp
+
+commit 89a8ff85913178fd86c44323bd685760d61188f0
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Wed Sep 19 19:14:13 2018 +0200
+
+    ++
+
+:000000 100644 0000000... 768f9cf... A	tests/test_ttf.cpp
+
+commit acaa2933442edc1065d7f6c3048bd835997bc1f7
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Wed Sep 19 19:13:51 2018 +0200
+
+    spritefont / sheet rewriting
+
+:100644 000000 5f7bbd3... 0000000... D	tests/test_particles.cpp
+
+commit c171fdf6e251e185282b57755aba6fc118297e91
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Sep 17 22:08:37 2018 +0200
+
+    freetype2 fix CMakeLists\n+ttf tests
+
+:100644 100644 1d31fe0... 826f6de... M	doc/log.md
+:100644 100644 63ce076... 5bfb43d... M	include/wee/engine/assets.hpp
+:100644 100644 054097c... 189fce6... M	include/wee/engine/gui/layout.hpp
+:100644 100644 7f80b89... 203073e... M	include/wee/wee.hpp
+:100644 100644 3d39ae7... c8a3ba2... M	tests/CMakeLists.txt
+:100644 100644 928f485... e5385f5... M	tests/test_application.cpp
+:100644 100644 fe3c408... 8318d05... M	tests/test_gui.cpp
+:100644 100644 61be779... 3266017... M	vendor/CMakeLists.txt
+:100644 100644 c79da5b... 44dd4c7... M	vendor/SDL_ttf.cmake
+
+commit fe02005968e444d6c65e6580e499ec692e46f8e0
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Sep 17 16:22:18 2018 +0200
+
+    +imgui
+
+:100644 100644 f139d2e... 34c7c17... M	include/wee/engine/application.hpp
+:100644 100644 25bc452... 63ce076... M	include/wee/engine/assets.hpp
+:100644 100644 ba6c222... 054097c... M	include/wee/engine/gui/layout.hpp
+:100644 100644 2867221... c17babc... M	src/engine/application.cpp
+:100644 100644 4ef72df... fe3c408... M	tests/test_gui.cpp
+
+commit 0848839e06e259dfb1074f147e68e9d9e2f604c5
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Sep 17 13:54:22 2018 +0200
+
+    +imgui\n+terrain finished\n+ttf fonts
+
+:100644 100644 dea7b5b... 1d31fe0... M	doc/log.md
+:100644 100644 f8cb826... 8e4e131... M	include/wee/core/delegate.hpp
+:100644 100644 57e823a... 8275b76... M	include/wee/core/vec2.hpp
+:000000 100644 0000000... ba6c222... A	include/wee/engine/gui/layout.hpp
+:100644 100644 478fcdf... 7f80b89... M	include/wee/wee.hpp
+:100644 100644 dc46583... 6c3e3b2... M	src/base/SDL_Application.c
+:100644 100644 dea4ae5... 2867221... M	src/engine/application.cpp
+:100644 100644 bf5f4f5... 75e7323... M	tests/terrain.hpp
+:000000 100644 0000000... 4ef72df... A	tests/test_gui.cpp
+:100644 100644 86379aa... 4ee2266... M	tests/test_kult.cpp
+:100644 000000 6125f81... 0000000... D	tests/vec2.h
+
+commit 99328eb05b1953f5a15276cc5c9a4ea38d65816d
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 13 23:34:05 2018 +0200
+
+    log update
+
+:100644 100644 35ad7e4... 86379aa... M	tests/test_kult.cpp
+
+commit 3e9868746d7aa036ac10aac273d8cb770f3d77cc
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 13 23:26:11 2018 +0200
+
+    log update
+
+:000000 100644 0000000... dea7b5b... A	doc/log.md
+
+commit 02354a133fb61e5779313978b0ea1be31c88f5ea
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Thu Sep 13 23:23:33 2018 +0200
+
+    box2D is giving some really strange behaviour
+
+:100644 100644 404516d... f26b653... M	tests/Box2DEXT.hpp
+:100644 100644 67ead87... 35ad7e4... M	tests/test_kult.cpp
+:100644 100644 1cdae10... 6125f81... M	tests/vec2.h
+
+commit 1927aa3db827f19c827377da2ddd699fb207ac42
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Tue Sep 11 23:27:00 2018 +0200
+
+    + adding files
+
+:000000 100644 0000000... 0d80eed... A	include/wee/core/curve.hpp
+:000000 100644 0000000... 12f6326... A	include/wee/engine/noise.hpp
+:000000 100644 0000000... 669ae2f... A	include/wee/gfx/SDL_SurfaceEXT.hpp
+:000000 100644 0000000... 55bfdca... A	src/gfx/SDL_SurfaceEXT.cpp
+:000000 100644 0000000... 404516d... A	tests/Box2DEXT.hpp
+:000000 100644 0000000... bf5f4f5... A	tests/terrain.hpp
+:100644 100644 f139607... 67ead87... M	tests/test_kult.cpp
+:000000 100644 0000000... 1cdae10... A	tests/vec2.h
+:000000 100644 0000000... d121510... A	tests/world.hpp
+
+commit 0418fbed7627994231b8c00cab8180ca48a41a6e
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Tue Sep 11 22:31:39 2018 +0200
+
+    done for today
+
+:100644 100644 65feb0d... 25bc452... M	include/wee/engine/assets.hpp
+:100644 100644 658c905... 9bd5736... M	include/wee/gfx/SDL_RendererEXT.hpp
+:100644 100644 9da3f4b... 8caf680... M	src/gfx/SDL_RendererEXT.cpp
+:100644 100644 a4fd5a9... f139607... M	tests/test_kult.cpp
+:100644 100644 f33eb32... 13d9395... M	vendor/kult/kult.hpp
+
+commit a9f14184415d12b401bd8da844a007e74043bcc5
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Fri Sep 7 16:14:31 2018 +0200
+
+    finished for the day
+
+:100644 000000 f09f798... 0000000... D	include/wee/base/SDL_ColorEXT.hpp
+:000000 100644 0000000... 168636f... A	include/wee/gfx/SDL_ColorEXT.hpp
+:000000 100644 0000000... 658c905... A	include/wee/gfx/SDL_RendererEXT.hpp
+:100644 000000 11e90dc... 0000000... D	src/base/SDL_ColorEXT.cpp
+:100644 100644 cb61317... dea4ae5... M	src/engine/application.cpp
+:000000 100644 0000000... ac530ae... A	src/gfx/SDL_ColorEXT.cpp
+:000000 100644 0000000... 9da3f4b... A	src/gfx/SDL_RendererEXT.cpp
+:100644 100644 640a2bf... 928f485... M	tests/test_application.cpp
+:100644 100644 2c6c9b5... a4fd5a9... M	tests/test_kult.cpp
+
+commit d646b3426ce689a37abe9ccf83f8ddc5dde1d565
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Fri Sep 7 10:34:14 2018 +0200
+
+    renamed circular_buffer
+
+:100644 100644 69ba0c5... 40975b9... M	doc/games.md
+:100644 100644 5fe2bf4... 9cfd424... M	include/wee/core/circular_array.hpp
+:100644 100644 9e33d4d... 1d26633... M	include/wee/engine/particles.hpp
+:100644 100644 e78fcd9... 2c6c9b5... M	tests/test_kult.cpp
+
+commit 2e291c9c4d2e6ca43e8efe032556af6994559247
+Author: miel <mielvandam@gmail.com>
+Date:   Fri Sep 7 09:29:18 2018 +0200
+
+    graduation plan
+
+:100644 100644 69ba0c5... 16869aa... M	doc/games.md
+
+commit 696eecccf527880f068c61b989daeb64ca730457
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Fri Sep 7 08:59:39 2018 +0200
+
+    includes
+
+:100644 100644 4899eaa... 8f6728b... M	.gitmodules
+:100644 100644 dd25f55... 1dc46fe... M	CMakeLists.txt
+:100644 100644 75fda3b... c8ab8c1... M	include/wee/base/SDL_Application.h
+:100644 100644 0a867f0... f09f798... M	include/wee/base/SDL_ColorEXT.hpp
+:100644 100644 4d38179... c8a106a... M	include/wee/config.h.in
+:000000 100644 0000000... 5fe2bf4... A	include/wee/core/circular_array.hpp
+:100644 100644 e34fc64... f8cb826... M	include/wee/core/delegate.hpp
+:100644 100644 23986c3... e323de1... M	include/wee/core/factory.hpp
+:100644 000000 7fccc05... 0000000... D	include/wee/core/rect.hpp
+:000000 100644 0000000... 08632dc... A	include/wee/engine/applet.hpp
+:000000 100644 0000000... f139d2e... A	include/wee/engine/application.hpp
+:100644 100644 41df21c... 65feb0d... M	include/wee/engine/assets.hpp
+:000000 100644 0000000... 646557e... A	include/wee/engine/camera.hpp
+:000000 100644 0000000... 9e33d4d... A	include/wee/engine/particles.hpp
+:100644 100644 5ae5543... 2f7cf7c... M	include/wee/engine/spritesheet.hpp
+:000000 100644 0000000... cec64c5... A	include/wee/engine/texturepacker.hpp
+:100644 100644 b8bc7fb... 3bf8302... M	include/wee/util/logstream.hpp
+:100644 100644 40eb6e7... 1ff5e68... M	include/wee/wee.h
+:100644 100644 0cfbc21... a2e2a47... M	src/base/CMakeLists.txt
+:100644 100644 69f92d1... dc46583... M	src/base/SDL_Application.c
+:100644 100644 ff77de0... 11e90dc... M	src/base/SDL_ColorEXT.cpp
+:100644 000000 51eed00... 0000000... D	src/core/rect.cpp
+:000000 100644 0000000... cb61317... A	src/engine/application.cpp
+:100644 100644 5caf83b... 081c264... M	src/engine/assets.cpp
+:100644 100644 0207c32... 98e5ba5... M	src/engine/spritesheet.cpp
+:100644 100644 939c065... 3d39ae7... M	tests/CMakeLists.txt
+:100644 100644 b9e1161... 640a2bf... M	tests/test_application.cpp
+:000000 100644 0000000... e78fcd9... A	tests/test_kult.cpp
+:000000 100644 0000000... 5f7bbd3... A	tests/test_particles.cpp
+:100644 100644 bcd5af0... 61be779... M	vendor/CMakeLists.txt
+:000000 160000 0000000... 4406bee... A	vendor/SDL2_ttf
+:100644 100644 21edffb... d1de53e... M	vendor/SDL_image.cmake
+:000000 100644 0000000... c79da5b... A	vendor/SDL_ttf.cmake
+:000000 100644 0000000... 51479af... A	vendor/kult/.travis.yml
+:000000 100644 0000000... 0df5995... A	vendor/kult/LICENSE
+:000000 100644 0000000... 2ebeb49... A	vendor/kult/README.md
+:000000 100644 0000000... 67ccbae... A	vendor/kult/bench.cxx
+:000000 100644 0000000... 685cb7a... A	vendor/kult/demo1.cc
+:000000 100644 0000000... f2fbd7e... A	vendor/kult/demo2.cc
+:000000 100644 0000000... 009536c... A	vendor/kult/demo3.cc
+:000000 100644 0000000... f1a8ac0... A	vendor/kult/demo4.cc
+:000000 100644 0000000... bb58d31... A	vendor/kult/demo5.cc
+:000000 100644 0000000... ef4fb08... A	vendor/kult/kult.cpp
+:000000 100644 0000000... f33eb32... A	vendor/kult/kult.hpp
+:000000 100644 0000000... d68011c... A	vendor/kult/tests.cxx
+:000000 100644 0000000... 3fd064e... A	vendor/poco.cmake
+
+commit a71fc02d5aa9d6aa2b698037b3c676960f12cde1
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Sep 3 13:52:10 2018 +0200
+
+    migrating to pure SDL
+
+:100644 100644 6afcbf6... dd25f55... M	CMakeLists.txt
+:000000 100644 0000000... 75fda3b... A	include/wee/base/SDL_Application.h
+:000000 100644 0000000... 0a867f0... A	include/wee/base/SDL_ColorEXT.hpp
+:100644 000000 e4b3005... 0000000... D	include/wee/base/application.hpp
+:100644 000000 29eed5f... 0000000... D	include/wee/base/base_application.hpp
+:100644 000000 3f589a5... 0000000... D	include/wee/base/platform/SDL2/SDL_Application.hpp
+:100644 000000 a8dbe33... 0000000... D	include/wee/base/platform_application.hpp
+:000000 100644 0000000... d812df9... A	include/wee/base/plugin.hpp
+:100644 100644 d451e99... b8bc7fb... M	include/wee/util/logstream.hpp
+:000000 100644 0000000... 40eb6e7... A	include/wee/wee.h
+:100644 100644 98a8c3b... 478fcdf... M	include/wee/wee.hpp
+:100644 100644 4c30434... 0cfbc21... M	src/base/CMakeLists.txt
+:000000 100644 0000000... 69f92d1... A	src/base/SDL_Application.c
+:000000 100644 0000000... ff77de0... A	src/base/SDL_ColorEXT.cpp
+:100644 000000 dff4d5a... 0000000... D	src/base/application.cpp
+:100644 000000 d8266db... 0000000... D	src/base/base_application.cpp
+:100644 000000 6eea8ce... 0000000... D	src/base/platform/SDL2/SDL_Application.cpp
+:100644 100644 6c07a5d... 939c065... M	tests/CMakeLists.txt
+:100644 100644 0bc2a45... b9e1161... M	tests/test_application.cpp
+:000000 100644 0000000... df8363b... A	tests/test_rendertargets.cpp
+:100644 100644 b8e2815... 87a20ae... M	vendor/SDL2.cmake
+:100644 100644 7dfae87... 21edffb... M	vendor/SDL_image.cmake
+
+commit 7d3b47e7e94e3093f4761b228da2e8876ecab50e
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Aug 27 23:23:57 2018 +0200
+
+    additional deps
+
+:100644 100644 a3c47a2... 6afcbf6... M	CMakeLists.txt
+:100644 100644 552fd43... d127c0e... M	include/wee/core/singleton.hpp
+:000000 100644 0000000... 41df21c... A	include/wee/engine/assets.hpp
+:100644 100644 260a132... 44f1e5c... M	src/CMakeLists.txt
+:100644 100644 26f20c2... 1149a83... M	src/base/platform/SDL2/CMakeLists.txt
+:000000 100644 0000000... 5caf83b... A	src/engine/assets.cpp
+:000000 100644 0000000... 3ede9ff... A	src/engine/assets.mm
+:100644 100644 6aaae61... 6c07a5d... M	tests/CMakeLists.txt
+:100644 100644 b31f4b9... bcd5af0... M	vendor/CMakeLists.txt
+:100644 100644 659c80b... b8e2815... M	vendor/SDL2.cmake
+:000000 100644 0000000... 7dfae87... A	vendor/SDL_image.cmake
+:000000 100644 0000000... 5ce7974... A	vendor/SDL_mixer.cmake
+
+commit 702435d9750805aa3d07f0227f0cdfe9d735eec7
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Sun Aug 26 12:39:22 2018 +0200
+
+    forgot these
+
+:000000 100644 0000000... 7fccc05... A	include/wee/core/rect.hpp
+:000000 100644 0000000... 45dcbb0... A	include/wee/core/serialize.hpp
+:000000 100644 0000000... f505599... A	include/wee/engine/serialize.hpp
+:000000 100644 0000000... 2470850... A	include/wee/util/cleanup.hpp
+:000000 100644 0000000... 51eed00... A	src/core/rect.cpp
+:000000 100644 0000000... 0207c32... A	src/engine/spritesheet.cpp
+:000000 100644 0000000... 7fda899... A	tests/assets/mc.json
+:000000 100644 0000000... f1f7950... A	tests/assets/test_spritesheet.json
+:000000 100644 0000000... 0421a65... A	tests/test_spritesheet.cpp
+:000000 100644 0000000... 02971be... A	vendor/fmt.cmake
+:000000 100644 0000000... 4b49a50... A	vendor/json.cmake
+:000000 100644 0000000... 3473523... A	vendor/liquidfun.cmake
+
+commit 906ee725ba237b860969598d80d513ae182ea50a
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Sun Aug 26 12:38:16 2018 +0200
+
+    spritesheet in the works
+
+:100644 100644 024ce3c... 4899eaa... M	.gitmodules
+:100644 100644 04f173b... a3c47a2... M	CMakeLists.txt
+:100644 100644 50822d9... e4b3005... M	include/wee/base/application.hpp
+:100644 100644 203eb07... 29eed5f... M	include/wee/base/base_application.hpp
+:100644 100644 7938141... 3f589a5... M	include/wee/base/platform/SDL2/SDL_Application.hpp
+:100644 100644 5453d1f... 711323f... M	include/wee/base/platform/SDL2/SDL_EventLoop.hpp
+:100644 100644 e69de29... 5ae5543... M	include/wee/engine/spritesheet.hpp
+:100644 100644 b506d35... d451e99... M	include/wee/util/logstream.hpp
+:100644 100644 ef19231... 260a132... M	src/CMakeLists.txt
+:100644 100644 07750c3... 6eea8ce... M	src/base/platform/SDL2/SDL_Application.cpp
+:100644 100644 defe402... 4d61db7... M	src/base/platform/SDL2/SDL_EventLoop.cpp
+:100644 100644 61efd2e... caa6bcd... M	src/util/CMakeLists.txt
+:100644 100644 1e94b76... 1d9d9cc... M	src/util/logstream.cpp
+:100644 100644 57ca6d0... 6aaae61... M	tests/CMakeLists.txt
+:160000 000000 11cda0f... 0000000... D	vendor/Box2D
+:100644 100644 22d70be... b31f4b9... M	vendor/CMakeLists.txt
+:100644 100644 e21f601... 659c80b... M	vendor/SDL2.cmake
+:000000 160000 0000000... 6201052... A	vendor/fmt
+:000000 160000 0000000... 7f20402... A	vendor/liquidfun
+
+commit acdf1847e0cbf91845436d38e7e8393d8a1ca2bc
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Sat Aug 25 00:10:14 2018 +0200
+
+    working on eventloop (last: SDL_Application:81)
+
+:000000 100644 0000000... 50822d9... A	include/wee/base/application.hpp
+:000000 100644 0000000... 203eb07... A	include/wee/base/base_application.hpp
+:000000 100644 0000000... 7938141... A	include/wee/base/platform/SDL2/SDL_Application.hpp
+:000000 100644 0000000... 5453d1f... A	include/wee/base/platform/SDL2/SDL_EventLoop.hpp
+:000000 100644 0000000... a8dbe33... A	include/wee/base/platform_application.hpp
+:000000 100644 0000000... e34fc64... A	include/wee/core/delegate.hpp
+:000000 100644 0000000... e31b2ab... A	include/wee/core/fsm.hpp
+:000000 100644 0000000... e69de29... A	include/wee/engine/aabb.hpp
+:000000 100644 0000000... f505599... A	include/wee/engine/ecs.hpp
+:000000 100644 0000000... e66e503... A	include/wee/engine/intersect.hpp
+:000000 100644 0000000... e69de29... A	include/wee/engine/spritesheet.hpp
+:000000 100644 0000000... 7f679ee... A	include/wee/engine/transform.hpp
+:000000 100644 0000000... 5c56ddf... A	include/wee/gfx/texture.h
+:000000 100644 0000000... b506d35... A	include/wee/util/logstream.hpp
+:000000 100644 0000000... 4c30434... A	src/base/CMakeLists.txt
+:000000 100644 0000000... dff4d5a... A	src/base/application.cpp
+:000000 100644 0000000... d8266db... A	src/base/base_application.cpp
+:000000 100644 0000000... 26f20c2... A	src/base/platform/SDL2/CMakeLists.txt
+:000000 100644 0000000... 07750c3... A	src/base/platform/SDL2/SDL_Application.cpp
+:000000 100644 0000000... defe402... A	src/base/platform/SDL2/SDL_EventLoop.cpp
+:000000 100644 0000000... 61efd2e... A	src/util/CMakeLists.txt
+:000000 100644 0000000... 1e94b76... A	src/util/logstream.cpp
+:100644 100644 a67506e... 22d70be... M	vendor/CMakeLists.txt
+:000000 100644 0000000... e21f601... A	vendor/SDL2.cmake
+
+commit 3fa0d3f91cce293d717fe8e0d0ba6db17a518f24
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Fri Aug 24 23:21:25 2018 +0200
+
+    removed cJSON again
+
+:100644 100644 9c9284e... 024ce3c... M	.gitmodules
+:160000 000000 86234db... 0000000... D	vendor/cJSON
+
+commit eca64278776369700b448d599121f54df26efd9d
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Fri Aug 24 23:21:12 2018 +0200
+
+    changes
+
+:100644 100644 12a1669... 9c9284e... M	.gitmodules
+:100644 000000 ae57d46... 0000000... D	include/wee/util/log.hpp
+:100644 100644 b445033... ef19231... M	src/CMakeLists.txt
+:100644 100644 b63f0ed... 57ca6d0... M	tests/CMakeLists.txt
+:100644 100644 0ad214d... 0bc2a45... M	tests/test_application.cpp
+:000000 160000 0000000... 86234db... A	vendor/cJSON
+:000000 160000 0000000... 04597c3... A	vendor/json
+
+commit 141736efa30cbed74b9a8515568bdc76cea82609
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Fri Aug 24 00:36:29 2018 +0200
+
+    start unit testing
+
+:100644 100644 5c77823... 04f173b... M	CMakeLists.txt
+:100644 000000 e69de29... 0000000... D	include/wee/base/application.h
+:100644 100644 bba7e8c... 4d38179... M	include/wee/config.h.in
+:100644 100644 aab0000... 98a8c3b... M	include/wee/wee.hpp
+:100644 100644 2f18dfc... b445033... M	src/CMakeLists.txt
+:000000 100644 0000000... b63f0ed... A	tests/CMakeLists.txt
+:000000 100644 0000000... 0ad214d... A	tests/test_application.cpp
+:100644 100644 e69de29... a67506e... M	vendor/CMakeLists.txt
+
+commit 5c30c7794655a67e450e45a553c2a00333933411
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Aug 13 15:09:49 2018 +0200
+
+    here. previous was Poco lib
+
+:000000 100755 0000000... 1e02959... A	scripts/pup.sh
+
+commit 077c317b24d972eb527a3b312558140a9d492b84
+Author: Emiel van Dam <emiel.van.dam@hetconsultancyhuis.nl>
+Date:   Mon Aug 13 15:08:45 2018 +0200
+
+    added pup script
+
+:100644 100644 8864ba5... 12a1669... M	.gitmodules
+:000000 160000 0000000... 076517d... A	vendor/poco
+
+commit 00694750c0a0981177136cd54679ae176601b672
+Author: emdagh <34509796+emdagh@users.noreply.github.com>
+Date:   Mon Aug 13 08:58:57 2018 +0200
+
+    Update games.md
+
+:100644 100644 5ae9012... 69ba0c5... M	doc/games.md
+
+commit c3e2eae0686936e155a3a0a926122dc9b3ecca3d
+Author: emdagh <34509796+emdagh@users.noreply.github.com>
+Date:   Mon Aug 13 08:58:31 2018 +0200
+
+    Update games.md
+
+:100644 100644 4302559... 5ae9012... M	doc/games.md
+
+commit 639f1e00706060f77844117826d145863f9283e2
+Author: emdagh <34509796+emdagh@users.noreply.github.com>
+Date:   Mon Aug 13 08:58:13 2018 +0200
+
+    Update games.md
+
+:100644 100644 a214a5f... 4302559... M	doc/games.md
+
+commit 85c84c6fb950b3ad2ceb4c547796551f10746451
+Author: miel <mielvandam@gmail.com>
+Date:   Mon Aug 13 00:06:32 2018 +0200
+
+    stuff added
+
+:100644 100644 ade5075... 8864ba5... M	.gitmodules
+:000000 100644 0000000... e69de29... A	gen/ios/Info.plist.in
+:000000 100644 0000000... d17420e... A	include/wee/core/builder.hpp
+:100644 100644 5f08b76... a0e6653... M	include/wee/core/mat4.hpp
+:100644 100644 4ed4bed... 4122624... M	include/wee/core/vec3.hpp
+:000000 100644 0000000... 9419d55... A	include/wee/engine/viewport.hpp
+:000000 100644 0000000... 3bf8f6d... A	include/wee/gfx/vertex_declaration.hpp
+:000000 100644 0000000... 380399f... A	include/wee/gfx/vertex_element.hpp
+:100644 000000 9419d55... 0000000... D	include/wee/gfx/viewport.hpp
+:000000 100644 0000000... e69de29... A	include/wee/net/tcp.cpp
+:000000 100644 0000000... e69de29... A	include/wee/net/tcp.hpp
+:000000 100644 0000000... e69de29... A	include/wee/net/udp.cpp
+:000000 100644 0000000... e69de29... A	include/wee/net/udp.hpp
+:100644 100644 6c89d4e... 6318e4b... M	src/core/mat4.cpp
+:100644 100644 0ea29ad... 895763a... M	src/core/vec3.cpp
+:000000 100644 0000000... abbb98f... A	src/engine/viewport.cpp
+:000000 100644 0000000... e69de29... A	src/gfx/.stub.cpp
+:100644 000000 683e077... 0000000... D	src/gfx/viewport.cpp
+:000000 160000 0000000... 39a72ab... A	vendor/enet
+
+commit bca3b9c28e251db61f9b0a986f2a570ad5114749
+Author: emdagh <34509796+emdagh@users.noreply.github.com>
+Date:   Sun Aug 12 23:09:33 2018 +0200
+
+    Initial commit
+
+:000000 100644 0000000... 259148f... A	.gitignore
+:000000 100644 0000000... dd18b09... A	LICENSE
+
+commit e959110c2914f4057dee69f08806570388e81d16
+Author: miel <mielvandam@gmail.com>
+Date:   Sun Aug 12 23:07:52 2018 +0200
+
+    initial commit
+
+:000000 100644 0000000... ade5075... A	.gitmodules
+:000000 100644 0000000... 5c77823... A	CMakeLists.txt
+:000000 100644 0000000... a214a5f... A	doc/games.md
+:000000 100644 0000000... dad69fb... A	include/wee/base/applet.hpp
+:000000 100644 0000000... e69de29... A	include/wee/base/application.h
+:000000 100644 0000000... bba7e8c... A	include/wee/config.h.in
+:000000 100644 0000000... 23986c3... A	include/wee/core/factory.hpp
+:000000 100644 0000000... 79412f5... A	include/wee/core/mat4.h
+:000000 100644 0000000... 5f08b76... A	include/wee/core/mat4.hpp
+:000000 100644 0000000... 552fd43... A	include/wee/core/singleton.hpp
+:000000 100644 0000000... cebd96a... A	include/wee/core/threadpool.hpp
+:000000 100644 0000000... 57e823a... A	include/wee/core/vec2.hpp
+:000000 100644 0000000... 4ed4bed... A	include/wee/core/vec3.hpp
+:000000 100644 0000000... 0d0083c... A	include/wee/engine/curve.hpp
+:000000 100644 0000000... 8616704... A	include/wee/engine/easing.hpp
+:000000 100644 0000000... e69de29... A	include/wee/gfx/graphics_context.hpp
+:000000 100644 0000000... e69de29... A	include/wee/gfx/graphics_device.hpp
+:000000 100644 0000000... 9419d55... A	include/wee/gfx/viewport.hpp
+:000000 100644 0000000... afc5864... A	include/wee/util/csv.hpp
+:000000 100644 0000000... ae57d46... A	include/wee/util/log.hpp
+:000000 100644 0000000... cddf6e6... A	include/wee/util/map.hpp
+:000000 100644 0000000... 12d1a15... A	include/wee/util/numeric.hpp
+:000000 100644 0000000... 39bbac3... A	include/wee/util/parallel.hpp
+:000000 100644 0000000... 924d62b... A	include/wee/util/range.hpp
+:000000 100644 0000000... 7085972... A	include/wee/util/split.hpp
+:000000 100644 0000000... b1505be... A	include/wee/util/tee.hpp
+:000000 100644 0000000... 2e932c1... A	include/wee/util/zip.hpp
+:000000 100644 0000000... aab0000... A	include/wee/wee.hpp
+:000000 100644 0000000... 2f18dfc... A	src/CMakeLists.txt
+:000000 100644 0000000... a5b705d... A	src/core/CMakeLists.txt
+:000000 100644 0000000... b460fa7... A	src/core/mat4.c
+:000000 100644 0000000... 6c89d4e... A	src/core/mat4.cpp
+:000000 100644 0000000... 0ea29ad... A	src/core/vec3.cpp
+:000000 100644 0000000... 0aa0020... A	src/engine/CMakeLists.txt
+:000000 100644 0000000... f3627ec... A	src/engine/easing.cpp
+:000000 100644 0000000... 67d5e9e... A	src/gfx/CMakeLists.txt
+:000000 100644 0000000... 683e077... A	src/gfx/viewport.cpp
+:000000 160000 0000000... 11cda0f... A	vendor/Box2D
+:000000 100644 0000000... e69de29... A	vendor/CMakeLists.txt
+:000000 160000 0000000... bda34ed... A	vendor/SDL2
+:000000 160000 0000000... d22cb09... A	vendor/SDL2_image
+:000000 160000 0000000... 2a97319... A	vendor/SDL2_mixer
+:000000 160000 0000000... 9ab26d2... A	vendor/cxx-prettyprint
+:000000 160000 0000000... 6a4d93a... A	vendor/date
