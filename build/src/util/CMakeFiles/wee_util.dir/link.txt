@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC  -fpic -Wall -Wextra -std=c++11 -msse -msse2 -g  -shared -Wl,-soname,libwee_util.so -o ../../lib/Debug/libwee_util.so CMakeFiles/wee_util.dir/logstream.cpp.o  -L/home/emda/git/wee/build/lib/Debug -Wl,-rpath,/home/emda/git/wee/build/lib/Debug: ../../lib/Debug/libfmtd.a 
