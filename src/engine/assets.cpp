@@ -13,19 +13,64 @@
 extern "C" const char* iOS_getDataPath();
 #endif
 
+Sint64 istream_seek( struct SDL_RWops *context, Sint64 offset, int whence)
+{
+	std::istream* stream = (std::istream*) context->hidden.unknown.data1;
+
+	if ( whence == SEEK_SET )
+		stream->seekg ( offset, std::ios::beg );
+	else if ( whence == SEEK_CUR )
+		stream->seekg ( offset, std::ios::cur );
+	else if ( whence == SEEK_END )
+		stream->seekg ( offset, std::ios::end );
+
+	return stream->fail() ? -1 : (int)stream->tellg();
+}
+
+
+size_t istream_read(SDL_RWops *context, void *ptr, size_t size, size_t maxnum)
+{
+	if ( size == 0 ) return -1;
+	std::istream* stream = (std::istream*) context->hidden.unknown.data1;
+	stream->read( (char*)ptr, size * maxnum );
+
+	return stream->bad() ? -1 : stream->gcount() / size;
+}
+
+int istream_close( SDL_RWops *context )
+{
+	if ( context ) {
+		SDL_FreeRW( context );
+	}
+	return 0;
+}
+
+Sint64 istream_size(SDL_RWops* io) {
+	std::istream* stream = (std::istream*) io->hidden.unknown.data1;
+	int offset = stream->tellg();
+	stream->seekg(0, std::ios::end);
+	int ret = stream->tellg();
+	stream->seekg(offset, std::ios::beg);
+	return ret;
+	
+}
 
 SDL_RWops* SDL_RWFromStream(std::istream& is) {
-    std::istreambuf_iterator<char> eos;
-    std::string contents(std::istreambuf_iterator<char>(is),
-        (std::istreambuf_iterator<char>())
-    );
+    SDL_RWops *rwops;
+    rwops = SDL_AllocRW();
 
-    auto* ptr = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-    if(!ptr) {
-        throw std::runtime_error(SDL_GetError());
+    if ( rwops != NULL ) 
+    {
+		rwops->size = istream_size;
+        rwops->seek = istream_seek;
+        rwops->read = istream_read;
+        rwops->write = NULL;
+        rwops->close = istream_close;
+        rwops->hidden.unknown.data1 = &is;
     }
-    return ptr;
+    return rwops;
 }
+
 
 namespace wee {
     std::string get_resource_path(const std::string& subDir) {

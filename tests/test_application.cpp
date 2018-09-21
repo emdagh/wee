@@ -121,6 +121,9 @@ public:
     virtual int load_content() {
         DEBUG_METHOD();
         texture = asset_helper::from_file<SDL_Texture>("@face", "awesome_face.png");
+
+        
+
         return 0;
     }
 

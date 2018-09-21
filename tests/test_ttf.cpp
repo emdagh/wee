@@ -22,25 +22,10 @@ void iterate(const json& j, T f) {
             f(it);
         }
     }
+
 }
 }
 
-void test_spritefont(const std::string& pt) {
-    using nlohmann::json;
-    std::ifstream is;
-    is.open(pt);
-    if(!is.is_open()) {
-        throw ::file_not_found(pt);
-    }
-
-    json::parser_callback_t cb = [](int depth, json::parse_event_t event, json & parsed) {
-
-        return true;
-    };
-
-    json::parse(is, cb);
-    is.close();
-}
 
 #include <engine/application.hpp>
 #include <engine/applet.hpp>
@@ -57,26 +42,29 @@ struct game : wee::applet {
         TTF_Quit();
     }
 
-#undef USE_ASSETS
+#define USE_ASSETS
 
-        TTF_Font* load_ttf(const std::string& name, int size, std::istream& is) {
+    int load_content() {
+        assets<TTF_Font>::instance();
+
+
+#ifdef USE_ASSETS
+        auto load_ttf = [&] (std::istream& is, int size) {
             std::istreambuf_iterator<char> eos;
             std::string contents(std::istreambuf_iterator<char>(is),
                 (std::istreambuf_iterator<char>())
             );
-
-            SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-
-            TTF_Font* font = TTF_OpenFontRW(rw, 0, 32);
-
-
-            return font;
+            return TTF_OpenFontRW(SDL_RWFromConstMem(contents.c_str(), (int)contents.length()), 1, size);
+        };
+        std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
+        std::ifstream is;
+        is.open(pt);
+        if(!is.is_open()) {
+            throw ::file_not_found(pt);
         }
-    int load_content() {
-
-
-        assets<TTF_Font>::instance();
-
+        auto* f = load_ttf(is, 32);
+        _sf = new sprite_font("@foofont", f);
+#else
 
         std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
         std::ifstream is;
@@ -84,21 +72,15 @@ struct game : wee::applet {
         if(!is.is_open()) {
             throw ::file_not_found(pt);
         }
-
-#ifdef USE_ASSETS
-        TTF_Font* font = load_ttf("@foo", 32, is);
-#else
-
         std::istreambuf_iterator<char> eos;
         std::string contents(std::istreambuf_iterator<char>(is),
             (std::istreambuf_iterator<char>())
         );
-        //SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-        TTF_Font* font = TTF_OpenFontRW(SDL_RWFromConstMem(contents.c_str(), (int)contents.length()), 0, 32);
+        TTF_Font* font = TTF_OpenFontRW(SDL_RWFromConstMem(contents.c_str(), (int)contents.length()), 1, 32);
+        _sf = new sprite_font("@foofont", font);
 
 #endif
 
-        _sf = new sprite_font("@foofont", font);
 
 
         return 0;
@@ -107,7 +89,7 @@ struct game : wee::applet {
         return 0;
     }
     int draw(SDL_Renderer* renderer) {
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
 
@@ -125,6 +107,7 @@ struct game : wee::applet {
         int yy = y - finfo.height - finfo.descent;// + (finfo.ascent + finfo.descent);
         
 
+        //SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::White);
         for(auto c : test) {
             const glyph_info& info = _sf->_ginfo[c];
             const SDL_Rect& src = _sf->get(c);

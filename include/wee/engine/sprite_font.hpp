@@ -73,6 +73,8 @@ namespace wee {
             int d = 0;
             _texture_size(num, maxw, maxh, &d);
 
+            DEBUG_LOG("creating texuture {0}x{0}", d);
+
             SDL_Surface* surface = SDL_CreateRGBSurface(0, d, d, 32,
                     SDL_RMASK, SDL_GMASK, SDL_BMASK, SDL_AMASK);
 
@@ -96,6 +98,7 @@ namespace wee {
                 _ginfo[a] = gi;
 
                 SDL_Surface* tmp = TTF_RenderGlyph_Blended(_font, a, {0xff, 0xff, 0xff, 0x00});
+                //SDL_Surface* tmp = TTF_RenderGlyph_Solid(_font, a, {0xff, 0xff, 0xff, 0xff});
                 packer::node* n = packer::insert(root, {0, 0, tmp->w, tmp->h});
                 n->id = (int)a;
 

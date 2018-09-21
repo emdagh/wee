@@ -61,13 +61,11 @@ namespace wee {
                     (std::istreambuf_iterator<char>())
                 );
 
-                SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+                //SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+				SDL_RWops* rw = SDL_RWFromStream(is);
 
                 TTF_Font* ptr = TTF_OpenFontRW(rw, 0, 32);
-                /*auto* ptr = TTF_OpenFontRW(SDL_RWFromStream(is), 0, size);
-                if(!ptr) {
-                    throw std::runtime_error(TTF_GetError());
-                }*/
+                
                 resources[name] = ptr;
                 return ptr;
 
