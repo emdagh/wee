@@ -56,18 +56,7 @@ namespace wee {
             DEBUG_VALUE_OF(name);
             DEBUG_VALUE_OF(size);
             if(resources.count(name) == 0) {
-                std::istreambuf_iterator<char> eos;
-                std::string contents(std::istreambuf_iterator<char>(is),
-                    (std::istreambuf_iterator<char>())
-                );
-
-                //SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-				SDL_RWops* rw = SDL_RWFromStream(is);
-
-                TTF_Font* ptr = TTF_OpenFontRW(rw, 0, 32);
-                
-                resources[name] = ptr;
-                return ptr;
+                resources[name] = TTF_OpenFontRW(SDL_RWFromStream(is), 0, size);
 
             }
             return resources.at(name);
