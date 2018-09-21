@@ -12,11 +12,11 @@ Now might be a good idea to look for a spline editor I can use to create level c
 ## 2018-09-16 (4hrs)
 Started work on GUI (layout mostly)
 
-## 2018-09-15: 4 hrs
+## 2018-09-15: (4 hrs)
 Same as yesterday
 
-## 2018-09-14: 7 hrs
-Today, I worked mainly on terran genetation
+## 2018-09-14: (7 hrs)
+Today, I worked mainly on terrain genetation
 
 ## 2018-09-13 (8 hrs)
 Created game concept for second game. Trying to fix Box2D build issues.
