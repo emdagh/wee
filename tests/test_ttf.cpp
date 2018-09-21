@@ -57,8 +57,21 @@ struct game : wee::applet {
         TTF_Quit();
     }
 
-#define USE_ASSETS
+#undef USE_ASSETS
 
+        TTF_Font* load_ttf(const std::string& name, int size, std::istream& is) {
+            std::istreambuf_iterator<char> eos;
+            std::string contents(std::istreambuf_iterator<char>(is),
+                (std::istreambuf_iterator<char>())
+            );
+
+            SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+
+            TTF_Font* font = TTF_OpenFontRW(rw, 0, 32);
+
+
+            return font;
+        }
     int load_content() {
 
 
@@ -66,23 +79,22 @@ struct game : wee::applet {
 
 
         std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
-
-#ifdef USE_ASSETS
-#else
-
         std::ifstream is;
         is.open(pt);
         if(!is.is_open()) {
             throw ::file_not_found(pt);
         }
+
+#ifdef USE_ASSETS
+        TTF_Font* font = load_ttf("@foo", 32, is);
+#else
+
         std::istreambuf_iterator<char> eos;
         std::string contents(std::istreambuf_iterator<char>(is),
             (std::istreambuf_iterator<char>())
         );
-
-        SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
-
-        TTF_Font* font = TTF_OpenFontRW(rw, 0, 32);
+        //SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+        TTF_Font* font = TTF_OpenFontRW(SDL_RWFromConstMem(contents.c_str(), (int)contents.length()), 0, 32);
 
 #endif
 

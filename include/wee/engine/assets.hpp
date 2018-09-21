@@ -56,11 +56,20 @@ namespace wee {
             DEBUG_VALUE_OF(name);
             DEBUG_VALUE_OF(size);
             if(resources.count(name) == 0) {
-                auto* ptr = TTF_OpenFontRW(SDL_RWFromStream(is), 0, size);
+                std::istreambuf_iterator<char> eos;
+                std::string contents(std::istreambuf_iterator<char>(is),
+                    (std::istreambuf_iterator<char>())
+                );
+
+                SDL_RWops* rw = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+
+                TTF_Font* ptr = TTF_OpenFontRW(rw, 0, 32);
+                /*auto* ptr = TTF_OpenFontRW(SDL_RWFromStream(is), 0, size);
                 if(!ptr) {
                     throw std::runtime_error(TTF_GetError());
-                }
+                }*/
                 resources[name] = ptr;
+                return ptr;
 
             }
             return resources.at(name);
@@ -72,6 +81,7 @@ namespace wee {
         typename dictionary<SDL_Texture*>::type resources;
 
         SDL_Texture* load(const std::string& name, std::istream& is) {
+            DEBUG_METHOD();
             if(resources.count(name) == 0) {
                 SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
                 return from_surface(name, surface);
@@ -80,6 +90,9 @@ namespace wee {
         }
         
         SDL_Texture* from_surface(const std::string& name, SDL_Surface* surface) {
+            DEBUG_METHOD();
+            DEBUG_VALUE_AND_TYPE_OF(name);
+            DEBUG_VALUE_AND_TYPE_OF(surface);
             if(!after) {
                 throw std::logic_error("no callback defined for asset manager");
             }
