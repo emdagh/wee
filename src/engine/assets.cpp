@@ -20,7 +20,11 @@ SDL_RWops* SDL_RWFromStream(std::istream& is) {
         (std::istreambuf_iterator<char>())
     );
 
-    return SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+    auto* ptr = SDL_RWFromConstMem(contents.c_str(), (int)contents.length());
+    if(!ptr) {
+        throw std::runtime_error(SDL_GetError());
+    }
+    return ptr;
 }
 
 namespace wee {

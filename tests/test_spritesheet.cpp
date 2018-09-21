@@ -1,4 +1,4 @@
-#include <engine/spritesheet.hpp>
+#include <engine/sprite_sheet.hpp>
 #include <util/logstream.hpp>
 #include <util/parallel.hpp>
 #include <nlohmann/json.hpp>
@@ -6,7 +6,7 @@
 #include <iostream>
 
 using nlohmann::json;
-using wee::spritesheet;
+using wee::sprite_sheet;
 
 template <typename T>
 void iterate(const json& j, T f) {
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
         json j;
         is >> j;
 
-        spritesheet s = j;
+        sprite_sheet s = j;
 
         DEBUG_VALUE_AND_TYPE_OF(s);
 

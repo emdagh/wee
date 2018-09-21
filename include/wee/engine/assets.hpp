@@ -39,10 +39,31 @@ namespace wee {
     struct assets<TTF_Font> : singleton<assets<TTF_Font> > {
         typename dictionary<TTF_Font*>::type resources;
 
+        assets() {
+            if(!TTF_WasInit()) {
+                TTF_Init();
+            }
+        }
+
+        virtual ~assets() {
+            if(TTF_WasInit()) {
+                TTF_Quit();
+            }
+        }
+
         TTF_Font* load(const std::string& name, int size, std::istream& is) {
             DEBUG_METHOD();
+            DEBUG_VALUE_OF(name);
+            DEBUG_VALUE_OF(size);
+            if(resources.count(name) == 0) {
+                auto* ptr = TTF_OpenFontRW(SDL_RWFromStream(is), 0, size);
+                if(!ptr) {
+                    throw std::runtime_error(TTF_GetError());
+                }
+                resources[name] = ptr;
 
-            return NULL;
+            }
+            return resources.at(name);
         }
     };
 
