@@ -414,6 +414,7 @@ struct game : applet {
             b2DebugDrawEXT(world_, renderer, camera_);
 
             SDL_RenderPresent(renderer);
+
         }
         return 0; 
     }
