@@ -1,5 +1,33 @@
 # Development diary
 
+## 2018-09-23 (5 hrs)
+Worked on planning into the wee hours; the descriptions on some of the ILO's are... cryptic.
+
+## 2018-09-22 (8 hrs)
+Work on getting TTF fonts into the framework in a nice way.
+
+Arrgh! First memory management issue! Very nice. Worked GDB like crazy trying to figure this one out. Details are in
+commit 250ec7d4eee9eb041570dbfe87c8e91ad598f579
+Eventually it was a mixture of RTFM and GDB that saved me. Phew.
+
+## 2018-09-21 (8 hrs)
+Did some refactoring / rewriting of sprite sheets for use in sprite fonts. Generalized the classes a bit.
+Had a call with Ahbishek, and the project proposal was approved! So, now he just needs to figure out how to mark it as such.
+Make sure to call/contact him about this Monday next week.
+
+## 2018-09-20 (8 hrs)
+Created a sprite font class, created several helper classes as well as creating a prelimenary setup of the asset manager. 
+
+## 2018-09-19 (8 hrs)
+Spent time working on the build system. Some third-party libraries need rather specific build setups. Needed to purge 
+some system libraries to test this. What I don't want with this framework is to end up saying 'it works on my laptop'.
+
+## 2018-09-18 (8 hrs)
+General programming work, mainly playing around with 3rd party libraries. Trying to make an informed decision about 
+composition vs. inheritance. Composition won out; mainly based on modern notions that OOP is kind of dead for
+most intents and purposes due to cache coherency issues with OOP (array of structs vs. struct of arrays [AOS vs SOA])
+
+
 ## 2018-09-17 (10hrs)
 finished up most of the prototype of the imgui for now. Buttons and sliders are in there; now I need to
 get some nice textures for it. Tomorrow I'll work on the gameplay of the Tiny Wings clone.

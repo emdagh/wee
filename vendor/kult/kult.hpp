@@ -299,7 +299,8 @@ namespace kult {
         // }
 
         virtual std::string name() const {
-            return std::string { (NAME >> 24) & 0xff, (NAME >> 16) & 0xff, (NAME >> 8) & 0xff, NAME & 0xff };
+            return std::to_string(NAME);
+            //return std::string { (NAME >> 24) & 0xff, (NAME >> 16) & 0xff, (NAME >> 8) & 0xff, NAME & 0xff };
         }
 
         virtual void purge( const type &id ) const {

@@ -113,12 +113,21 @@ std::ostream& operator << (std::ostream& os, const terrain_t& t) {
     return os << j;
 }
 
+typedef struct {
+    bool mouse_is_down;
+} input_t;
+
+std::ostream& operator << (std::ostream& os, const input_t& t) {
+    return os << t.mouse_is_down;
+}
+
 using collider  = kult::component<1 << 0, collider_t>;
 using rigidbody = kult::component<1 << 1, rigidbody_t>;
 using nested    = kult::component<1 << 2, nested_t>;
 using transform = kult::component<1 << 3, transform_t>;
 using visual    = kult::component<1 << 4, visual_t>;
 using terrain   = kult::component<1 << 5, terrain_t>;
+using input     = kult::component<1 << 7, input_t>;
 
 
 class collisions : public b2ContactListener {
@@ -165,10 +174,13 @@ struct player {
     static kult::type create(b2World* world, const vec2& at) {
 
         kult::type self = kult::entity();
-        
+
+        kult::add<input>(self).mouse_is_down = false;
+
         {
             b2BodyDef bd;
             bd.type = b2_dynamicBody; 
+            bd.linearDamping = 0.05f;
             kult::add<rigidbody>(self) = { world->CreateBody(&bd) };
         }
 
@@ -177,12 +189,13 @@ struct player {
         {
             b2CircleShape shape;
             shape.m_p.Set(0.0f, 0.0f);
-            shape.m_radius = SCREEN_TO_WORLD(10.0f);
+            shape.m_radius = SCREEN_TO_WORLD(20.0f);
             b2FixtureDef fd;
             //fd.filter.categoryBits = (uint16_t)collision_filter::player;
             //fd.filter.maskBits = (uint16_t)collision_filter::any;
             fd.density = 1.0f;
             fd.restitution = 0.0f;
+            fd.friction = 0.0f;
             fd.shape = &shape;
             fd.userData = (void*)self;
 
@@ -196,7 +209,7 @@ struct player {
     static void limit_velocity(kult::type _player) {
         b2Vec2 vel = kult::get<rigidbody>(_player).body->GetLinearVelocity();
         const float MIN_VELOCITY_X = 3.0f;
-        const float MAX_VELOCITY_X = 18.0f;
+        const float MAX_VELOCITY_X = 25.0f;
         const float MIN_VELOCITY_Y = -40.0f;
         const float MAX_VELOCITY_Y = 8.0f;
         vel.x = std::max(std::min(vel.x, MAX_VELOCITY_X), MIN_VELOCITY_X);
@@ -318,7 +331,19 @@ struct game : applet {
 
     void set_callbacks(application* app) {
         app->on_mousemove += [&] (int x, int y) {
-            DEBUG_LOG("mouse={},{}", x, y);
+            //DEBUG_LOG("mouse={},{}", x, y);
+            return 0;
+        };
+
+        app->on_mousedown += [&] (char) {
+            DEBUG_LOG("Mouse down");
+            kult::get<input>(_player).mouse_is_down = true;
+            return 0;
+        };
+
+        app->on_mouseup += [&] (char) {
+            DEBUG_LOG("Mouse up");
+            kult::get<input>(_player).mouse_is_down = false;
             return 0;
         };
 
@@ -356,7 +381,6 @@ struct game : applet {
         camera_.x = tx.p.x;
         camera_.y = tx.p.y;
 
-        player::limit_velocity(_player);
         {
             for(auto& id : kult::join<terrain>()) {
                 terrain_t& t = kult::get<terrain>(id);
@@ -365,6 +389,16 @@ struct game : applet {
                     terrain_chunk::reset(id, kult::get<terrain>(t.next).last);
                 }
             }
+        }
+
+        {
+            for(auto& id : kult::join<input, rigidbody>()) {
+
+                if(kult::get<input>(id).mouse_is_down) {
+                    kult::get<rigidbody>(id).body->ApplyForceToCenter(b2Vec2(1.5f, 9.0f), true);
+                }
+            }
+            player::limit_velocity(_player);
         }
 
         return 0; 

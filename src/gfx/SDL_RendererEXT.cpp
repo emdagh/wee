@@ -6,9 +6,9 @@ void SDL_RenderCopyEXT(struct SDL_Renderer* renderer, struct SDL_Texture* textur
 {
     SDL_RenderCopy(renderer, texture, &src, &dst);
 }
-void SDL_SetRenderDrawColorEXT(struct SDL_Renderer* renderer, const SDL_Color* color)
+void SDL_SetRenderDrawColorEXT(struct SDL_Renderer* renderer, const SDL_Color& color)
 {
-    SDL_SetRenderDrawColor(renderer, color->r, color->g, color->b, color->a);
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
 void SDL_RenderDrawCircleEXT(SDL_Renderer* renderer, int x, int y, int r) {
