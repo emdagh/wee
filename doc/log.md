@@ -1,5 +1,16 @@
 # Development diary
 
+## 2018-09-24 (8 hrs)
+Today, I decided to learn C++17 as a part of my PDP's / ILO's. Haven't put it into SMART context yet... But I'll do so ASAP.
+
+Worked on OpenGL low-level stuff. VertexBuffers mostly. Trying to iterate over an std::tuple<Ts...>. Seems way easier in C++17...
+
+## 2018-09-24 (8 hrs)
+Generalized terrain (cosine waves) so that it can tilt and tile inifinetely. 
+Generalized particle system to have external draw and update functions.
+Played around with particle systems. 
+Worked on the PDP a bit.
+
 ## 2018-09-23 (5 hrs)
 Worked on planning into the wee hours; the descriptions on some of the ILO's are... cryptic.
 

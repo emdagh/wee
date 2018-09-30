@@ -1,0 +1,7 @@
+{
+    "name" : "@foo",
+    "image" : "assets/img/foo.png",
+    "format" : "RGB565",
+    "meta" : {
+    }
+}

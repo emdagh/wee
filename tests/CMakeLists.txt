@@ -1,6 +1,7 @@
 
-
+file( GLOB COMMON_SOURCES common/*.cpp)
 file( GLOB APP_SOURCES *.cpp )
+
 foreach( testsourcefile ${APP_SOURCES} )
     string( REPLACE ".cpp" "" testname ${testsourcefile} )
     message(${testname})
@@ -8,7 +9,7 @@ foreach( testsourcefile ${APP_SOURCES} )
     get_filename_component(barename ${testname} NAME)
     message(STATUS ${barename})
 
-    add_executable( ${barename} ${testsourcefile} )
+    add_executable( ${barename} ${testsourcefile} ${COMMON_SOURCES} )
     target_link_libraries(
         ${barename}
         wee_engine
@@ -16,6 +17,7 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_gfx
         wee_core
         liquidfun
+        GL
         SDL_ttf
         SDL_image
         SDL2

@@ -1,0 +1,14 @@
+{
+    "fonts" : [
+        { 
+            "name" : "Boxy-Bold_16pt_regular",
+            "size" : 16,
+            "style" : "normal"
+        }, 
+        {
+            "name" : "Boxy-Bold_16pt_outlined_underlined",
+            "size" : 16,
+            "style" : "outline, underline"
+        }
+    ]
+}

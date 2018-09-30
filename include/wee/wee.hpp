@@ -24,4 +24,14 @@ namespace { // prevent cluttering of global namespace
     T& as_lvalue(T&& t) {
         return t;
     }
+    template <typename T>
+    T zero() {
+        return std::pair<T,T>().first;
+    }
+
+    template <typename T>
+    T one() {
+        return !zero<T>();
+    }
+
 }

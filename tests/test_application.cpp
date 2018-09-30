@@ -77,11 +77,11 @@ struct pstate {
 pstate pstate::_ = { 0.f, 0.f }; 
 
 struct particle_helper {
-    static void explode(emitter<pstate>* em, float x, float y, int count) {
+    static void explode(particles<pstate>* em, float x, float y, int count) {
        
         float spawnRadius = 32.0f;
         for(int i=0; i < count; i++) {
-            em->emit((emitter<pstate>::particle)
+            em->emit((particles<pstate>::particle)
             {
                 x + random(-spawnRadius, spawnRadius),
                 y + random(-spawnRadius, spawnRadius), 
@@ -99,13 +99,13 @@ struct particle_helper {
 
 class game : public applet {
     SDL_Texture* texture;
-    emitter<pstate>* p;
+    particles<pstate>* p;
 public:
 
     game() {
-        p = new emitter<pstate>(1000, 
+        p = new particles<pstate>(1000, 
 
-            [&] (emitter<pstate>::particle& p, int dt) {
+            [&] (particles<pstate>::particle& p, int dt) {
                 p.x += p.state.vx * dt;
                 p.y += p.state.vy * dt;
 
@@ -152,7 +152,6 @@ public:
             SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);//IndianRed);
             SDL_RenderClear(renderer);
             //SDL_RenderCopy(renderer, texture, NULL, NULL);
-            p->draw(renderer);
         }
 
 

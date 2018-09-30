@@ -1,9 +1,13 @@
 #undef KULT_BUILD_TESTS
+#include "common/common.hpp"
+#include "common/collisions.hpp"
+#include "common/components.hpp"
+#include "common/Box2DEXT.hpp"
+
 #include <kult.hpp>
 
 #include <Box2D/Box2D.h>
 
-#define DEFAULT_COLLIDER_CALLBACK [] (kult::type, kult::type, const vec2&) {}
 
 #include <nlohmann/json.hpp>
 #include <SDL.h>
@@ -12,29 +16,16 @@
 #include <engine/assets.hpp>
 #include <engine/application.hpp>
 #include <engine/applet.hpp>
+#include <engine/particles.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 
 #include <core/vec2.hpp>
-#include "Box2DEXT.hpp"
-#include "terrain.hpp"
+//#include "terrain.hpp"
 
 using nlohmann::json;
 using kult::entity;
 
-namespace wee {
-    void to_json(json& j, const vec2& v) {
-        j = {
-            { "x" , v.x },
-            { "y" , v.y }
-        };
-    }
-
-    void from_json(const json& j, vec2& v) {
-        v.x = j["x"];
-        v.y = j["y"];
-    }
-}
 
 using namespace wee;
 
@@ -43,119 +34,10 @@ float sigmoid(float x, float k) {
     return (x - x * k) / (k - std::abs(x) * 2 * k + 1);
 }
 
-typedef struct {
-    b2Fixture* fixture = NULL;
-    std::function<void(kult::type, kult::type, const vec2&)> enter = DEFAULT_COLLIDER_CALLBACK;
-    std::function<void(kult::type, kult::type, const vec2&)> leave = DEFAULT_COLLIDER_CALLBACK;
-} collider_t; 
-
-std::ostream& operator << (std::ostream& os, const collider_t& c) {
-    return os;
-}
-
-typedef struct {
-    b2Body* body;
-} rigidbody_t;
-
-std::ostream& operator << (std::ostream& os, const rigidbody_t& rb) {
-    return os << rb.body;
-}
-
-typedef struct {
-    vec2 p;
-    float t;
-} transform_t;
-
-std::ostream& operator << (std::ostream& os, const transform_t& tx) {
-    return os;
-}
-
-typedef struct {
-    kult::type parent;
-    vec2 offset;
-} nested_t;
-
-std::ostream& operator << (std::ostream& os, const nested_t& tx) {
-    return os;
-}
-
-typedef struct {
-    SDL_Texture* tex;
-    SDL_Rect     src;
-    SDL_Rect     dst;
-    SDL_Color    color;
-} visual_t;
-
-std::ostream& operator << (std::ostream& os, const visual_t& tx) {
-    return os;
-}
-
-typedef struct {
-    float* dst;
-    std::function<float(float, float, float)> easing;
-} tween_t;
-
-typedef struct {
-    int time;
-    int timeout;
-} timeout_t;
-
-typedef struct {
-    vec2 last;
-    kult::type next;
-} terrain_t;
-
-std::ostream& operator << (std::ostream& os, const terrain_t& t) {
-    json j = {
-        {"last", t.last},
-        {"next", t.next}
-    };
-    return os << j;
-}
-
-typedef struct {
-    bool mouse_is_down;
-} input_t;
-
-std::ostream& operator << (std::ostream& os, const input_t& t) {
-    return os << t.mouse_is_down;
-}
-
-using collider  = kult::component<1 << 0, collider_t>;
-using rigidbody = kult::component<1 << 1, rigidbody_t>;
-using nested    = kult::component<1 << 2, nested_t>;
-using transform = kult::component<1 << 3, transform_t>;
-using visual    = kult::component<1 << 4, visual_t>;
-using terrain   = kult::component<1 << 5, terrain_t>;
-using input     = kult::component<1 << 7, input_t>;
 
 
-class collisions : public b2ContactListener {
-public:
-    collisions() {}
-    virtual void BeginContact(b2Contact* contact) {
 
-        const b2Fixture* fA = contact->GetFixtureA();
-        const b2Fixture* fB = contact->GetFixtureB();
-        
-        auto objA = (kult::type)fA->GetUserData(); 
-        auto objB = (kult::type)fB->GetUserData();
 
-        b2WorldManifold man;
-        contact->GetWorldManifold(&man);
-        if(kult::has<collider>(objA)) {
-            kult::get<collider>(objA).enter(objA, objB, {man.normal.x, man.normal.y});
-        }
-        
-        if(kult::has<collider>(objB)) {
-            kult::get<collider>(objB).enter(objB, objA, {man.normal.x, man.normal.y});
-        }
-        
-        
-    }
-    virtual void EndContact(b2Contact*) {
-    }
-};
 
 enum class collision_filter : uint16_t {
     environment = 1 << 0,
@@ -169,6 +51,28 @@ enum class collision_filter : uint16_t {
 #define HILLS_PIXELSTEP         10
 #define HILLS_WIDTH             640
 #define HILLS_VERTEX_COUNT      HILLS_PER_CHUNK * HILLS_WIDTH / HILLS_PIXELSTEP
+/*
+template <typename T>
+struct particle_collision_emitter {
+    static kult::type create(b2World* world, kult::entity parent, const vec2& offset, float radius, std::function<voi) {
+        kult::type self = kult::entity();
+
+        kult::add<nested>(id).parent = parent;
+        kult::get<nested>(id).offset = offset;
+
+        b2BodyDef bd;
+        bd.type = b2_staticBody;
+        kult::add<rigidbody>(id).body = world->CreateBody(&bd);
+
+
+
+        b2FixtureDef fd;
+        fd.isSensor = true;
+        fd.shape = &shape;
+
+
+    }
+};*/
 
 struct player {
     static kult::type create(b2World* world, const vec2& at) {
@@ -176,6 +80,25 @@ struct player {
         kult::type self = kult::entity();
 
         kult::add<input>(self).mouse_is_down = false;
+        kult::get<input>(self).is_jumping = true;
+
+        /*kult::add<visual>(self).texture = assets<SDL_Texture>::instance().load(
+            "@animal", 
+            ::as_lvalue(
+                std::ifstream(
+                    wee::get_resource_path("") + "assets/img/sloth.png"
+                )
+            )
+        );
+
+        SDL_QueryTexture(kult::get<visual>(self).texture,
+            NULL,
+            NULL,
+            &kult::get<visual>(self).src.w,
+            &kult::get<visual>(self).src.h
+        );*/
+
+
 
         {
             b2BodyDef bd;
@@ -195,12 +118,18 @@ struct player {
             //fd.filter.maskBits = (uint16_t)collision_filter::any;
             fd.density = 1.0f;
             fd.restitution = 0.0f;
-            fd.friction = 0.0f;
             fd.shape = &shape;
             fd.userData = (void*)self;
 
             kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
-            kult::get<collider>(self).enter = DEFAULT_COLLIDER_CALLBACK;
+            kult::get<collider>(self).enter = [&] (const collision& c) {
+                kult::get<input>(c.self).is_jumping = false;
+                kult::get<input>(c.self).N = c.normal;
+
+            };
+            kult::get<collider>(self).leave = [&] (const collision& c) {
+                kult::get<input>(c.self).is_jumping = true;
+            };
             
         }
         return self;
@@ -217,6 +146,7 @@ struct player {
         kult::get<rigidbody>(_player).body->SetLinearVelocity(vel);
     }
 };
+
 
 using namespace wee;
 
@@ -288,12 +218,24 @@ struct terrain_chunk {
         std::vector<b2Vec2> vertices(n);
         b2Vec2 finish;
 
-        float r = randf(150.f);
+        float r = randf(75.0f);
 
+        constexpr const float to_rad = static_cast<float>(M_PI) / 180.0f;
+        vec2 direction = vec2::from_angle(to_rad * 10.0f); // 15deg decline
+        vec2 normal = vec2::normal_of(direction);
+        
         for(int i=0; i < n; i++) {
 
-            float x = i * step;
-            float y = std::cos(2 * M_PI * ((float)i / n)) * r; 
+            float x = direction.x * i * step;
+            float y = direction.y * i * step;//normal.y;// * i * step;//;
+
+            float ry = std::cos(2.0f * static_cast<float>(M_PI) * ((float)i / n)) * r;
+
+            x += normal.x * ry;
+            y += normal.y * ry;
+
+
+            DEBUG_LOG("{},{}", x, y);
 
             b2Vec2& vec = vertices[i];
             vec.x = start.x + x;
@@ -319,19 +261,60 @@ struct terrain_chunk {
 
 };
 
+struct pstate {
+    float vx, vy;
+    float scale;
+    float rotation;
+
+
+    static pstate _; 
+};
+
+pstate pstate::_ = { 0.0f, 0.0f };
+
+struct particle_helper {
+    static void spray(particles<pstate>* em, const b2Vec2& pos, const b2Vec2& vel, const vec2& n) {
+        DEBUG_METHOD();
+
+        float vlen_sq = vel.LengthSquared() / 8.0f;
+
+        //for(int i=0; i < 10; i++) {
+            particles<pstate>::particle res;
+            res.x = pos.x;
+            res.y = pos.y;
+            res.t = 0;
+            res.ttl = 1000 + (int)randf(2000.0f);
+            res.color = SDL_ColorPresetEXT::White;
+            float fs = randf();
+            res.state = { 
+                n.x * vlen_sq * fs, 
+                n.y * vlen_sq * fs, 
+                1.0f, 
+                randf() * 2.0f * M_PI 
+            };
+            
+
+            em->emit(res);
+        //}
+    }
+};
+
 struct game : applet {
     SDL_Rect camera_;
     float zoom_;
     b2World* world_;
     kult::type _player;
 
+    particles<pstate>* _particles;
+
     std::vector<kult::type> chunks;
+
+    int _airtime = 0;
 
     constexpr static const int NUM_CHUNKS = 2;
 
     void set_callbacks(application* app) {
         app->on_mousemove += [&] (int x, int y) {
-            //DEBUG_LOG("mouse={},{}", x, y);
             return 0;
         };
 
@@ -349,7 +332,32 @@ struct game : applet {
 
     }
 
-    virtual int load_content() { 
+    virtual int load_content() {
+        auto context = SDL_GL_GetCurrentContext();
+
+        std::string pt = wee::get_resource_path("") + "assets/img/smoke.png";
+        DEBUG_VALUE_OF(pt);
+        assets<SDL_Texture>::instance().load("@dirt", ::as_lvalue(std::ifstream(pt)));
+
+        _particles = new particles<pstate>(32, [&] (particles<pstate>::particle& p, int dt) {
+
+            p.state.vy += 1.f / dt * 9.8f;
+
+            p.x += p.state.vx;
+            p.y += p.state.vy;
+
+            p.state.vx *= 0.9f;
+            p.state.vy *= 0.9f;
+
+            float ip = (float)p.t / p.ttl;
+
+            p.state.scale = 1.0f + (3 * ip);
+            p.state.rotation = -dt * ip * 8.0f * M_PI;
+
+            p.t += dt;
+
+            p.color.a = (int)(1.0f - ip * 255.f);
+        });
         world_ = new b2World({0.0f, 9.8f});
 
         world_->SetContactListener(new collisions);
@@ -394,12 +402,23 @@ struct game : applet {
         {
             for(auto& id : kult::join<input, rigidbody>()) {
 
-                if(kult::get<input>(id).mouse_is_down) {
-                    kult::get<rigidbody>(id).body->ApplyForceToCenter(b2Vec2(1.5f, 9.0f), true);
+                b2Body* body = kult::get<rigidbody>(id).body;
+                const input_t& ip = kult::get<input>(id);
+
+                if(ip.mouse_is_down) {
+                    body->ApplyForceToCenter(b2Vec2(.5f, 9.0f), true);
+                }
+
+                if(ip.is_jumping) {
+                    _airtime += dt;
+                } else {
+                    particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), ip.N);
                 }
             }
             player::limit_velocity(_player);
         }
+
+        _particles->update(dt);
 
         return 0; 
     }
@@ -412,6 +431,60 @@ struct game : applet {
             SDL_RenderClear(renderer);
 
             b2DebugDrawEXT(world_, renderer, camera_);
+                
+
+            int cx = -camera_.x + (camera_.w >> 1);
+            int cy = -camera_.y + (camera_.h >> 1);
+            for(auto& id : kult::join<transform, visual>()) {
+                const visual_t& vis = kult::get<visual>(id);
+                const transform_t& tx = kult::get<transform>(id);
+                SDL_Rect dst = {
+                    cx + static_cast<int>(tx.p.x) - (vis.src.w >> 1),
+                    cy + static_cast<int>(tx.p.y) - (vis.src.h >> 1),
+                    vis.src.w,
+                    vis.src.h
+                };
+
+                SDL_RenderCopyEx(renderer, 
+                    vis.texture,
+                    &vis.src,
+                    &dst,
+                    tx.t,
+                    NULL,
+                    SDL_FLIP_NONE);
+
+            }
+
+            _particles->draw([&] (const particles<pstate>::container_type& particles) {
+                SDL_Texture* tex = assets<SDL_Texture>::instance().get("@dirt");
+                int w, h;
+                SDL_QueryTexture(tex, NULL, NULL, &w, &h);
+
+                SDL_Rect src = { 0, 0, w, h };
+
+                int cx = -camera_.x + (camera_.w >> 1);
+                int cy = -camera_.y + (camera_.h >> 1);
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+                for(size_t i=0; i < particles.size(); ++i) {
+                    auto& ref = particles[i];
+
+                    int ww = (int)(w * ref.state.scale);
+                    int hh = (int)(h * ref.state.scale);
+
+                    SDL_Rect dst = { 
+                        cx + static_cast<int>((ref.x - w / 2)), 
+                        cy + static_cast<int>((ref.y - h / 2)), 
+                        ww,
+                        hh
+                    };
+                    //SDL_SetRenderDrawColor(renderer, ref.color.r, ref.color.g, ref.color.b, ref.color.a);
+                    SDL_SetTextureColorMod(tex, ref.color.r, ref.color.g, ref.color.b);
+                    SDL_SetTextureAlphaMod(tex, ref.color.a);
+
+                    
+                    SDL_RenderCopyEx(renderer, tex, &src, &dst, ref.state.rotation, NULL, SDL_FLIP_NONE);
+                }
+            });
 
             SDL_RenderPresent(renderer);
 

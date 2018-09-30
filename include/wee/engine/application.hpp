@@ -25,6 +25,11 @@ namespace wee {
         event_handler<int(uint8_t)> on_mousedown;
         event_handler<int(uint8_t)> on_mouseup;
         event_handler<int(int, int)> on_mousemove;
+
+        event_handler<void(void)> before_update;
+        event_handler<void(void)> after_update;
+        event_handler<void(void)> before_draw;
+        event_handler<void(void)> after_draw;
     };
 
 }
