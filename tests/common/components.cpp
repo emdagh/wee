@@ -15,6 +15,12 @@ namespace wee {
         v.y = j["y"];
     }
 }
+std::ostream& operator << (std::ostream& os, const articulation_t&) {
+    return os;;
+}
+std::ostream& operator << (std::ostream& os, const raycast_t&) {
+    return os;
+}
 std::ostream& operator << (std::ostream& os, const collider_t&) {
     return os << "collider_t";
 }
