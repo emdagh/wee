@@ -10,7 +10,7 @@ using namespace wee;
 typedef kult::type entity_type;
 
 
-class b2RayCastListener : public b2RayCastCallback {
+class b2RayCastClosest : public b2RayCastCallback {
     b2Fixture* _fixture;
     b2Vec2 _point, _normal;
     float _fraction= 1.f;
@@ -187,7 +187,6 @@ class game : public applet {
     SDL_Rect _camera;
     entity_type b0, p, b1;
     vec2f _mouse_pos;
-    b2RayCastListener _raycast;
     kult::type _rope;
 public:
     game() {
@@ -264,7 +263,8 @@ public:
         b2Vec2 pb = SCREEN_TO_WORLD(temp);
 
         //_world->RayCast(&_raycast, pa, pb);
-        _raycast.RayCast(_world, pa, pb);
+        b2RayCastClosest rc;
+        rc.RayCast(_world, pa, pb);
         return 0;
     }
 
