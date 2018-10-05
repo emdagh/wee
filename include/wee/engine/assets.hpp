@@ -23,9 +23,6 @@ namespace wee {
         typedef std::map<std::string, T> type;
     };
 
-    
-
-
     std::string get_resource_path(const std::string&);
 
     template <typename T>
@@ -67,10 +64,18 @@ namespace wee {
     struct assets<SDL_Texture> : singleton<assets<SDL_Texture> > {
         typename dictionary<SDL_Texture*>::type resources;
 
+        assets() {
+            //IMG_Init(IMG_INIT_PNG | IMG_INIT_GIF | IMG_INIT_JPG)
+        }
+
         SDL_Texture* load(const std::string& name, std::istream& is) {
             DEBUG_METHOD();
+            DEBUG_VALUE_AND_TYPE_OF(name);
             if(resources.count(name) == 0) {
                 SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
+                if(!surface) {
+                    throw std::runtime_error(IMG_GetError());
+                }
                 return from_surface(name, surface);
             }
             return resources[name];

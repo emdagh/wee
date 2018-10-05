@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
-PROJECT(SDL_image C)
+PROJECT(SDL2_image C)
 
 add_definitions(-DLOAD_PNG)
 
@@ -65,7 +65,7 @@ endif(ATOM_PLATFORM_IOS)
 add_library(z ${SRC_LIBZ})
 #add_library(png ${SRC_LIBPNG})
 
-add_library(SDL_image ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
+add_library(SDL2_image ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 
 if(ATOM_PLATFORM_IOS)
     set(SDL_IMAGE_COMPILE_FLAGS "-fno-objc-arc")
@@ -78,8 +78,8 @@ if(ATOM_PLATFORM_IOS)
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
     )
 endif(ATOM_PLATFORM_IOS)
-target_link_libraries(SDL_image png z)
-install(TARGETS SDL_image DESTINATION .)
+target_link_libraries(SDL2_image png z)
+install(TARGETS SDL2_image DESTINATION .)
 
 
 

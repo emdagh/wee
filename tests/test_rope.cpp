@@ -1,11 +1,17 @@
 #include "common/common.hpp"
 #include "common/components.hpp"
 #include "common/Box2DEXT.hpp"
+#include <engine/assets.hpp>
 #include <util/logstream.hpp>
 #include <kult.hpp>
 #include <Box2D/Box2D.h>
+#include <tmxlite/Map.hpp>
+#include <tmxlite/Layer.hpp>
+#include <tmxlite/TileLayer.hpp>
+#include <string>
 
 using namespace wee;
+typedef int gid;
 
 typedef kult::type entity_type;
 
@@ -16,17 +22,15 @@ class b2RayCastClosest : public b2RayCastCallback {
     float _fraction= 1.f;
 public:
     void RayCast(b2World* world, const b2Vec2& p1, const b2Vec2& p2) {
-        DEBUG_METHOD();
         _fixture = NULL;
         _fraction = 1.0f;
         world->RayCast(this, p1, p2);
-        DEBUG_LOG("end");
         if(_fixture) {
             kult::type self = reinterpret_cast<kult::type>(_fixture->GetUserData());
             raycast_t& r = kult::get<raycast>(self);
-            r.is_hit = true;
-            r.point = {_point.x, _point.y};
-            r.normal = {_normal.x, _normal.y};
+            r.is_hit     = true;
+            r.point      = {_point.x, _point.y};
+            r.normal     = {_normal.x, _normal.y};
         }
 
     }
@@ -179,6 +183,14 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
     return self;
 }
 
+kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src) {
+    DEBUG_METHOD();
+    kult::type self = kult::entity();
+    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White };
+    kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, 0.0f};
+    return self;
+}
+
 
 class game : public applet {
     b2World* _world;
@@ -202,7 +214,81 @@ public:
         create_block(_world, { -16, 100, 32, 32 });
         create_block(_world, { -16, 150, 32, 32 });
         _rope = create_rope_between(_world, p, b1, kult::get<rigidbody>(b1).body->GetWorldCenter());
-        
+
+        std::string pt = wee::get_resource_path("") + "assets/tiled-maps-master/jb-32.tmx";
+        tmx::Map tiled_map;
+        tiled_map.load(pt);
+        auto map_dimensions = tiled_map.getTileCount();
+        int rows = map_dimensions.y;
+        int cols = map_dimensions.x;
+
+        auto tile_size = tiled_map.getTileSize();
+        int tile_w = tile_size.x;
+        int tile_h = tile_size.y;
+
+        std::map<gid, SDL_Texture*> tilesets;
+
+        auto& map_tilesets = tiled_map.getTilesets();
+        for(auto& tset : map_tilesets) {
+            auto* tex = wee::assets<SDL_Texture>::instance().load(
+                tset.getImagePath(),
+                ::as_lvalue(
+                    std::ifstream(tset.getImagePath())
+                )
+            );
+            tilesets.insert(std::pair<gid, SDL_Texture*>(tset.getFirstGID(), tex));
+        }
+
+        const auto& map_layers = tiled_map.getLayers();
+        for(const auto& layer : map_layers) {
+            if(layer->getType() != tmx::Layer::Type::Tile) {
+                continue;
+            }
+
+            auto* tile_layer = dynamic_cast<const tmx::TileLayer*>(layer.get());
+            auto& layer_tiles = tile_layer->getTiles();
+
+            for(int y=0; y < rows; y++) {
+                for(int x=0; x < cols; x++) {
+                    int ix = x + y * cols;
+                    gid cur_gid = layer_tiles[ix].ID;
+                    if(0 == cur_gid) {
+                        continue;
+                    }
+
+                    auto tset_gid = -1;
+                    for(auto& ts : tilesets) {
+                        if(ts.first <= cur_gid) {
+                            tset_gid = ts.first;
+                            break;
+                        }
+                    }
+
+                    if(tset_gid == -1) 
+                        continue;
+
+                    cur_gid -= tset_gid;
+
+                    int ts_w = 0;
+                    int ts_h = 0;
+                    SDL_QueryTexture(tilesets[tset_gid],
+                            NULL, NULL, &ts_w, &ts_h);
+
+                    int region_x = (cur_gid % (ts_w / tile_w)) * tile_w;
+                    int region_y = (cur_gid / (ts_w / tile_h)) * tile_h;
+
+                    int x_pos = x * tile_w;
+                    int y_pos = y * tile_h;
+
+                    DEBUG_VALUE_OF(region_x);
+                    DEBUG_VALUE_OF(region_y);
+                    DEBUG_VALUE_OF(x_pos);
+                    DEBUG_VALUE_OF(y_pos);
+                    tile(tilesets[tset_gid], {x_pos, y_pos}, {region_x, region_y, tile_w, tile_h});
+
+                }
+            }
+        }
     }
 
     int update(int dt) {
@@ -224,17 +310,41 @@ public:
         _camera.y = pos.y;
     }
 
+    
+
     int draw(SDL_Renderer* renderer) {
         SDL_RenderGetLogicalSize(renderer, &_camera.w, &_camera.h);
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
-        b2DebugDrawEXT(_world, renderer, _camera);
-        SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
-        SDL_RenderDrawLine(renderer, 0, _camera.h >> 1, _camera.w, _camera.h >> 1);
-
-        
         int cx = -_camera.x + (_camera.w >> 1);
         int cy = -_camera.y + (_camera.h >> 1);
+        {
+            for(const auto& e : kult::join<transform, visual>()) {
+                const visual_t& v = kult::get<visual>(e);
+                const transform_t& t = kult::get<transform>(e);
+
+                SDL_Rect dst = {
+                    cx + t.p.x, 
+                    cy + t.p.y,
+                    v.src.w, 
+                    v.src.h
+                };
+                SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::White);
+                SDL_RenderDrawRect(renderer, &dst);
+                SDL_RenderCopy(renderer, 
+                    v.texture,
+                    &v.src,
+                    &dst
+                );
+
+
+            }
+        }
+        b2DebugDrawEXT(_world, renderer, _camera);
+        
+        SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
+
+        
 
         b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
         b2Vec2 temp = { _mouse_pos.x, _mouse_pos.y };

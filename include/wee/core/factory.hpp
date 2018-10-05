@@ -3,6 +3,7 @@
 #include <core/singleton.hpp>
 #include <string>
 #include <map>
+#include <functional>
 
 namespace wee {
 
@@ -11,10 +12,10 @@ template <typename T, typename ClassId = std::string>
 struct factory 
 : public singleton<factory<T, ClassId> >
 {
-    typedef T*(*create_fn)();
+    typedef std::function<T*(void)> create_fn; //T*(*create_fn)(void);
     typedef ClassId classid_t;
     
-    void register_class(const classid_t& id, create_fn fn) {
+    void register_class(const classid_t& id, const create_fn& fn) {
         auto it = _reg.find(id);
         
         if(it != _reg.end()) 
@@ -22,10 +23,11 @@ struct factory
         _reg[id] = fn;
     }
 
-    T* create(const classid_t& id) {
+    template <typename... Args>
+    T* create(const classid_t& id, const Args&&... args) {
         auto it = _reg.find(id);
         if(it != _reg.end() ) 
-            return (*it).second();
+            return (*it).second(std::forward<Args>(args)...);
         return NULL;
     }
     
@@ -33,7 +35,23 @@ protected:
     std::map<ClassId, create_fn> _reg;
 };
 
-template <typename S, typename T, typename ClassId = std::string>
+//struct <typename S, typename T>
+///static S* factory_basic_create() { return new T(); }
+
+template <typename S, typename T, typename C = std::string>
+void register_factory(const C& id) {
+    factory<S, C>::instance().register_class(id, [] () { 
+        return dynamic_cast<S*>(new T()); 
+    });
+}
+
+template <typename S, typename T, typename C = std::string>
+void register_factory(const C& id, const typename factory<S, C>::create_fn& fn) {
+    factory<S, C>::instance().register_class(id, fn);
+}
+
+
+/*template <typename S, typename T, typename ClassId = std::string>
 struct register_factory {
     typedef S base_t;
     typedef T derived_t;
@@ -51,7 +69,7 @@ protected:
     static base_t* create() {
         return new derived_t;
     }
-};
+};*/
 
 
 
