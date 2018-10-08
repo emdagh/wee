@@ -1,4 +1,21 @@
 # Development diary
+## 2018-08-10 (8hrs)
+worked on TMX -> box2D converters 
+## 2018-07-10(8 hrs)
+C++17 lectures, worked on TMX loader
+## 2018-06-10
+C++17 lectures, worked on gameplay
+## 2018-05-10
+## 2018-04-10
+## 2018-03-10
+## 2018-02-10
+## 2018-01-10
+## 2018-30-09
+## 2018-29-09
+## 2018-28-09
+## 2018-27-09
+## 2018-26-09
+## 2018-25-09
 
 ## 2018-09-24 (8 hrs)
 Today, I decided to learn C++17 as a part of my PDP's / ILO's. Haven't put it into SMART context yet... But I'll do so ASAP.

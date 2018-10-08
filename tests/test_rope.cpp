@@ -15,6 +15,178 @@ typedef int gid;
 
 typedef kult::type entity_type;
 
+struct b2BodyBuilder : public singleton<b2BodyBuilder> {
+    typedef std::function<b2Body*(b2World*, const tmx::Object&)> create_function;
+
+    b2Body* build(b2World* world, const tmx::Object& obj) {
+        const auto& ix= obj.getShape();
+        _mp[ix](world, obj);
+    }
+
+    void push(const tmx::Object::Shape& ix, const create_function& fun) {
+        _mp[ix] = fun;
+    }
+
+    std::map<tmx::Object::Shape, create_function> _mp;
+};
+
+static class register_factories {
+public:
+
+    static b2Body* create_polygon(b2World* world, const tmx::Object& obj) {
+        const auto& pos  = obj.getPosition();
+        const auto& aabb = obj.getAABB();
+
+        kult::type self = kult::entity();
+        b2Vec2 halfWS;
+        halfWS.Set(aabb.width / 2, aabb.height / 2);
+
+        std::vector<b2Vec2> vertices;
+
+        for(const auto& point : obj.getPoints()) {
+            b2Vec2 pos;
+            pos.Set(SCREEN_TO_WORLD(point.x), SCREEN_TO_WORLD(point.y));
+            vertices.push_back(pos);
+        }
+        b2Body* body = nullptr;
+        b2Fixture* fixture = nullptr;
+        {
+            b2BodyDef bd;
+            bd.type = b2_staticBody;
+            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+            body = world->CreateBody(&bd);
+        }
+        {
+            b2PolygonShape shape;
+            shape.Set(&vertices[0], vertices.size());
+            b2FixtureDef def;
+            def.shape               = &shape;
+            def.isSensor            = false;
+            def.filter.categoryBits = 0xffff;
+            def.filter.maskBits     = 0xffff;
+            def.userData            = reinterpret_cast<void*>(self);
+            fixture                 = body->CreateFixture(&def);
+        }
+        kult::add<rigidbody>(self).body = body;
+        kult::add<collider>(self).fixture = fixture;
+        kult::add<raycast>(self).is_hit = false;
+
+        return body;
+    }
+
+    register_factories() {
+        b2BodyBuilder::instance().push(tmx::Object::Shape::Polygon, create_polygon);
+
+        b2BodyBuilder::instance().push(tmx::Object::Shape::Ellipse,
+            [&] (b2World* world, const tmx::Object& obj) -> b2Body* {
+                const auto& aabb = obj.getAABB();
+                const auto& pos  = obj.getPosition();
+                
+                assert(aabb.width == aabb.height);
+                
+                float radius = aabb.width / 2.0f;
+                kult::type self = kult::entity();
+                b2Body* body = nullptr;
+                b2Fixture* fixture = nullptr;
+                
+                {
+                    b2BodyDef bd;
+                    bd.type = b2_staticBody;
+                    bd.position.Set(SCREEN_TO_WORLD(pos.x + radius), SCREEN_TO_WORLD(pos.y + radius));
+                    body = world->CreateBody(&bd);
+                }
+                
+                {
+
+                    b2CircleShape shape;
+                    shape.m_radius = SCREEN_TO_WORLD(radius);//obj.m_width / 2);
+                    b2FixtureDef def;
+                    def.shape = &shape;
+                    def.isSensor = false;
+                    def.filter.categoryBits = 0xffff;
+                    def.filter.maskBits = 0xffff;
+                    def.userData = reinterpret_cast<void*>(self);
+                    fixture = body->CreateFixture(&def);
+                }
+
+                kult::add<rigidbody>(self).body = body;
+                kult::add<collider>(self).fixture = fixture;
+                kult::add<raycast>(self).is_hit = false;
+
+                return body;
+            }
+        );
+    }
+}_;
+
+//template <typename T>
+//T* build(
+
+
+void parse_tmx(b2World* world, const std::string& pt) {
+    tmx::Map map;
+
+    if(map.load(pt)) {
+        DEBUG_LOG("loaded map version: {}.{}", 
+                map.getVersion().upper,
+                map.getVersion().lower);
+        const auto& properties = map.getProperties();
+        DEBUG_LOG("map has {} properties", properties.size());
+        for(const auto& p : properties) {
+            DEBUG_VALUE_OF(p.getName());
+            DEBUG_VALUE_OF((int)p.getType());
+
+        }
+
+        const auto& layers = map.getLayers();
+        DEBUG_LOG("map has {} layers", layers.size());
+        for(const auto& layer : layers) {
+
+            if(layer->getType() == tmx::Layer::Type::Object) {
+                DEBUG_LOG("found object layer {}",
+                    layer->getName());
+
+                const auto& objects = dynamic_cast<tmx::ObjectGroup*>(layer.get())->getObjects();
+
+                for(const auto& object : objects) {
+                    DEBUG_LOG("object {}", object.getName());
+                    
+                    const auto& position = object.getPosition();
+                    const auto& type = object.getType();
+                    const auto& shape = object.getShape();
+
+                    b2Body* body = b2BodyBuilder::instance().build(world, object);
+                    DEBUG_VALUE_OF(body);
+
+
+                    DEBUG_LOG("position: {},{}", position.x, position.y);
+
+                    const auto& object_properties = object.getProperties();
+                    DEBUG_LOG("object has {} properties", 
+                        object_properties.size());
+                    for(const auto& object_property : object_properties) {
+                        DEBUG_LOG("property: {} ({})", 
+                            object_property.getName(),
+                            (int)object_property.getType()
+                        );
+                    }
+                }
+            }
+            const auto& layer_properties = layer->getProperties();
+            DEBUG_LOG("layer has {} properties", layer_properties.size());
+            for(const auto& p : layer_properties) {
+                DEBUG_LOG("property: {} ({})", 
+                    p.getName(),
+                    (int)p.getType()
+                );
+
+            }
+
+        }
+
+    }
+
+}
 
 class b2RayCastClosest : public b2RayCastCallback {
     b2Fixture* _fixture;
@@ -184,7 +356,6 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
 }
 
 kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src) {
-    DEBUG_METHOD();
     kult::type self = kult::entity();
     kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White };
     kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, 0.0f};
@@ -215,7 +386,9 @@ public:
         create_block(_world, { -16, 150, 32, 32 });
         _rope = create_rope_between(_world, p, b1, kult::get<rigidbody>(b1).body->GetWorldCenter());
 
-        std::string pt = wee::get_resource_path("") + "assets/tiled-maps-master/jb-32.tmx";
+        std::string pt = wee::get_resource_path("") + "assets/levels/level.tmx";
+        parse_tmx(_world, pt);
+
         tmx::Map tiled_map;
         tiled_map.load(pt);
         auto map_dimensions = tiled_map.getTileCount();
@@ -280,10 +453,10 @@ public:
                     int x_pos = x * tile_w;
                     int y_pos = y * tile_h;
 
-                    DEBUG_VALUE_OF(region_x);
+                    /*DEBUG_VALUE_OF(region_x);
                     DEBUG_VALUE_OF(region_y);
                     DEBUG_VALUE_OF(x_pos);
-                    DEBUG_VALUE_OF(y_pos);
+                    DEBUG_VALUE_OF(y_pos);*/
                     tile(tilesets[tset_gid], {x_pos, y_pos}, {region_x, region_y, tile_w, tile_h});
 
                 }
@@ -329,8 +502,8 @@ public:
                     v.src.w, 
                     v.src.h
                 };
-                SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::White);
-                SDL_RenderDrawRect(renderer, &dst);
+                /*SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::White);
+                SDL_RenderDrawRect(renderer, &dst);*/
                 SDL_RenderCopy(renderer, 
                     v.texture,
                     &v.src,
