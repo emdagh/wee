@@ -74,8 +74,92 @@ public:
         return body;
     }
 
+    static b2Body* create_polyline(b2World* world, const tmx::Object& obj) {
+
+        DEBUG_METHOD();
+        const auto& pos  = obj.getPosition();
+        const auto& aabb = obj.getAABB();
+
+        kult::type self = kult::entity();
+        b2Vec2 halfWS;
+        halfWS.Set(aabb.width / 2, aabb.height / 2);
+
+        std::vector<b2Vec2> vertices;
+
+        for(const auto& point : obj.getPoints()) {
+            b2Vec2 pos;
+            pos.Set(SCREEN_TO_WORLD(point.x), SCREEN_TO_WORLD(point.y));
+            vertices.push_back(pos);
+        }
+        b2Body* body = nullptr;
+        b2Fixture* fixture = nullptr;
+        {
+            b2BodyDef bd;
+            bd.type = b2_staticBody;
+            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+            body = world->CreateBody(&bd);
+        }
+        {
+            //b2PolygonShape shape;
+            b2ChainShape shape;
+            shape.CreateChain(&vertices[0], vertices.size());
+            b2FixtureDef def;
+            def.shape               = &shape;
+            def.isSensor            = false;
+            def.filter.categoryBits = 0xffff;
+            def.filter.maskBits     = 0xffff;
+            def.userData            = reinterpret_cast<void*>(self);
+            fixture                 = body->CreateFixture(&def);
+        }
+        kult::add<rigidbody>(self).body = body;
+        kult::add<collider>(self).fixture = fixture;
+        kult::add<raycast>(self).is_hit = false;
+
+        return body;
+
+
+
+    };
+    static b2Body* create_rectangle(b2World* world, const tmx::Object& obj) {
+
+        kult::type self = kult::entity();
+
+        const auto& aabb = obj.getAABB();
+        const auto& pos  = obj.getPosition();
+        b2Vec2 halfWS;
+        halfWS.Set(aabb.width / 2, aabb.height / 2);
+
+        b2Body* body = nullptr;
+        b2Fixture* fixture = nullptr;
+        {
+            b2BodyDef bd;
+            bd.type = b2_staticBody;
+            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+            body = world->CreateBody(&bd);
+        }
+        {
+            b2PolygonShape shape;
+            shape.SetAsBox(SCREEN_TO_WORLD(halfWS.x), SCREEN_TO_WORLD(halfWS.y));
+            b2FixtureDef def;
+            def.shape               = &shape;
+            def.isSensor            = false;
+            def.filter.categoryBits = 0xffff;
+            def.filter.maskBits     = 0xffff;
+            def.userData            = reinterpret_cast<void*>(self);
+            fixture                 = body->CreateFixture(&def);
+        }
+        
+        kult::add<rigidbody>(self).body = body;
+        kult::add<collider>(self).fixture = fixture;
+        kult::add<raycast>(self).is_hit = false;
+
+        return body;
+    };
+
     register_factories() {
         b2BodyBuilder::instance().push(tmx::Object::Shape::Polygon, create_polygon);
+        b2BodyBuilder::instance().push(tmx::Object::Shape::Rectangle, create_rectangle);
+        b2BodyBuilder::instance().push(tmx::Object::Shape::Polyline, create_polyline);
 
         b2BodyBuilder::instance().push(tmx::Object::Shape::Ellipse,
             [&] (b2World* world, const tmx::Object& obj) -> b2Body* {
