@@ -65,6 +65,7 @@ typedef struct {
     SDL_Texture* texture = NULL;
     SDL_Rect     src;
     SDL_Color    color = {255,255,255,255};
+    int layer;
 } visual_t;
 
 

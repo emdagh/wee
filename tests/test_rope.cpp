@@ -305,7 +305,6 @@ public:
     }
 };
 
-
 struct camera {
     SDL_Rect rect;
 };
@@ -461,14 +460,25 @@ public:
         _camera = { 0, 0, 0, 0 };
     }
     int load_content() {
-        b0 = create_block(_world, {-100, 0, 200, 8 });
         p  = create_player(_world, {0, -150});
         b1 = create_block(_world, { -16, -300, 32, 32 });
-        create_block(_world, { -16, -200, 32, 32 });
-        create_block(_world, { 200, -100, 32, 32 });
-        create_block(_world, { -16, 100, 32, 32 });
-        create_block(_world, { -16, 150, 32, 32 });
         _rope = create_rope_between(_world, p, b1, kult::get<rigidbody>(b1).body->GetWorldCenter());
+
+        assets<SDL_Texture>::instance().load("@BG_mountains", ::as_lvalue(
+            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+        ));
+        assets<SDL_Texture>::instance().load("@BG_clouds", ::as_lvalue(
+            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+        ));
+        assets<SDL_Texture>::instance().load("@MG_clouds_1", ::as_lvalue(
+            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+        ));
+        assets<SDL_Texture>::instance().load("@MG_clouds_2", ::as_lvalue(
+            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+        ));
+        assets<SDL_Texture>::instance().load("@MG_clouds_3", ::as_lvalue(
+            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+        ));
 
         std::string pt = wee::get_resource_path("") + "assets/levels/level.tmx";
         parse_tmx(_world, pt);
@@ -576,37 +586,37 @@ public:
         int cx = -_camera.x + (_camera.w >> 1);
         int cy = -_camera.y + (_camera.h >> 1);
         {
+            /*std::vector<kult::type> entities;*/
+
             for(const auto& e : kult::join<transform, visual>()) {
                 const visual_t& v = kult::get<visual>(e);
                 const transform_t& t = kult::get<transform>(e);
-
                 SDL_Rect dst = {
                     cx + t.p.x, 
                     cy + t.p.y,
                     v.src.w, 
                     v.src.h
                 };
-                /*SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::White);
-                SDL_RenderDrawRect(renderer, &dst);*/
                 SDL_RenderCopy(renderer, 
                     v.texture,
                     &v.src,
                     &dst
                 );
-
-
             }
+
+            /*std::sort(entities.begin(), entities.end(), [&] (const kult::type& a, const kult::type& b) {
+                int la = kult::get<visual>(a).layer;
+                int lb = kult::get<visual>(b).layer;
+                return la < lb;
+            });*/
         }
         b2DebugDrawEXT(_world, renderer, _camera);
         
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
 
-        
-
         b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
         b2Vec2 temp = { _mouse_pos.x, _mouse_pos.y };
         b2Vec2 pb = SCREEN_TO_WORLD(temp);
-
 
         pa = WORLD_TO_SCREEN(pa);
         pb = WORLD_TO_SCREEN(pb);
