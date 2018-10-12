@@ -68,6 +68,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/vendor/date/include
     ${CMAKE_SOURCE_DIR}/vendor/json/include
     ${CMAKE_SOURCE_DIR}/vendor/kult
+    ${CMAKE_SOURCE_DIR}/vendor/cxx-prettyprint
     ${CMAKE_SOURCE_DIR}/vendor/tmxlite/tmxlite/include
 )
 LINK_DIRECTORIES(
