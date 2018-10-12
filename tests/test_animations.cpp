@@ -49,10 +49,17 @@ int main(int argc, char* argv[]) {
     json j;
     j << is;
 
-    std::map<std::string, std::vector<std::string> > animation_names = j["animations"];
+    auto frames = j["frames"];
+    for(auto it = frames.begin(); it != frames.end(); it++) {
+        //SDL_Rect frame = it.value()["frame"];
+        DEBUG_VALUE_AND_TYPE_OF(it.value()["frame"]);
+    }
 
-    std::cout << animation_names << std::endl;
-    //std::copy(j.begin(), j.end(), std::back_inserter(names));
+
+    //std::map<std::string, std::vector<std::string> > animation_names = j["animations"];
+
+    //std::cout << animation_names << std::endl;
+    
     /*iterate(j["animations"], [&] (const json& js) {
         std::cout << js << std::endl;
     });*/
