@@ -28,6 +28,10 @@ namespace wee {
         std::vector<SDL_Rect> _rects;
         SDL_Texture* _texture;
 
+        const size_t index_of(const std::string& name) const {
+            return _ix.at(name);
+        }
+
         const SDL_Rect& get(const T& key)  {
             return static_cast<const basic_sprite_sheet<T>* >(this)->get(key); 
         }
