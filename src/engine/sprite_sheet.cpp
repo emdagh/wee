@@ -38,9 +38,14 @@ namespace wee {
         }
 
         std::ifstream is;
-        is.open((j["meta"]["image"]));
+
+        std::string image_path = get_resource_path("") + j["meta"]["image"].get<std::string>();
+
+        is.open(image_path);
         if(is.is_open()) {
             s._texture= assets<SDL_Texture>::instance().load(j["meta"]["image"], is);
+        } else {
+            throw file_not_found(image_path);
         }
     }
     std::ostream& operator << (std::ostream& os, const sprite_sheet& s) {

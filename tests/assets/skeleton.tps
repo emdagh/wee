@@ -26,7 +26,7 @@
             </struct>
         </array>
         <key>allowRotation</key>
-        <true/>
+        <false/>
         <key>shapeDebug</key>
         <false/>
         <key>dpi</key>
@@ -34,7 +34,7 @@
         <key>dataFormat</key>
         <string>pixijs4</string>
         <key>textureFileName</key>
-        <filename>img/skeleton.png</filename>
+        <filename></filename>
         <key>flipPVR</key>
         <false/>
         <key>pvrCompressionQuality</key>
@@ -74,11 +74,11 @@
         <key>jpgQuality</key>
         <uint>80</uint>
         <key>pngOptimizationLevel</key>
-        <uint>0</uint>
+        <uint>1</uint>
         <key>webpQualityLevel</key>
         <uint>101</uint>
         <key>textureSubPath</key>
-        <string></string>
+        <string>assets/img</string>
         <key>atfFormats</key>
         <string></string>
         <key>textureFormat</key>
@@ -88,9 +88,9 @@
         <key>maxTextureSize</key>
         <QSize>
             <key>width</key>
-            <int>256</int>
+            <int>2048</int>
             <key>height</key>
-            <int>256</int>
+            <int>2048</int>
         </QSize>
         <key>fixedTextureSize</key>
         <QSize>
@@ -104,7 +104,7 @@
             <key>algorithm</key>
             <enum type="AlgorithmSettings::AlgorithmId">Basic</enum>
             <key>freeSizeMode</key>
-            <enum type="AlgorithmSettings::AlgorithmFreeSizeMode">Best</enum>
+            <enum type="AlgorithmSettings::AlgorithmFreeSizeMode">Fast</enum>
             <key>sizeConstraints</key>
             <enum type="AlgorithmSettings::SizeConstraints">AnySize</enum>
             <key>forceSquared</key>
@@ -149,7 +149,7 @@
             <string></string>
         </struct>
         <key>autoAliasEnabled</key>
-        <false/>
+        <true/>
         <key>trimSpriteNames</key>
         <false/>
         <key>prependSmartFolderName</key>
@@ -163,7 +163,7 @@
             <key>scaleMode</key>
             <enum type="ScaleMode">Smooth</enum>
             <key>extrude</key>
-            <uint>0</uint>
+            <uint>1</uint>
             <key>trimThreshold</key>
             <uint>1</uint>
             <key>trimMargin</key>
@@ -181,228 +181,178 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
-            <key type="filename">img/skeleton/Sprite Sheets/attack_0.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_1.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_10.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_11.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_12.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_13.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_14.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_15.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_16.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_17.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_2.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_3.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_4.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_5.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_6.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_7.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_8.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/attack_9.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/Skeleton Attack.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/Skeleton Dead.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/Skeleton Hit.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/Skeleton Idle.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/Skeleton React.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/Skeleton Walk.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_0.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_1.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_10.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_11.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_12.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_13.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_14.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_15.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_16.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_17.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_2.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_3.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_4.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_5.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_6.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_7.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_8.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/attack_9.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_0.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_1.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_10.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_11.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_12.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_13.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_14.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_2.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_3.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_4.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_5.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_6.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_7.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_8.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/dead_9.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_0.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_1.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_2.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_3.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_4.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_5.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_6.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/hit_7.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_0.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_1.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_10.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_2.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_3.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_4.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_5.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_6.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_7.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_8.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/idle_9.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/react_0.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/react_1.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/react_2.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/react_3.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_0.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_1.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_10.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_11.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_12.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_2.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_3.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_4.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_5.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_6.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_7.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_8.png</key>
+            <key type="filename">img/skeleton/Sprite Sheets/converted/walk_9.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
+                <point_f>0,0</point_f>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
                 <rect>11,9,21,19</rect>
                 <key>scale9Paddings</key>
                 <rect>11,9,21,19</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_0.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_1.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_10.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_11.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_12.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_13.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_14.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_2.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_3.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_4.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_5.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_6.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_7.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_8.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/dead_9.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>8,8,17,16</rect>
-                <key>scale9Paddings</key>
-                <rect>8,8,17,16</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_0.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_1.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_2.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_3.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_4.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_5.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_6.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/hit_7.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>8,8,15,16</rect>
-                <key>scale9Paddings</key>
-                <rect>8,8,15,16</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_0.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_1.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_10.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_2.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_3.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_4.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_5.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_6.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_7.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_8.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/idle_9.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>6,8,12,16</rect>
-                <key>scale9Paddings</key>
-                <rect>6,8,12,16</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">img/skeleton/Sprite Sheets/react_0.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/react_1.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/react_2.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/react_3.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>6,8,11,16</rect>
-                <key>scale9Paddings</key>
-                <rect>6,8,11,16</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_0.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_1.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_10.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_11.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_12.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_2.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_3.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_4.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_5.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_6.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_7.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_8.png</key>
-            <key type="filename">img/skeleton/Sprite Sheets/walk_9.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>6,8,11,17</rect>
-                <key>scale9Paddings</key>
-                <rect>6,8,11,17</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
         </map>
         <key>fileList</key>
         <array>
-            <filename>img/skeleton/Sprite Sheets/react_0.png</filename>
-            <filename>img/skeleton/Sprite Sheets/react_1.png</filename>
-            <filename>img/skeleton/Sprite Sheets/react_2.png</filename>
-            <filename>img/skeleton/Sprite Sheets/react_3.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_0.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_1.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_2.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_3.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_4.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_5.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_6.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_7.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_8.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_9.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_10.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_11.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_12.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_13.png</filename>
-            <filename>img/skeleton/Sprite Sheets/dead_14.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_0.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_1.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_2.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_3.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_4.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_5.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_6.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_7.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_8.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_9.png</filename>
-            <filename>img/skeleton/Sprite Sheets/idle_10.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_0.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_1.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_2.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_3.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_4.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_5.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_6.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_7.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_8.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_9.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_10.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_11.png</filename>
-            <filename>img/skeleton/Sprite Sheets/walk_12.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_0.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_1.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_2.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_3.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_4.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_5.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_6.png</filename>
-            <filename>img/skeleton/Sprite Sheets/hit_7.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_0.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_1.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_2.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_3.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_4.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_5.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_6.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_7.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_8.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_9.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_10.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_11.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_12.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_13.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_14.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_15.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_16.png</filename>
-            <filename>img/skeleton/Sprite Sheets/attack_17.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_0.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_1.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_2.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_3.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_4.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_5.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_6.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_7.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_8.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_9.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_10.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_11.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_12.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_13.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_14.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_15.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_16.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/attack_17.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_0.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_1.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_2.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_3.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_4.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_5.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_6.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_7.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_8.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_9.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_10.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_11.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_12.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_13.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/dead_14.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_0.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_1.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_2.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_3.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_4.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_5.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_6.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/hit_7.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_0.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_1.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_2.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_3.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_4.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_5.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_6.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_7.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_8.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_9.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/idle_10.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/react_0.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/react_1.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/react_2.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/react_3.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/Skeleton Attack.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/Skeleton Dead.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/Skeleton Hit.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/Skeleton Idle.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/Skeleton React.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/Skeleton Walk.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_0.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_1.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_2.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_3.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_4.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_5.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_6.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_7.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_8.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_9.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_10.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_11.png</filename>
+            <filename>img/skeleton/Sprite Sheets/converted/walk_12.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
         <key>replaceList</key>
         <array/>
         <key>ignoredWarnings</key>
-        <array>
-            <string>try-pro-features</string>
-        </array>
+        <array/>
         <key>commonDivisorX</key>
         <uint>1</uint>
         <key>commonDivisorY</key>

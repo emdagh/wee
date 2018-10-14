@@ -15,8 +15,11 @@ namespace wee {
         v.y = j["y"];
     }
 }
+std::ostream& operator << (std::ostream& os, const timeout_t&) {
+    return os;
+}
 std::ostream& operator << (std::ostream& os, const articulation_t&) {
-    return os;;
+    return os;
 }
 std::ostream& operator << (std::ostream& os, const raycast_t&) {
     return os;

@@ -71,12 +71,13 @@ typedef struct {
 
 typedef struct {
     float* dst;
-    std::function<float(float, float, float)> easing;
+    std::function<float(float)> easing;
 } tween_t;
 
 typedef struct {
     int time;
     int timeout;
+    std::function<void(const kult::type&)> on_timeout = nullptr;
 } timeout_t;
 
 typedef struct {
@@ -100,6 +101,7 @@ std::ostream& operator << (std::ostream& os, const terrain_t& t);
 std::ostream& operator << (std::ostream& os, const input_t& t);
 std::ostream& operator << (std::ostream& os, const collider_t& t);
 std::ostream& operator << (std::ostream& os, const raycast_t&);
+std::ostream& operator << (std::ostream& os, const timeout_t&);
 std::ostream& operator << (std::ostream& os, const articulation_t&);
 
 using collider  = kult::component<1 << 0, collider_t>;
@@ -111,3 +113,4 @@ using terrain   = kult::component<1 << 5, terrain_t>;
 using raycast   = kult::component<1 << 6, raycast_t>;
 using input     = kult::component<1 << 7, input_t>;
 using articulation = kult::component<1 << 8, articulation_t>;
+using timeout     = kult::component<1 << 9, timeout_t>;
