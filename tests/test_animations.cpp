@@ -153,6 +153,7 @@ struct game : wee::applet {
             15
         };
 
+
         kult::add<visual>(e) = {
             assets<SDL_Texture>::instance().get("assets/img/skeleton.png"),
             { 0, 0, 0, 0 },
