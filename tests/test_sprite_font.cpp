@@ -1,6 +1,6 @@
 
-#include <engine/application.hpp>
-#include <engine/applet.hpp>
+#include <base/application.hpp>
+#include <base/applet.hpp>
 #include <engine/assets.hpp>
 #include <engine/sprite_font.hpp>
 #include <gfx/SDL_ColorEXT.hpp>

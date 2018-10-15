@@ -3,8 +3,8 @@
 #include <engine/assets.hpp>
 #include <prettyprint.hpp>
 #include "common/components.hpp"
-#include <engine/applet.hpp>
-#include <engine/application.hpp>
+#include <base/applet.hpp>
+#include <base/application.hpp>
 #include <fstream>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>

@@ -48,6 +48,3 @@ std::ostream& operator << (std::ostream& os, const terrain_t& t) {
     return os << j;
 }
 
-std::ostream& operator << (std::ostream& os, const input_t& t) {
-    return os << t.mouse_is_down;
-}

@@ -1,6 +1,6 @@
 #include <engine/gui/layout.hpp>
-#include <engine/application.hpp>
-#include <engine/applet.hpp>
+#include <base/application.hpp>
+#include <base/applet.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <engine/gui/layout.hpp>

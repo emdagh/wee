@@ -6,7 +6,6 @@ collisions::~collisions() {
 }
 void collisions::BeginContact(b2Contact* contact) 
 {
-    DEBUG_METHOD();
     const b2Fixture* fA = contact->GetFixtureA();
     const b2Fixture* fB = contact->GetFixtureB();
 

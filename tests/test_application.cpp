@@ -1,6 +1,5 @@
 #include <wee/wee.hpp>
 #include <util/logstream.hpp>
-#include <base/SDL_Application.h>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <iostream>
@@ -9,8 +8,8 @@
 #include <SDL_ttf.h>
 #include <fstream>
 #include <engine/assets.hpp>
-#include <engine/application.hpp>
-#include <engine/applet.hpp>
+#include <base/application.hpp>
+#include <base/applet.hpp>
 #include <engine/particles.hpp>
 
 using namespace wee;

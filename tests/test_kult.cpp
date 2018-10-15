@@ -14,8 +14,8 @@
 #include <core/circular_array.hpp>
 #include <util/logstream.hpp>
 #include <engine/assets.hpp>
-#include <engine/application.hpp>
-#include <engine/applet.hpp>
+#include <base/application.hpp>
+#include <base/applet.hpp>
 #include <engine/particles.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
@@ -79,8 +79,8 @@ struct player {
 
         kult::type self = kult::entity();
 
-        kult::add<input>(self).mouse_is_down = false;
-        kult::get<input>(self).is_jumping = true;
+        //kult::add<input>(self).mouse_is_down = false;
+        //kult::get<input>(self).is_jumping = true;
 
         /*kult::add<visual>(self).texture = assets<SDL_Texture>::instance().load(
             "@animal", 
@@ -123,12 +123,26 @@ struct player {
 
             kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
             kult::get<collider>(self).enter = [&] (const collision& c) {
-                kult::get<input>(c.self).is_jumping = false;
-                kult::get<input>(c.self).N = c.normal;
+                b2Body* body = kult::get<rigidbody>(c.self).body;
+
+                /*
+                 * TODO: this sort of merits a "particles" component. What would it look like though?
+                 * If I just link to a singleton (manager) type thing; it's not good practice.
+                 * But it seems like the only sensible way to go...
+                 * 
+                 * Option 2 would be to have the particles as an argument to the player::create function
+                 * and having the lambda of the collider capture it. 
+                 *
+                 * I prefer option 2 because a singleton is usually a canary-in-the-colemine for bad design.
+                 */
+                particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), c.normal);
+
+                //kult::get<input>(c.self).is_jumping = false;
+                //kult::get<input>(c.self).N = c.normal;
 
             };
             kult::get<collider>(self).leave = [&] (const collision& c) {
-                kult::get<input>(c.self).is_jumping = true;
+                //kult::get<input>(c.self).is_jumping = true;
             };
             
         }
@@ -311,6 +325,8 @@ struct game : applet {
 
     int _airtime = 0;
 
+    bool mouse_is_down;
+
     constexpr static const int NUM_CHUNKS = 2;
 
     void set_callbacks(application* app) {
@@ -320,13 +336,13 @@ struct game : applet {
 
         app->on_mousedown += [&] (char) {
             DEBUG_LOG("Mouse down");
-            kult::get<input>(_player).mouse_is_down = true;
+            this->mouse_is_down = true;
             return 0;
         };
 
         app->on_mouseup += [&] (char) {
             DEBUG_LOG("Mouse up");
-            kult::get<input>(_player).mouse_is_down = false;
+            this->mouse_is_down = false;
             return 0;
         };
 
@@ -400,21 +416,17 @@ struct game : applet {
         }
 
         {
-            for(auto& id : kult::join<input, rigidbody>()) {
 
-                b2Body* body = kult::get<rigidbody>(id).body;
-                const input_t& ip = kult::get<input>(id);
 
-                if(ip.mouse_is_down) {
+                auto* body = kult::get<rigidbody>(_player).body;
+                if(this->mouse_is_down) {
                     body->ApplyForceToCenter(b2Vec2(.5f, 9.0f), true);
                 }
 
-                if(ip.is_jumping) {
+                /*if(ip.is_jumping) {
                     _airtime += dt;
                 } else {
-                    particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), ip.N);
-                }
-            }
+                }*/
             player::limit_velocity(_player);
         }
 

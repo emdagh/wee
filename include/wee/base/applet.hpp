@@ -1,10 +1,13 @@
 #pragma once
 
+struct SDL_Renderer;
+
 namespace wee {
     class applet {
-        virtual int create() = 0;
-        virtual int destroy() = 0;
-        virtual int update(int, int) = 0;
-        virtual int draw() = 0;
+    public:
+        virtual ~applet(){} 
+        virtual int load_content() = 0;
+        virtual int update(int) = 0;
+        virtual int draw(SDL_Renderer*) = 0;
     };
 }

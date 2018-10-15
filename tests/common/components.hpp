@@ -85,11 +85,6 @@ typedef struct {
     kult::type next;
 } terrain_t;
 
-typedef struct {
-    bool mouse_is_down;
-    bool is_jumping;
-    wee::vec2 N; // contact normal
-} input_t;
 
 
 
@@ -98,7 +93,6 @@ std::ostream& operator << (std::ostream& os, const transform_t&);
 std::ostream& operator << (std::ostream& os, const nested_t& );
 std::ostream& operator << (std::ostream& os, const visual_t& );
 std::ostream& operator << (std::ostream& os, const terrain_t& t);
-std::ostream& operator << (std::ostream& os, const input_t& t);
 std::ostream& operator << (std::ostream& os, const collider_t& t);
 std::ostream& operator << (std::ostream& os, const raycast_t&);
 std::ostream& operator << (std::ostream& os, const timeout_t&);
@@ -111,6 +105,5 @@ using transform = kult::component<1 << 3, transform_t>;
 using visual    = kult::component<1 << 4, visual_t>;
 using terrain   = kult::component<1 << 5, terrain_t>;
 using raycast   = kult::component<1 << 6, raycast_t>;
-using input     = kult::component<1 << 7, input_t>;
 using articulation = kult::component<1 << 8, articulation_t>;
 using timeout     = kult::component<1 << 9, timeout_t>;
