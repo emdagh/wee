@@ -59,7 +59,7 @@ struct particle_helper {
                 n.x * vlen_sq * fs, 
                 n.y * vlen_sq * fs, 
                 1.0f, 
-                randf() * 2.0f * M_PI 
+                randf() * 2.0f * (float)M_PI 
             };
             
 
@@ -486,7 +486,7 @@ struct game : applet {
         return 0; 
     }
 };
-
+#undef main
 int main(int, char* []) {
 
     applet* let = new game;
