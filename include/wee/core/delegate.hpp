@@ -302,7 +302,7 @@ private:
     }
     
     template <typename>
-    struct is_member_pair : std::false_type { };
+	struct is_member_pair : std::false_type {  };
     
     template <class C>
     struct is_member_pair< ::std::pair<C* const,
@@ -311,29 +311,37 @@ private:
     };
     
     template <typename>
-    struct is_const_member_pair : std::false_type { };
+	struct is_const_member_pair : std::false_type {  };
     
+	template <typename T>
+	constexpr static const is_member_pair<T> is_member_pair_v = is_member_pair<T>{}; // VS2017 workaround 
+	template <typename T>
+	constexpr static const is_const_member_pair<T> is_const_member_pair_v = is_const_member_pair<T>{}; // VS2017 workaround 
+
     template <class C>
     struct is_const_member_pair< ::std::pair<C const* const,
     R (C::* const)(A...) const> > : std::true_type
     {
+		is_const_member_pair() {}
     };
     
     template <typename T>
     static typename ::std::enable_if<
-    !(is_member_pair<T>{} ||
-      is_const_member_pair<T>{}),
+    !(is_member_pair_v<T> ||
+      is_const_member_pair_v<T>),
     R
     >::type
     functor_stub(void* const object_ptr, A&&... args)
     {
         return (*static_cast<T*>(object_ptr))(::std::forward<A>(args)...);
     }
+
+	
     
     template <typename T>
     static typename ::std::enable_if<
-    is_member_pair<T>{} ||
-    is_const_member_pair<T>{},
+    is_member_pair_v<T> ||
+    is_const_member_pair_v<T>,
     R
     >::type
     functor_stub(void* const object_ptr, A&&... args)

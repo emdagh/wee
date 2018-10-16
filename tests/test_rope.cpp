@@ -20,7 +20,7 @@ struct b2BodyBuilder : public singleton<b2BodyBuilder> {
 
     b2Body* build(b2World* world, const tmx::Object& obj) {
         const auto& ix= obj.getShape();
-        _mp[ix](world, obj);
+        return _mp[ix](world, obj);
     }
 
     void push(const tmx::Object::Shape& ix, const create_function& fun) {
@@ -58,7 +58,7 @@ public:
         }
         {
             b2PolygonShape shape;
-            shape.Set(&vertices[0], vertices.size());
+            shape.Set(&vertices[0], (int32_t)vertices.size());
             b2FixtureDef def;
             def.shape               = &shape;
             def.isSensor            = false;
@@ -556,6 +556,7 @@ public:
                 }
             }
         }
+		return 0;
     }
 
     int update(int dt) {
@@ -575,6 +576,8 @@ public:
         b2Vec2 pos = WORLD_TO_SCREEN(kult::get<rigidbody>(p).body->GetPosition());
         _camera.x = pos.x;
         _camera.y = pos.y;
+
+		return 0;
     }
 
     
@@ -592,8 +595,8 @@ public:
                 const visual_t& v = kult::get<visual>(e);
                 const transform_t& t = kult::get<transform>(e);
                 SDL_Rect dst = {
-                    cx + t.p.x, 
-                    cy + t.p.y,
+                    cx + (int)t.p.x, 
+                    cy + (int)t.p.y,
                     v.src.w, 
                     v.src.h
                 };
@@ -623,9 +626,10 @@ public:
 
 
 
-        SDL_RenderDrawLine(renderer, cx + pa.x, cy + pa.y, pb.x, pb.y);
+        SDL_RenderDrawLine(renderer, cx + (int)pa.x, cy + (int)pa.y, (int)pb.x, (int)pb.y);
         
         SDL_RenderPresent(renderer);
+		return 0;
     }
 
     int on_click() {
@@ -671,7 +675,7 @@ public:
     }
 
 };
-
+#undef main //SDL idiocy
 int main(int, char*[]) {
     applet* let = new game();
     application app(let);

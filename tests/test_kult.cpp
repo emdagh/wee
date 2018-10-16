@@ -29,6 +29,45 @@ using kult::entity;
 
 using namespace wee;
 
+struct pstate {
+    float vx, vy;
+    float scale;
+    float rotation;
+
+
+    static pstate _; 
+};
+
+pstate pstate::_ = { 0.0f, 0.0f };
+
+struct particle_helper {
+    static void spray(particles<pstate>* em, const b2Vec2& pos, const b2Vec2& vel, const vec2& n) {
+        DEBUG_METHOD();
+        DEBUG_VALUE_OF(em);
+
+        float vlen_sq = vel.LengthSquared() / 8.0f;
+
+        //for(int i=0; i < 10; i++) {
+            particles<pstate>::particle res;
+            res.x = pos.x;
+            res.y = pos.y;
+            res.t = 0;
+            res.ttl = 1000 + (int)randf(2000.0f);
+            res.color = SDL_ColorPresetEXT::White;
+            float fs = randf();
+            res.state = { 
+                n.x * vlen_sq * fs, 
+                n.y * vlen_sq * fs, 
+                1.0f, 
+                randf() * 2.0f * M_PI 
+            };
+            
+
+            em->emit(res);
+        //}
+    }
+};
+
 
 float sigmoid(float x, float k) {
     return (x - x * k) / (k - std::abs(x) * 2 * k + 1);
@@ -75,31 +114,9 @@ struct particle_collision_emitter {
 };*/
 
 struct player {
-    static kult::type create(b2World* world, const vec2& at) {
-
+    static kult::type create(b2World* world, const vec2& at, wee::particles<pstate>* _particles) {
+        DEBUG_VALUE_OF(_particles);
         kult::type self = kult::entity();
-
-        //kult::add<input>(self).mouse_is_down = false;
-        //kult::get<input>(self).is_jumping = true;
-
-        /*kult::add<visual>(self).texture = assets<SDL_Texture>::instance().load(
-            "@animal", 
-            ::as_lvalue(
-                std::ifstream(
-                    wee::get_resource_path("") + "assets/img/sloth.png"
-                )
-            )
-        );
-
-        SDL_QueryTexture(kult::get<visual>(self).texture,
-            NULL,
-            NULL,
-            &kult::get<visual>(self).src.w,
-            &kult::get<visual>(self).src.h
-        );*/
-
-
-
         {
             b2BodyDef bd;
             bd.type = b2_dynamicBody; 
@@ -122,7 +139,7 @@ struct player {
             fd.userData = (void*)self;
 
             kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
-            kult::get<collider>(self).enter = [&] (const collision& c) {
+            kult::get<collider>(self).enter = [_particles] (const collision& c) {
                 b2Body* body = kult::get<rigidbody>(c.self).body;
 
                 /*
@@ -135,6 +152,7 @@ struct player {
                  *
                  * I prefer option 2 because a singleton is usually a canary-in-the-colemine for bad design.
                  */
+                DEBUG_VALUE_OF(c.normal);//vec2f::length(c.normal));
                 particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), c.normal);
 
                 //kult::get<input>(c.self).is_jumping = false;
@@ -235,7 +253,7 @@ struct terrain_chunk {
         float r = randf(75.0f);
 
         constexpr const float to_rad = static_cast<float>(M_PI) / 180.0f;
-        vec2 direction = vec2::from_angle(to_rad * 10.0f); // 15deg decline
+        vec2 direction = vec2::from_angle(to_rad * 15.0f); 
         vec2 normal = vec2::normal_of(direction);
         
         for(int i=0; i < n; i++) {
@@ -249,7 +267,6 @@ struct terrain_chunk {
             y += normal.y * ry;
 
 
-            DEBUG_LOG("{},{}", x, y);
 
             b2Vec2& vec = vertices[i];
             vec.x = start.x + x;
@@ -275,43 +292,6 @@ struct terrain_chunk {
 
 };
 
-struct pstate {
-    float vx, vy;
-    float scale;
-    float rotation;
-
-
-    static pstate _; 
-};
-
-pstate pstate::_ = { 0.0f, 0.0f };
-
-struct particle_helper {
-    static void spray(particles<pstate>* em, const b2Vec2& pos, const b2Vec2& vel, const vec2& n) {
-        DEBUG_METHOD();
-
-        float vlen_sq = vel.LengthSquared() / 8.0f;
-
-        //for(int i=0; i < 10; i++) {
-            particles<pstate>::particle res;
-            res.x = pos.x;
-            res.y = pos.y;
-            res.t = 0;
-            res.ttl = 1000 + (int)randf(2000.0f);
-            res.color = SDL_ColorPresetEXT::White;
-            float fs = randf();
-            res.state = { 
-                n.x * vlen_sq * fs, 
-                n.y * vlen_sq * fs, 
-                1.0f, 
-                randf() * 2.0f * M_PI 
-            };
-            
-
-            em->emit(res);
-        //}
-    }
-};
 
 struct game : applet {
     SDL_Rect camera_;
@@ -374,11 +354,13 @@ struct game : applet {
 
             p.color.a = (int)(1.0f - ip * 255.f);
         });
+
         world_ = new b2World({0.0f, 9.8f});
 
         world_->SetContactListener(new collisions);
 
-        _player = player::create(world_, { 5.0f, -150 });
+        DEBUG_VALUE_OF(_particles);
+        _player = player::create(world_, { 5.0f, -150 }, _particles);
 
         vec2 lastPosition = { 0.0f, 0.0f };
         kult::type prev = kult::none();

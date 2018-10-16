@@ -80,13 +80,16 @@ struct particle_helper {
        
         float spawnRadius = 32.0f;
         for(int i=0; i < count; i++) {
+            SDL_Color c;
+
+            SDL_CreateColorRGB(255, 255, 255, &c),
             em->emit((particles<pstate>::particle)
             {
                 x + random(-spawnRadius, spawnRadius),
                 y + random(-spawnRadius, spawnRadius), 
                 0, 
                 1000 + (int)random(0.0f, 1000.0f),
-                SDL_CreateColorRGB(255, 255, 255),
+                c,
                 { 
                     random(-1.f, 1.f) * random(0.f, 2.f), 
                     random(-1.f, 1.f) * random(0.f, 2.f) 

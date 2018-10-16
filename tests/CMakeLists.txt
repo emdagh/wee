@@ -2,6 +2,18 @@
 file( GLOB COMMON_SOURCES common/*.cpp)
 file( GLOB APP_SOURCES *.cpp )
 
+find_package(OpenGL)
+
+IF(UNIX)
+SET(PLATFORM_LIBS 
+	pthread 
+	dl
+	sndio
+)
+ELSEIF(WIN32)
+SET(PLATFORM_LIBS)
+ENDIF()
+
 foreach( testsourcefile ${APP_SOURCES} )
     string( REPLACE ".cpp" "" testname ${testsourcefile} )
     message(${testname})
@@ -18,13 +30,11 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_core
         tmxlite
         liquidfun
-        GL
+        ${OPENGL_gl_LIBRARY}
         SDL_ttf
         SDL2_image
         SDL2
-        pthread
-        dl
-        sndio
+        ${PLATFORM_LIBS}
 
     )
 endforeach( testsourcefile ${APP_SOURCES} )

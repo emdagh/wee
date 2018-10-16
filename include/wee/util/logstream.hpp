@@ -2,7 +2,7 @@
 
 #include <sstream>
 #include <typeinfo>
-#include <cxxabi.h>
+//#include <cxxabi.h>
 #include <iterator>
 #include <iostream>
 #include <iomanip>
@@ -26,10 +26,10 @@ namespace wee {
         std::stringstream ss;
         ss << RESET << name;
         if(print_type) {
-            int status = 0;
+            //int status = 0;
             auto ti = typeid(val).name();
-            auto realname = abi::__cxa_demangle(ti, 0, 0, &status);
-            ss << " (" << WHITE << realname << RESET << ")";
+            //auto realname = abi::__cxa_demangle(ti, 0, 0, &status);
+            ss << " (" << WHITE << ti << RESET << ")";
         }
         ss << "=[" << BLUE << val << RESET << "]";
         return ss.str();

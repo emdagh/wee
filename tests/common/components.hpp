@@ -11,8 +11,8 @@
 struct collision {
     kult::type self;
     kult::type other;
-    wee::vec2 point;
     wee::vec2 normal;
+    wee::vec2 point;
 };
 struct raycast_hit {
     kult::type self;

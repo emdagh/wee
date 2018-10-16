@@ -8,7 +8,12 @@ namespace wee {
     struct basic_vec2 {
         T x, y;
 
-
+        basic_vec2 operator - () const {
+            basic_vec2 copy(*this);
+            copy.x = -copy.x;
+            copy.y = -copy.y;
+            return copy;
+        }
 
         basic_vec2 operator + (const basic_vec2& other) const {
             basic_vec2 copy(*this);

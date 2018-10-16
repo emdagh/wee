@@ -19,10 +19,10 @@ void b2DrawJoints(SDL_Renderer* renderer, b2Body* body, const SDL_Rect& camera) 
         const b2Vec2& b = WORLD_TO_SCREEN(joint->GetAnchorB());
 
         SDL_RenderDrawLine(renderer, 
-            a.x + cx,
-            a.y + cy,
-            b.x + cx,
-            b.y + cy
+            (int)a.x + cx,
+			(int)a.y + cy,
+			(int)b.x + cx,
+			(int)b.y + cy
         );
 
 
@@ -46,7 +46,7 @@ void b2DrawFixtures(SDL_Renderer* renderer, b2Body* body, const SDL_Rect& camera
             SDL_RenderDrawCircleEXT(renderer, 
                     cx + (int)(bPos.x + 0.5f), 
                     cy + (int)(bPos.y + 0.5f), 
-                    radius
+                    (int)radius
             );
 
         } else if ( shapeType == b2Shape::e_chain ) {
@@ -58,10 +58,10 @@ void b2DrawFixtures(SDL_Renderer* renderer, b2Body* body, const SDL_Rect& camera
                 SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
 
                 SDL_RenderDrawLine(renderer, 
-                    bPos.x + cx + (int)(a.x + 0.5f), 
-                    bPos.y + cy + (int)(a.y + 0.5f), 
-                    bPos.x + cx + (int)(b.x + 0.5f), 
-                    bPos.y + cy + (int)(b.y + 0.5f)
+                    cx + (int)(bPos.x + a.x + 0.5f),
+                    cy + (int)(bPos.y + a.y + 0.5f),
+                    cx + (int)(bPos.x + b.x + 0.5f),
+                    cy + (int)(bPos.y + b.y + 0.5f)
                 );
 
             }

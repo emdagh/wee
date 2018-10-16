@@ -15,7 +15,7 @@ void to_json(json& j, const SDL_Rect& r) {
 }
 
 void from_json(const json& j, SDL_Rect& r) {
-    r = (SDL_Rect) {
+    r = SDL_Rect {
             j.at("x").get<int>(),
             j.at("y").get<int>(),
             j.at("w").get<int>(),

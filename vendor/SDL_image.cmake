@@ -4,11 +4,12 @@ PROJECT(SDL2_image C)
 
 add_definitions(-DLOAD_PNG)
 
-if(ATOM_PLATFORM_ANDROID)
+#if(ATOM_PLATFORM_ANDROID)
 include_directories(
     SDL2_image/external/libpng-1.6.2
+    SDL2_image/external/zlib-1.2.8
 )
-endif(ATOM_PLATFORM_ANDROID)
+#endif(ATOM_PLATFORM_ANDROID)
 
 file(GLOB SDL_IMAGE_SOURCES
     SDL2_image/IMG.c
@@ -62,8 +63,8 @@ file(GLOB SDL_IMAGE_SOURCES_PLATFORM
 )
 endif(ATOM_PLATFORM_IOS)
 
-add_library(z ${SRC_LIBZ})
-#add_library(png ${SRC_LIBPNG})
+add_library(z_1.2.8 ${SRC_LIBZ})
+add_library(png_1.6.2 ${SRC_LIBPNG})
 
 add_library(SDL2_image ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 
@@ -78,7 +79,7 @@ if(ATOM_PLATFORM_IOS)
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
     )
 endif(ATOM_PLATFORM_IOS)
-target_link_libraries(SDL2_image png z)
+target_link_libraries(SDL2_image png_1.6.2 z_1.2.8)
 install(TARGETS SDL2_image DESTINATION .)
 
 

@@ -1,5 +1,6 @@
 #include <engine/easing.hpp>
 //#include <atom/core/math/math.h>
+#define  _USE_MATH_DEFINES
 #include <cmath>
 
 namespace wee {
