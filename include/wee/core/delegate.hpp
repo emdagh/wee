@@ -312,11 +312,15 @@ private:
     
     template <typename>
 	struct is_const_member_pair : std::false_type {  };
-    
+   
+    /**
+     * apparently, there's a bug in VS2017 that doesn't allow {} in template parameters.
+     * the following two specializations are a `temporary` workaround...
+     */
 	template <typename T>
-	constexpr static const is_member_pair<T> is_member_pair_v = is_member_pair<T>{}; // VS2017 workaround 
+	constexpr static const is_member_pair<T> is_member_pair_v = is_member_pair<T>{}; 
 	template <typename T>
-	constexpr static const is_const_member_pair<T> is_const_member_pair_v = is_const_member_pair<T>{}; // VS2017 workaround 
+	constexpr static const is_const_member_pair<T> is_const_member_pair_v = is_const_member_pair<T>{}; 
 
     template <class C>
     struct is_const_member_pair< ::std::pair<C const* const,
