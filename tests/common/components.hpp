@@ -30,6 +30,9 @@ typedef struct {
     b2Fixture* fixture = NULL;
     collision_callback enter = DEFAULT_COLLIDER_CALLBACK;
     collision_callback leave = DEFAULT_COLLIDER_CALLBACK;
+    std::function<void(const kult::type&)> on_trigger_enter = nullptr;
+    std::function<void(const kult::type&)> on_trigger_leave = nullptr;
+
 } collider_t; 
 
 typedef struct {

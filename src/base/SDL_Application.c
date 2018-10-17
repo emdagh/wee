@@ -162,7 +162,7 @@ struct SDL_Application* SDL_CreateApplication() {
 }
 int SDL_DestroyApplication(SDL_Application* ptr) {
 
-
+	return 0;
 }
 struct SDL_Window* SDL_GetApplicationWindow(const SDL_Application* ptr) {
     return ptr->window;

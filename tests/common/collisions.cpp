@@ -15,10 +15,16 @@ void collisions::BeginContact(b2Contact* contact)
     b2WorldManifold man;
     contact->GetWorldManifold(&man);
     if(kult::has<collider>(objA)) {
+        if(fA->IsSensor()) {
+            kult::get<collider>(objA).on_trigger_enter(objA);
+        }
         kult::get<collider>(objA).enter({objA, objB, {man.normal.x, man.normal.y}, {man.points[0].x, man.points[0].y}});
     }
 
     if(kult::has<collider>(objB)) {
+        if(fB->IsSensor()) {
+            kult::get<collider>(objB).on_trigger_enter(objB);
+        }
         kult::get<collider>(objB).enter({objB, objA, {man.normal.x, man.normal.y}, {man.points[0].x, man.points[0].y}});
     }
 

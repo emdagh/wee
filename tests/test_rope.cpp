@@ -203,11 +203,22 @@ public:
     }
 }_;
 
-//template <typename T>
-//T* build(
+template <typename T>
+T get_property(const tmx::Property& p) {
+    throw not_implemented();
+};
+
+template<>
+bool get_property(const tmx::Property& p) {
+    return p.getBoolValue();
+}
 
 
-void parse_tmx(b2World* world, const std::string& pt) {
+
+
+void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
+
+
     tmx::Map map;
 
     if(map.load(pt)) {
@@ -218,6 +229,7 @@ void parse_tmx(b2World* world, const std::string& pt) {
         DEBUG_LOG("map has {} properties", properties.size());
         for(const auto& p : properties) {
             DEBUG_VALUE_OF(p.getName());
+            DEBUG_VALUE_OF(p.getStringValue());
             DEBUG_VALUE_OF((int)p.getType());
 
         }
@@ -249,10 +261,12 @@ void parse_tmx(b2World* world, const std::string& pt) {
                     DEBUG_LOG("object has {} properties", 
                         object_properties.size());
                     for(const auto& object_property : object_properties) {
-                        DEBUG_LOG("property: {} ({})", 
-                            object_property.getName(),
-                            (int)object_property.getType()
-                        );
+                        if(object_property.getName() == "type") {
+                            if(object_property.getStringValue() == "spawnPoint") {
+                                spawnPoint->x = (int)position.x;
+                                spawnPoint->y = (int)position.y;
+                            }
+                        }
                     }
                 }
             }
@@ -460,28 +474,31 @@ public:
         _camera = { 0, 0, 0, 0 };
     }
     int load_content() {
-        p  = create_player(_world, {0, -150});
-        b1 = create_block(_world, { -16, -300, 32, 32 });
-        _rope = create_rope_between(_world, p, b1, kult::get<rigidbody>(b1).body->GetWorldCenter());
 
         assets<SDL_Texture>::instance().load("@BG_mountains", ::as_lvalue(
-            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
         ));
         assets<SDL_Texture>::instance().load("@BG_clouds", ::as_lvalue(
-            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
         ));
         assets<SDL_Texture>::instance().load("@MG_clouds_1", ::as_lvalue(
-            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
         ));
         assets<SDL_Texture>::instance().load("@MG_clouds_2", ::as_lvalue(
-            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
         ));
         assets<SDL_Texture>::instance().load("@MG_clouds_3", ::as_lvalue(
-            std::ifstream(get_resource_path("") + "assets/img/mountains.png")
+            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
         ));
 
-        std::string pt = wee::get_resource_path("") + "assets/levels/level.tmx";
-        parse_tmx(_world, pt);
+        std::string pt = wee::get_resource_path("assets/levels") + "level.tmx";
+
+        SDL_Point spawnPoint;
+        parse_tmx(_world, pt, &spawnPoint);
+        
+        p  = create_player(_world, spawnPoint);
+        b1 = create_block(_world, { -16, -300, 32, 32 });
+        _rope = create_rope_between(_world, p, b1, kult::get<rigidbody>(b1).body->GetWorldCenter());
 
         tmx::Map tiled_map;
         tiled_map.load(pt);
@@ -500,7 +517,7 @@ public:
             auto* tex = wee::assets<SDL_Texture>::instance().load(
                 tset.getImagePath(),
                 ::as_lvalue(
-                    std::ifstream(tset.getImagePath())
+                    std::ifstream(tset.getImagePath(), std::ios::binary)
                 )
             );
             tilesets.insert(std::pair<gid, SDL_Texture*>(tset.getFirstGID(), tex));

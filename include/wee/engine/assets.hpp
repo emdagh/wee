@@ -93,7 +93,8 @@ namespace wee {
         }
 
         SDL_Texture* get(const std::string& name) {
-            if(resources.count(name) == 0) throw std::out_of_range(name);
+            if(resources.count(name) == 0) 
+				throw std::out_of_range(name);
             return resources[name];
         }
 

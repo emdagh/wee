@@ -4,9 +4,9 @@
 #include <SDL_mixer.h>
 
 #ifdef _WIN32
-#define PATH_SEP "\\"
+#define PATH_SEP '\\'
 #else
-#define PATH_SEP  "/"
+#define PATH_SEP  '/'
 #endif
 
 #if defined(__IOS__)
@@ -34,7 +34,7 @@ size_t istream_read(SDL_RWops *context, void *ptr, size_t size, size_t maxnum)
 	std::istream* stream = (std::istream*) context->hidden.unknown.data1;
 	stream->read( (char*)ptr, size * maxnum );
 
-	return stream->bad() ? -1 : stream->gcount() / size;
+	return stream->bad() ? -1 : (size_t)stream->gcount() / size;
 }
 
 int istream_close( SDL_RWops *context )
@@ -47,12 +47,11 @@ int istream_close( SDL_RWops *context )
 
 Sint64 istream_size(SDL_RWops* io) {
 	std::istream* stream = (std::istream*) io->hidden.unknown.data1;
-	int offset = stream->tellg();
+	std::streamoff offset = stream->tellg();
 	stream->seekg(0, std::ios::end);
-	int ret = stream->tellg();
+	std::streamoff ret = stream->tellg();
 	stream->seekg(offset, std::ios::beg);
 	return ret;
-	
 }
 
 SDL_RWops* SDL_RWFromStream(std::istream& is) {
@@ -92,10 +91,12 @@ namespace wee {
         }
         //If we want a specific subdirectory path in the resource directory
         //append it to the base path. This would be something like Lessons/res/Lesson0
-        return subDir.empty() ? baseRes : baseRes + subDir + PATH_SEP;
+        std::string res = subDir.empty() ? baseRes : baseRes + subDir + PATH_SEP;
 #else
-        return std::string(iOS_getDataPath());
+        std::string res = std::string(iOS_getDataPath());
 #endif
+        std::replace(res.begin(), res.end(), '/', PATH_SEP);
+        return res;
     }
 }
 

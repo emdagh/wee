@@ -328,12 +328,28 @@ struct game : applet {
 
     }
 
-    virtual int load_content() {
-        auto context = SDL_GL_GetCurrentContext();
+	bool file_exists(const std::string& path) {
+		std::ifstream is(path);
+		if (is.is_open()) {
+			is.close();
+			return true;
+		}
+		return false;
+	}
 
-        std::string pt = wee::get_resource_path("") + "assets/img/smoke.png";
-        DEBUG_VALUE_OF(pt);
-        assets<SDL_Texture>::instance().load("@dirt", ::as_lvalue(std::ifstream(pt)));
+    virtual int load_content() {
+		
+        //auto context = SDL_GL_GetCurrentContext();
+		try {
+			
+			std::string pt = wee::get_resource_path("assets/img") + "smoke.png";
+			bool exists = file_exists(pt);
+			DEBUG_VALUE_OF(pt);
+			assets<SDL_Texture>::instance().load("@dirt", ::as_lvalue(std::ifstream(pt, std::ios::binary)));
+		}
+		catch (const std::exception& err) {
+			DEBUG_LOG(err.what());
+		}
 
         _particles = new particles<pstate>(32, [&] (particles<pstate>::particle& p, int dt) {
 
