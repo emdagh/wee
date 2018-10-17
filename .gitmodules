@@ -31,3 +31,6 @@
 [submodule "vendor/SDL2_ttf"]
 	path = vendor/SDL2_ttf
 	url = https://github.com/davidsiaw/SDL2_ttf.git
+[submodule "vendor/tmxlite"]
+	path = vendor/tmxlite
+	url = https://github.com/fallahn/tmxlite.git
