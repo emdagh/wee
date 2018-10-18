@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 
 void to_json(json& j, const SDL_Rect& r) {
     j = json {

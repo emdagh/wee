@@ -2,7 +2,7 @@
 #include <engine/viewport.hpp>
 #include <core/vec3.hpp>
 #include <core/mat4.hpp>
-#include <util/numeric.hpp>
+#include <core/numeric.hpp>
 
 using namespace wee;
 

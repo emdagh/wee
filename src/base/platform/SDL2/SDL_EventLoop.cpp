@@ -1,4 +1,4 @@
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <base/platform/SDL2/SDL_EventLoop.hpp>
 #include <SDL.h>
 #include <iostream>

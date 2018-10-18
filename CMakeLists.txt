@@ -86,6 +86,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/vendor/SDL2_ttf
     ${CMAKE_SOURCE_DIR}/vendor/SDL2_mixer
     ${CMAKE_SOURCE_DIR}/vendor/date/include
+    ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     ${CMAKE_SOURCE_DIR}/vendor/json/include
     ${CMAKE_SOURCE_DIR}/vendor/kult
     ${CMAKE_SOURCE_DIR}/vendor/cxx-prettyprint

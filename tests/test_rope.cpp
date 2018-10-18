@@ -2,7 +2,7 @@
 #include "common/components.hpp"
 #include "common/Box2DEXT.hpp"
 #include <engine/assets.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <kult.hpp>
 #include <Box2D/Box2D.h>
 #include <tmxlite/Map.hpp>
@@ -203,16 +203,12 @@ public:
     }
 }_;
 
-template <typename T>
-T get_property(const tmx::Property& p) {
-    throw not_implemented();
-};
 
-template<>
-bool get_property(const tmx::Property& p) {
-    return p.getBoolValue();
-}
-
+/**
+ * every level chunk has:
+ * a spawn point
+ * a first-connected collider
+ */
 
 
 

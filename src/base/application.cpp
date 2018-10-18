@@ -2,7 +2,7 @@
 #include <base/applet.hpp>
 #include <engine/assets.hpp>
 #include <base/SDL_Application.h>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 
 using namespace wee;
 

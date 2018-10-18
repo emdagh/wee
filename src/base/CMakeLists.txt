@@ -1,7 +1,4 @@
-
-
 PROJECT(wee_base C CXX)
-
 
 FILE(GLOB SOURCES
     "*.cpp"
@@ -16,7 +13,6 @@ ADD_LIBRARY(
 
 TARGET_LINK_LIBRARIES(
     ${PROJECT_NAME}
-    wee_util
 )
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION .)

@@ -4,7 +4,7 @@
 #include <base/applet.hpp>
 #include <Box2D/Box2D.h>
 #include <SDL.h>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 
 #ifndef PTM_RATIO
 #define PTM_RATIO   (40.f)

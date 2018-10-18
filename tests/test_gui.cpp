@@ -4,7 +4,7 @@
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <engine/gui/layout.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <SDL.h>
 #include <SDL_ttf.h>
 

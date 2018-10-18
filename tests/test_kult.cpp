@@ -12,7 +12,7 @@
 #include <nlohmann/json.hpp>
 #include <SDL.h>
 #include <core/circular_array.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <engine/assets.hpp>
 #include <base/application.hpp>
 #include <base/applet.hpp>

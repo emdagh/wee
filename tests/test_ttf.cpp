@@ -3,7 +3,7 @@
 #include <SDL_ttf.h>
 #include <engine/assets.hpp>
 #include <engine/sprite_font.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <nlohmann/json.hpp>
 //std::map<uint16_t, SDL_Rect> index;
 //
@@ -141,7 +141,7 @@ int main(int, char* []) {
 
         return app.start();
     } catch(const std::exception& e) {
-        LOGE(e.what());
+        DEBUG_ERROR(e.what());
     }
 
     return 0;

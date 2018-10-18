@@ -1,5 +1,5 @@
 #include <wee/wee.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <iostream>
@@ -181,7 +181,7 @@ int main(int , char* []) {
 
         return app.start();
     } catch(const file_not_found& e) {
-        LOGE(e.what());
+        DEBUG_ERROR(e.what());
     } catch(...) {
         std::cout << "exception caught" << std::endl;
     }

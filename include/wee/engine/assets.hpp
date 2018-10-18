@@ -10,7 +10,7 @@
 #include <SDL_ttf.h>
 #include <core/delegate.hpp>
 #include <core/factory.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <iostream>
 #include <fstream>
 

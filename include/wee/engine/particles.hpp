@@ -2,7 +2,7 @@
 
 #include <core/circular_array.hpp>
 #include <core/delegate.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <SDL.h>
 #include <exception>
 #include <iterator>
@@ -40,7 +40,6 @@ namespace wee {
             _particles.reserve(17); 
         }
         void update(int dt) {
-            int n = 0;
             for(size_t i=0; i < _particles.size(); i++) {
                 particle& ref = _particles[i];
                 ref.t += dt;

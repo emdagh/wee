@@ -5,8 +5,8 @@ file( GLOB APP_SOURCES *.cpp )
 find_package(OpenGL)
 
 IF(UNIX)
-SET(PLATFORM_LIBS 
-	pthread 
+SET(PLATFORM_LIBS
+	pthread
 	dl
 	sndio
 )
@@ -34,6 +34,7 @@ foreach( testsourcefile ${APP_SOURCES} )
         SDL_ttf
         SDL2_image
         SDL2
+        fmt
         ${PLATFORM_LIBS}
 
     )

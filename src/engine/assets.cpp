@@ -1,5 +1,5 @@
 #include <engine/assets.hpp>
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 #include <SDL.h>
 #include <SDL_mixer.h>
 

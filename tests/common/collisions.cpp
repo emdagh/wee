@@ -1,6 +1,6 @@
 #include "collisions.hpp"
 #include "components.hpp"
-#include <util/logstream.hpp>
+#include <core/logstream.hpp>
 
 collisions::~collisions() {
 }
