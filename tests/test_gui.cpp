@@ -44,6 +44,8 @@ namespace imgui {
         uistate.active = 0;
         uistate.focus = 0;
         uistate.last = 0;
+
+        return 0;
     }
 
     int regionhit(const SDL_Rect& r) {
@@ -69,6 +71,7 @@ namespace imgui {
         if(uistate.focus == id) {
             //focus_callback(r);
         }
+        return id;
     }
 
     int _after(int id, const SDL_Rect& r) {
@@ -81,6 +84,7 @@ namespace imgui {
         } else {
             uistate._draw_active(id, r);
         }
+        return id;
     }
 
     int button(int id, const SDL_Rect& r) {
@@ -103,7 +107,7 @@ namespace imgui {
         float val_n = std::min(std::max(*value, 0.0f), value_max) / value_max;
         uistate._draw(id, r);
         
-        int w = std::min(r.w, r.h) >> 1;
+        //int w = std::min(r.w, r.h) >> 1;
         SDL_Rect grip;
 
         if(horizontal) {
@@ -170,20 +174,17 @@ struct game : applet {
         return rc;
     }
 
-    void _debug_rects(SDL_Renderer* renderer) {
-    }
-    
     void set_callbacks(application* app) {
         app->on_mousemove += [&] (int x, int y) {
             imgui::uistate.mousex = x;
             imgui::uistate.mousey = y;
             return 0;
         };
-        app->on_mousedown += [&] (uint16_t btn) {
+        app->on_mousedown += [&] (uint16_t) {
             imgui::uistate.mousedown = 1;
             return 0;
         };
-        app->on_mouseup += [&] (uint16_t btn) {
+        app->on_mouseup += [&] (uint16_t) {
             imgui::uistate.mousedown = 0;
             return 0;
         };
@@ -201,9 +202,11 @@ struct game : applet {
 
 
         _value = 0.0f;
+        return 0;
     } 
 
     virtual int update(int) {
+        return 0;
     }
 
     virtual int draw(SDL_Renderer* renderer) {
@@ -243,6 +246,8 @@ struct game : applet {
         imgui::slider(GEN_ID, { 256, 128, 16, 128}, 100.0f, &_value, false);
 
         SDL_RenderPresent(renderer);
+
+        return 0;
     }
 };
 

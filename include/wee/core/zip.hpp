@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iterator>
 #include <iostream>
+#include <tuple>
 
 namespace wee {
 
@@ -82,7 +83,7 @@ namespace wee {
     template<typename T, typename... Args>
         typename zip_impl<T>::container_t zip(const T& head, const Args&... tail)
         {
-            return zip_impl<T>(head, tail...);
+            return std::tie(zip_impl<T>(head, tail...));
         }
 
 }

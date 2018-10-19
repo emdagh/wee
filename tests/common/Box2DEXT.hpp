@@ -12,7 +12,6 @@ void b2DrawJoints(SDL_Renderer* renderer, b2Body* body, const SDL_Rect& camera) 
     int cx = -camera.x + (camera.w >> 1);
     int cy = -camera.y + (camera.h >> 1);
 
-    const b2Vec2& bPos = WORLD_TO_SCREEN(body->GetPosition());
     for(auto* ptr = body->GetJointList(); ptr; ptr = ptr->next) {
         auto* joint = ptr->joint;
         const b2Vec2& a = WORLD_TO_SCREEN(joint->GetAnchorA()); // world coordinates of anchor point.
@@ -116,8 +115,8 @@ void b2DrawBody(SDL_Renderer* renderer, b2Body* body, const SDL_Rect& camera) {
 
 void b2DebugDrawEXT(b2World* world, SDL_Renderer* renderer, const SDL_Rect& camera) {
 
-    int cx = -camera.x + (camera.w >> 1);
-    int cy = -camera.y + (camera.h >> 1);
+    //int cx = -camera.x + (camera.w >> 1);
+    //int cy = -camera.y + (camera.h >> 1);
 
     for(b2Body* body = world->GetBodyList(); body; body = body->GetNext()) {
         if(!body->IsActive()) {
@@ -132,3 +131,83 @@ void b2DebugDrawEXT(b2World* world, SDL_Renderer* renderer, const SDL_Rect& came
         }
     }
 }
+
+class b2DebugDrawImpl : public b2Draw {
+    SDL_Renderer* _renderer;
+    SDL_Rect _rect = { 0, 0, 0, 0 };
+public:
+    void SetRenderer(SDL_Renderer* renderer) {
+        _renderer = renderer;
+        SDL_RenderGetLogicalSize(renderer, &_rect.w, &_rect.h);
+    }
+
+    void SetCameraPosition(int x, int y) {
+        _rect.x = x;
+        _rect.y = y;
+    }
+
+public:
+	void DrawParticles(const b2Vec2 *, float32 , const b2ParticleColor *, int32 ) {}
+	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) {
+        assert(_renderer);
+
+        int cx = -_rect.x + (_rect.w >> 1);
+        int cy = -_rect.y + (_rect.h >> 1);
+
+        SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+        
+        for(int32 i=0; i < vertexCount; i++) {
+            const b2Vec2& a_WS = vertices[i];
+            const b2Vec2& b_WS = vertices[(i + 1) % vertexCount];
+
+            b2Vec2 a_SS = WORLD_TO_SCREEN(a_WS);
+            b2Vec2 b_SS = WORLD_TO_SCREEN(b_WS);
+
+            int x0 = cx + static_cast<int>(a_SS.x + 0.5f);
+            int y0 = cy + static_cast<int>(a_SS.y + 0.5f);
+            int x1 = cx + static_cast<int>(b_SS.x + 0.5f);
+            int y1 = cy + static_cast<int>(b_SS.y + 0.5f);
+            
+            SDL_RenderDrawLine(_renderer, x0, y0, x1, y1);
+        }
+    }
+    void DrawSolidPolygon(const b2Vec2* positions, int32 vertexCount, const b2Color& color) {
+        //SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+        DrawPolygon(positions, vertexCount, color);
+    }
+    void DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color) {
+
+        int iradius = WORLD_TO_SCREEN(radius);
+        b2Vec2 PositionSS = WORLD_TO_SCREEN(center);
+        int x = static_cast<int>(PositionSS.x + 0.5f);
+        int y = static_cast<int>(PositionSS.y + 0.5f);
+        int cx = -_rect.x + (_rect.w >> 1);
+        int cy = -_rect.y + (_rect.h >> 1);
+
+        SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+        SDL_RenderDrawCircleEXT(_renderer, cx + x, cy + y, iradius);
+
+        
+    }
+    void DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2&, const b2Color& color) {
+        //SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+        DrawCircle(center, radius, color);
+    }
+    void DrawSegment(const b2Vec2& _p1, const b2Vec2& _p2, const b2Color& color) {
+        int cx = -_rect.x + (_rect.w >> 1);
+        int cy = -_rect.y + (_rect.h >> 1);
+
+        auto p1 = WORLD_TO_SCREEN(_p1);
+        auto p2 = WORLD_TO_SCREEN(_p2);
+
+        int x0 = cx + static_cast<int>(p1.x + 0.5f);
+        int y0 = cy + static_cast<int>(p1.y + 0.5f);
+        int x1 = cx + static_cast<int>(p2.x + 0.5f);
+        int y1 = cy + static_cast<int>(p2.y + 0.5f);
+
+        SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+        SDL_RenderDrawLine(_renderer, x0, y0, x1, y1); 
+    }
+    void DrawTransform(const b2Transform& ) {
+    }
+};

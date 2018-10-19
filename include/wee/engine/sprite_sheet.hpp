@@ -30,7 +30,7 @@ namespace wee {
 
         const SDL_Rect& operator [] (size_t i) const { return _rects[i]; }
 
-        const size_t index_of(const std::string& name) const {
+        size_t index_of(const std::string& name) const {
             return _ix.at(name);
         }
 

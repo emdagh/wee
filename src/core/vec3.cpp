@@ -1,4 +1,3 @@
-#pragma once
 
 #include <core/vec3.hpp>
 #include <core/mat4.hpp>

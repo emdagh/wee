@@ -38,7 +38,7 @@ struct pstate {
     static pstate _; 
 };
 
-pstate pstate::_ = { 0.0f, 0.0f };
+pstate pstate::_ = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 struct particle_helper {
     static void spray(particles<pstate>* em, const b2Vec2& pos, const b2Vec2& vel, const vec2& n) {
@@ -159,7 +159,7 @@ struct player {
                 //kult::get<input>(c.self).N = c.normal;
 
             };
-            kult::get<collider>(self).leave = [&] (const collision& c) {
+            kult::get<collider>(self).leave = [&] (const collision&) {
                 //kult::get<input>(c.self).is_jumping = true;
             };
             
@@ -310,7 +310,7 @@ struct game : applet {
     constexpr static const int NUM_CHUNKS = 2;
 
     void set_callbacks(application* app) {
-        app->on_mousemove += [&] (int x, int y) {
+        app->on_mousemove += [&] (int, int) {
             return 0;
         };
 
@@ -343,7 +343,6 @@ struct game : applet {
 		try {
 			
 			std::string pt = wee::get_resource_path("assets/img") + "smoke.png";
-			bool exists = file_exists(pt);
 			DEBUG_VALUE_OF(pt);
 			assets<SDL_Texture>::instance().load("@dirt", ::as_lvalue(std::ifstream(pt, std::ios::binary)));
 		}
@@ -378,7 +377,6 @@ struct game : applet {
         DEBUG_VALUE_OF(_particles);
         _player = player::create(world_, { 5.0f, -150 }, _particles);
 
-        vec2 lastPosition = { 0.0f, 0.0f };
         kult::type prev = kult::none();
         for(int i=0; i < NUM_CHUNKS; i++) {
             kult::type id = terrain_chunk::create(world_, prev);

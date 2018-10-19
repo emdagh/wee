@@ -6,7 +6,7 @@ const int WIN_WIDTH = 640;
 const int WIN_HEIGHT = 480;
 
 #undef main
-int main(int argc, char **argv){
+int main(int , char **){
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
 		std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
 		return 1;

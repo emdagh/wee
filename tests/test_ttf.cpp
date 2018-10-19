@@ -85,7 +85,7 @@ struct game : wee::applet {
 
         return 0;
     }
-    int update(int dt) {
+    int update(int) {
         return 0;
     }
     int draw(SDL_Renderer* renderer) {

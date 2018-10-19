@@ -112,7 +112,7 @@ namespace wee {
             _r[ix] = rc;
         }
 
-        virtual void add(SDL_Rect* rc) {
+        virtual void add(SDL_Rect*) {
             throw not_implemented();
         }
 

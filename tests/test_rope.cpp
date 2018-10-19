@@ -3,203 +3,126 @@
 #include "common/Box2DEXT.hpp"
 #include <engine/assets.hpp>
 #include <core/logstream.hpp>
+#include <core/factory.hpp>
+#include <core/zip.hpp>
+#include <core/map.hpp>
+#include <prettyprint.hpp>
 #include <kult.hpp>
 #include <Box2D/Box2D.h>
 #include <tmxlite/Map.hpp>
 #include <tmxlite/Layer.hpp>
 #include <tmxlite/TileLayer.hpp>
 #include <string>
+#include <list>
 
 using namespace wee;
 typedef int gid;
 
 typedef kult::type entity_type;
 
-struct b2BodyBuilder : public singleton<b2BodyBuilder> {
-    typedef std::function<b2Body*(b2World*, const tmx::Object&)> create_function;
 
-    b2Body* build(b2World* world, const tmx::Object& obj) {
-        const auto& ix= obj.getShape();
-        return _mp[ix](world, obj);
-    }
-
-    void push(const tmx::Object::Shape& ix, const create_function& fun) {
-        _mp[ix] = fun;
-    }
-
-    std::map<tmx::Object::Shape, create_function> _mp;
-};
-
-static class register_factories {
+static class register_factories final {
 public:
 
-    static b2Body* create_polygon(b2World* world, const tmx::Object& obj) {
-        const auto& pos  = obj.getPosition();
-        const auto& aabb = obj.getAABB();
-
-        kult::type self = kult::entity();
-        b2Vec2 halfWS;
-        halfWS.Set(aabb.width / 2, aabb.height / 2);
-
-        std::vector<b2Vec2> vertices;
-
-        for(const auto& point : obj.getPoints()) {
-            b2Vec2 pos;
-            pos.Set(SCREEN_TO_WORLD(point.x), SCREEN_TO_WORLD(point.y));
-            vertices.push_back(pos);
-        }
-        b2Body* body = nullptr;
-        b2Fixture* fixture = nullptr;
-        {
-            b2BodyDef bd;
-            bd.type = b2_staticBody;
-            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
-            body = world->CreateBody(&bd);
-        }
-        {
-            b2PolygonShape shape;
-            shape.Set(&vertices[0], (int32_t)vertices.size());
-            b2FixtureDef def;
-            def.shape               = &shape;
-            def.isSensor            = false;
-            def.filter.categoryBits = 0xffff;
-            def.filter.maskBits     = 0xffff;
-            def.userData            = reinterpret_cast<void*>(self);
-            fixture                 = body->CreateFixture(&def);
-        }
-        kult::add<rigidbody>(self).body = body;
-        kult::add<collider>(self).fixture = fixture;
-        kult::add<raycast>(self).is_hit = false;
-
-        return body;
-    }
-
-    static b2Body* create_polyline(b2World* world, const tmx::Object& obj) {
-
-        DEBUG_METHOD();
-        const auto& pos  = obj.getPosition();
-        const auto& aabb = obj.getAABB();
-
-        kult::type self = kult::entity();
-        b2Vec2 halfWS;
-        halfWS.Set(aabb.width / 2, aabb.height / 2);
-
-        std::vector<b2Vec2> vertices;
-
-        for(const auto& point : obj.getPoints()) {
-            b2Vec2 pos;
-            pos.Set(SCREEN_TO_WORLD(point.x), SCREEN_TO_WORLD(point.y));
-            vertices.push_back(pos);
-        }
-        b2Body* body = nullptr;
-        b2Fixture* fixture = nullptr;
-        {
-            b2BodyDef bd;
-            bd.type = b2_staticBody;
-            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
-            body = world->CreateBody(&bd);
-        }
-        {
-            //b2PolygonShape shape;
-            b2ChainShape shape;
-            shape.CreateChain(&vertices[0], vertices.size());
-            b2FixtureDef def;
-            def.shape               = &shape;
-            def.isSensor            = false;
-            def.filter.categoryBits = 0xffff;
-            def.filter.maskBits     = 0xffff;
-            def.userData            = reinterpret_cast<void*>(self);
-            fixture                 = body->CreateFixture(&def);
-        }
-        kult::add<rigidbody>(self).body = body;
-        kult::add<collider>(self).fixture = fixture;
-        kult::add<raycast>(self).is_hit = false;
-
-        return body;
-
-
-
-    };
-    static b2Body* create_rectangle(b2World* world, const tmx::Object& obj) {
-
-        kult::type self = kult::entity();
-
-        const auto& aabb = obj.getAABB();
-        const auto& pos  = obj.getPosition();
-        b2Vec2 halfWS;
-        halfWS.Set(aabb.width / 2, aabb.height / 2);
-
-        b2Body* body = nullptr;
-        b2Fixture* fixture = nullptr;
-        {
-            b2BodyDef bd;
-            bd.type = b2_staticBody;
-            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
-            body = world->CreateBody(&bd);
-        }
-        {
-            b2PolygonShape shape;
-            shape.SetAsBox(SCREEN_TO_WORLD(halfWS.x), SCREEN_TO_WORLD(halfWS.y));
-            b2FixtureDef def;
-            def.shape               = &shape;
-            def.isSensor            = false;
-            def.filter.categoryBits = 0xffff;
-            def.filter.maskBits     = 0xffff;
-            def.userData            = reinterpret_cast<void*>(self);
-            fixture                 = body->CreateFixture(&def);
-        }
-        
-        kult::add<rigidbody>(self).body = body;
-        kult::add<collider>(self).fixture = fixture;
-        kult::add<raycast>(self).is_hit = false;
-
-        return body;
-    };
+    typedef factory<kult::type, std::string,        b2World*, const tmx::Object&> object_factory;
+    typedef factory<b2Shape*,   tmx::Object::Shape, const tmx::Object&> b2ShapeFactory;
 
     register_factories() {
-        b2BodyBuilder::instance().push(tmx::Object::Shape::Polygon, create_polygon);
-        b2BodyBuilder::instance().push(tmx::Object::Shape::Rectangle, create_rectangle);
-        b2BodyBuilder::instance().push(tmx::Object::Shape::Polyline, create_polyline);
 
-        b2BodyBuilder::instance().push(tmx::Object::Shape::Ellipse,
-            [&] (b2World* world, const tmx::Object& obj) -> b2Body* {
-                const auto& aabb = obj.getAABB();
-                const auto& pos  = obj.getPosition();
-                
-                assert(aabb.width == aabb.height);
-                
-                float radius = aabb.width / 2.0f;
-                kult::type self = kult::entity();
-                b2Body* body = nullptr;
-                b2Fixture* fixture = nullptr;
-                
-                {
-                    b2BodyDef bd;
-                    bd.type = b2_staticBody;
-                    bd.position.Set(SCREEN_TO_WORLD(pos.x + radius), SCREEN_TO_WORLD(pos.y + radius));
-                    body = world->CreateBody(&bd);
-                }
-                
-                {
 
-                    b2CircleShape shape;
-                    shape.m_radius = SCREEN_TO_WORLD(radius);//obj.m_width / 2);
-                    b2FixtureDef def;
-                    def.shape = &shape;
-                    def.isSensor = false;
-                    def.filter.categoryBits = 0xffff;
-                    def.filter.maskBits = 0xffff;
-                    def.userData = reinterpret_cast<void*>(self);
-                    fixture = body->CreateFixture(&def);
-                }
 
-                kult::add<rigidbody>(self).body = body;
-                kult::add<collider>(self).fixture = fixture;
-                kult::add<raycast>(self).is_hit = false;
-
-                return body;
+        b2ShapeFactory::instance().register_class(tmx::Object::Shape::Polygon, [] (const tmx::Object& obj) {
+            std::vector<b2Vec2> vertices;
+            for(const auto& point : obj.getPoints()) {
+                b2Vec2 pos;
+                pos.Set(SCREEN_TO_WORLD(point.x), SCREEN_TO_WORLD(point.y));
+                vertices.push_back(pos);
             }
-        );
+            b2Shape* shape = new b2PolygonShape();
+            ((b2PolygonShape*)shape)->Set(&vertices[0], (int32_t)vertices.size());
+
+            return shape;
+        });
+
+        b2ShapeFactory::instance().register_class(tmx::Object::Shape::Rectangle, [] (const tmx::Object& obj) {
+            const auto& aabb = obj.getAABB();
+            b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
+
+            b2Shape* res = new b2PolygonShape;
+            {
+                ((b2PolygonShape*)res)->SetAsBox(SCREEN_TO_WORLD(halfWS.x), SCREEN_TO_WORLD(halfWS.y));
+            }
+            return res; 
+        });
+
+        b2ShapeFactory::instance().register_class(tmx::Object::Shape::Rectangle, [] (const tmx::Object& obj) {
+            std::vector<b2Vec2> vertices;
+            for(const auto& point : obj.getPoints()) {
+                b2Vec2 pos;
+                pos.Set(SCREEN_TO_WORLD(point.x), SCREEN_TO_WORLD(point.y));
+                vertices.push_back(pos);
+            }
+            b2Shape* shape = new b2ChainShape;
+            ((b2ChainShape*)shape)->CreateChain(&vertices[0], vertices.size());
+            return shape;
+        });
+
+        b2ShapeFactory::instance().register_class(tmx::Object::Shape::Ellipse, [] (const tmx::Object& obj) {
+            const auto& aabb = obj.getAABB();
+            assert(aabb.width == aabb.height);
+            float radius = aabb.width / 2.0f;
+            b2Shape* shape = new b2CircleShape;
+            ((b2CircleShape*)shape)->m_radius = SCREEN_TO_WORLD(radius);//obj.m_width / 2);
+            return shape;
+        });
+        /*TODO: Text*/
+        
+        
+        object_factory::instance().register_class("spawnPoint", [&] (b2World*, const tmx::Object&) {
+            kult::type self = kult::entity();
+
+            return self;
+        });
+        
+        object_factory::instance().register_class("environment", [&] (b2World* world, const tmx::Object& obj) {
+            const auto& pos  = obj.getPosition();
+            const auto& aabb = obj.getAABB();
+            b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
+
+            kult::type self = kult::entity();
+            {
+                kult::add<rigidbody>(self);
+                kult::add<collider>(self);
+                kult::add<raycast>(self);
+            }
+            b2Body* body = nullptr;
+            {
+                b2BodyDef bd;
+                bd.type = b2_staticBody;
+                bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+                body = world->CreateBody(&bd);
+            }
+            kult::get<rigidbody>(self).body = body;
+            
+            b2Fixture* fixture = nullptr;
+            {
+                b2FixtureDef fd;
+                auto shape = std::unique_ptr<b2Shape>(b2ShapeFactory::instance().create(obj.getShape(), obj));
+                fd.shape = shape.get();
+                fd.isSensor            = false;
+                fd.filter.categoryBits = 0xffff;
+                fd.filter.maskBits     = 0xffff;
+                fd.userData            = reinterpret_cast<void*>(self);
+                fixture                 = body->CreateFixture(&fd);
+            }
+            kult::get<collider>(self).fixture = fixture;
+
+
+            return self;
+        });
+    }
+
+    virtual ~register_factories() {
     }
 }_;
 
@@ -208,8 +131,20 @@ public:
  * every level chunk has:
  * a spawn point
  * a first-connected collider
+ * a pointer to the next chunk
+ * a pointer to the previous chunk 
+ *
+ * The last two (prev, next ptr) can be over-arched by an 
+ * std::list 
  */
 
+struct level {
+    struct chunk {
+        vec2f _spawn;
+        kult::type _firstContact;
+    };
+    std::list<chunk*> _chunks;
+};
 
 
 void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
@@ -244,14 +179,34 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
                     DEBUG_LOG("object {}", object.getName());
                     
                     const auto& position = object.getPosition();
-                    const auto& type = object.getType();
-                    const auto& shape = object.getShape();
+                    //const auto& type = object.getType();
+                    //const auto& shape = object.getShape();
 
-                    b2Body* body = b2BodyBuilder::instance().build(world, object);
-                    DEBUG_VALUE_OF(body);
+                    //b2Body* body = b2BodyBuilder::instance().build(world, object);
+                    //
+                    //
+                    //
+                    auto in = object.getProperties();
+                    
+                    /*auto props = wee::zip(
+                        wee::map(in, [] (const tmx::Property& p) { return p.getName(); }), 
+                        wee::map(in, [] (const tmx::Property& p) { return p.getStringValue(); })
+                    );*/
+
+                    //std::vector<std::tuple<std::string, std::string> > props;
+
+                    std::map<std::string, std::string> props;
+                    for(const auto& p : object.getProperties()) {
+                        props.emplace(p.getName(), p.getStringValue());
+                    }
+                    DEBUG_VALUE_AND_TYPE_OF(props);
+
+                    if(props.count("class")) {
+                        register_factories::object_factory::instance().create(props["class"], world, object);
+                    }
+                    
 
 
-                    DEBUG_LOG("position: {},{}", position.x, position.y);
 
                     const auto& object_properties = object.getProperties();
                     DEBUG_LOG("object has {} properties", 
@@ -304,8 +259,8 @@ public:
             const b2Vec2& point, 
             const b2Vec2& normal, 
             float32 fraction) {
-        auto self = reinterpret_cast<kult::type>(fixture->GetUserData());
-        raycast_t& r = kult::get<raycast>(self);
+        //auto self = reinterpret_cast<kult::type>(fixture->GetUserData());
+        //raycast_t& r = kult::get<raycast>(self);
         _fixture    = fixture;
         _fraction   = fraction;
         _point      = point;
@@ -450,7 +405,7 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
 
 kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src) {
     kult::type self = kult::entity();
-    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White };
+    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White , 0};
     kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, 0.0f};
     return self;
 }
@@ -464,9 +419,19 @@ class game : public applet {
     entity_type b0, p, b1;
     vec2f _mouse_pos;
     kult::type _rope;
+    b2DebugDrawImpl _debugdraw;
 public:
     game() {
+        _debugdraw.SetFlags(
+            b2Draw::e_shapeBit | //= 0x0001, 
+            b2Draw::e_jointBit  //= 0x0002, 
+            //b2Draw::e_aabbBit   //= 0x0004, 
+            //e_pairBit  | //= 0x0008, 
+            //e_centerOfMassBit | //= 0x0010, 
+            //e_particleBit// = 0x0020 
+        ) ;
         _world = new b2World({0.0f, 9.8f});
+        _world->SetDebugDraw(&_debugdraw);
         _camera = { 0, 0, 0, 0 };
     }
     int load_content() {
@@ -572,8 +537,8 @@ public:
 		return 0;
     }
 
-    int update(int dt) {
-        _world->Step(1.0f / 60.0f, 4, 3);
+    int update(int ) {
+        _world->Step(1.0f / (float)60, 4, 3);
         articulation_t& a = kult::get<articulation>(_rope);
         for(auto& e : kult::join<raycast>()) {
             raycast_t& r = kult::get<raycast>(e);
@@ -589,13 +554,15 @@ public:
         b2Vec2 pos = WORLD_TO_SCREEN(kult::get<rigidbody>(p).body->GetPosition());
         _camera.x = pos.x;
         _camera.y = pos.y;
-
+        _debugdraw.SetCameraPosition(_camera.x, _camera.y);
 		return 0;
+
     }
 
     
 
     int draw(SDL_Renderer* renderer) {
+        _debugdraw.SetRenderer(renderer);
         SDL_RenderGetLogicalSize(renderer, &_camera.w, &_camera.h);
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
@@ -626,7 +593,8 @@ public:
                 return la < lb;
             });*/
         }
-        b2DebugDrawEXT(_world, renderer, _camera);
+        //b2DebugDrawEXT(_world, renderer, _camera);
+        _world->DrawDebugData();
         
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
 
@@ -688,6 +656,10 @@ public:
     }
 
 };
+
+#include <string>
+
+
 #undef main //SDL idiocy
 int main(int, char*[]) {
     applet* let = new game();

@@ -33,7 +33,7 @@ namespace wee {
         sprite_sheet _sheet;
         std::map<std::string, std::vector<size_t> > _animations;
     };
-    void to_json(json& j, const animation_info& a) {
+    void to_json(json& , const animation_info& ) {
 
     }
 
@@ -63,7 +63,7 @@ namespace wee {
                 animation_info* res = new animation_info;
 
                 json j;
-                j << is;
+                is >> j; 
                 from_json(j, *res);
                 _index[name] = std::unique_ptr<animation_info>(res);
 
@@ -94,7 +94,7 @@ std::ostream& operator << (std::ostream& os, const animation_t&) {
     return os;
 }
 
-auto animations = [&] (int dt) {
+auto animations = [&] (int ) {
     for(const auto& self : kult::join<timeout, animation, visual>()) {
         timeout_t& to   = kult::get<timeout>(self);
         animation_t& an = kult::get<animation>(self);
@@ -157,7 +157,8 @@ struct game : wee::applet {
         kult::add<visual>(e) = {
             assets<SDL_Texture>::instance().get("assets/img/skeleton.png"),
             { 0, 0, 0, 0 },
-            { 255, 255, 255, 255 }
+            { 255, 255, 255, 255 },
+            0
         };
 
         kult::add<timeout>(e) = {
@@ -190,8 +191,8 @@ struct game : wee::applet {
             const visual_t& v = kult::get<visual>(e);
             const transform_t& t = kult::get<transform>(e);
             SDL_Rect dst = {
-                t.p.x, 
-                t.p.y,
+                (int)(t.p.x + 0.5f), 
+                (int)(t.p.y + 0.5f),
                 v.src.w, 
                 v.src.h
             };
@@ -202,11 +203,13 @@ struct game : wee::applet {
             );
         }
         SDL_RenderPresent(renderer);
+        return 0; 
     }
+
 };
 
 
-int main(int argc, char* argv[]) {
+int main(int , char* []) {
 
     wee::applet *let = new game();
     wee::application app(let);

@@ -144,7 +144,6 @@ public:
     virtual int draw(SDL_Renderer* renderer) {
         static SDL_Texture* fb = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_TARGET, 640, 480);
 
-        static int once = 0;
 
         /**
          * render the scene 

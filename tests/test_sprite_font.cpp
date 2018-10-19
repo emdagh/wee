@@ -48,7 +48,7 @@ struct game : wee::applet {
 
         return 0;
     }
-    int update(int) {}
+    int update(int) { return 0; }
     int draw(SDL_Renderer* renderer) {
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
@@ -60,7 +60,8 @@ struct game : wee::applet {
         //SDL_RenderCopy(renderer, _font->_texture, NULL, NULL);
 
         SDL_RenderPresent(renderer);
-
+        
+        return 0;
     }
 
 };

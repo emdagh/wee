@@ -37,7 +37,7 @@ namespace wee {
         particles(size_t capacity, const update_callback& on_update) 
         : _on_update(on_update)
         {
-            _particles.reserve(17); 
+            _particles.reserve(capacity); 
         }
         void update(int dt) {
             for(size_t i=0; i < _particles.size(); i++) {
