@@ -15,10 +15,31 @@
 #include <string>
 #include <list>
 
+using nlohmann::json;
 using namespace wee;
 typedef int gid;
 
 typedef kult::type entity_type;
+
+#define E_CATEGORY_ENVIRONMENT  1 << 1
+#define E_CATEGORY_PICKUP       1 << 2
+#define E_CATEGORY_PLAYER       1 << 3
+
+typedef struct {
+    int value = 1;
+    int type;
+} pickup_t;
+
+std::ostream& operator << (std::ostream& os, const pickup_t& p) {
+    json j = {"pickup", 
+        { "value", p.value },
+        { "type", p.type }
+    };
+    os << j;
+    return os;
+}
+
+using pickup = kult::component<1 << 10, pickup_t>;
 
 
 static class register_factories final {
@@ -70,7 +91,10 @@ public:
         b2ShapeFactory::instance().register_class(tmx::Object::Shape::Ellipse, [] (const tmx::Object& obj) {
             const auto& aabb = obj.getAABB();
             assert(aabb.width == aabb.height);
+            DEBUG_VALUE_OF(aabb.width);
+            DEBUG_VALUE_OF(aabb.height);
             float radius = aabb.width / 2.0f;
+            DEBUG_VALUE_OF(radius);
             b2Shape* shape = new b2CircleShape;
             ((b2CircleShape*)shape)->m_radius = SCREEN_TO_WORLD(radius);//obj.m_width / 2);
             return shape;
@@ -110,13 +134,49 @@ public:
                 auto shape = std::unique_ptr<b2Shape>(b2ShapeFactory::instance().create(obj.getShape(), obj));
                 fd.shape = shape.get();
                 fd.isSensor            = false;
-                fd.filter.categoryBits = 0xffff;
-                fd.filter.maskBits     = 0xffff;
+                fd.filter.categoryBits = E_CATEGORY_ENVIRONMENT;
+                fd.filter.maskBits     = E_CATEGORY_PLAYER;
                 fd.userData            = reinterpret_cast<void*>(self);
-                fixture                 = body->CreateFixture(&fd);
+                fixture                = body->CreateFixture(&fd);
             }
             kult::get<collider>(self).fixture = fixture;
 
+
+            return self;
+        });
+
+        object_factory::instance().register_class("pickup", [&] (b2World* world, const tmx::Object& obj) {
+            const auto& pos  = obj.getPosition();
+            const auto& aabb = obj.getAABB();
+            b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
+
+            kult::type self = kult::entity();
+            {
+                kult::add<rigidbody>(self);
+                kult::add<collider>(self);
+                kult::add<pickup>(self);
+            }
+            b2Body* body = nullptr;
+            {
+                b2BodyDef bd;
+                bd.type = b2_staticBody;
+                bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+                body = world->CreateBody(&bd);
+            }
+            kult::get<rigidbody>(self).body = body;
+            
+            b2Fixture* fixture = nullptr;
+            {
+                b2FixtureDef fd;
+                auto shape = std::unique_ptr<b2Shape>(b2ShapeFactory::instance().create(obj.getShape(), obj));
+                fd.shape = shape.get();
+                fd.isSensor            = true;
+                fd.filter.categoryBits = E_CATEGORY_PICKUP;
+                fd.filter.maskBits     = E_CATEGORY_PLAYER;
+                fd.userData            = reinterpret_cast<void*>(self);
+                fixture                = body->CreateFixture(&fd);
+            }
+            kult::get<collider>(self).fixture = fixture;
 
             return self;
         });
@@ -423,12 +483,13 @@ class game : public applet {
 public:
     game() {
         _debugdraw.SetFlags(
-            b2Draw::e_shapeBit | //= 0x0001, 
-            b2Draw::e_jointBit  //= 0x0002, 
-            //b2Draw::e_aabbBit   //= 0x0004, 
-            //e_pairBit  | //= 0x0008, 
-            //e_centerOfMassBit | //= 0x0010, 
+            b2Draw::e_shapeBit          | //= 0x0001, 
+            b2Draw::e_jointBit          | //= 0x0002, 
+            b2Draw::e_aabbBit           | //= 0x0004, 
+            b2Draw::e_pairBit           | //= 0x0008, 
+            b2Draw::e_centerOfMassBit   | //= 0x0010, 
             //e_particleBit// = 0x0020 
+            0
         ) ;
         _world = new b2World({0.0f, 9.8f});
         _world->SetDebugDraw(&_debugdraw);
