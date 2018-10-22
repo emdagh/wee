@@ -76,7 +76,7 @@ public:
             return res; 
         });
 
-        b2ShapeFactory::instance().register_class(tmx::Object::Shape::Rectangle, [] (const tmx::Object& obj) {
+        b2ShapeFactory::instance().register_class(tmx::Object::Shape::Polyline, [] (const tmx::Object& obj) {
             std::vector<b2Vec2> vertices;
             for(const auto& point : obj.getPoints()) {
                 b2Vec2 pos;
@@ -101,8 +101,13 @@ public:
         });
         /*TODO: Text*/
         
+        object_factory::instance().register_class("norope", [&] (b2World*, const tmx::Object&) {
+            kult::type self = kult::entity();
+
+            return self;
+        });
         
-        object_factory::instance().register_class("spawnPoint", [&] (b2World*, const tmx::Object&) {
+        object_factory::instance().register_class("spawn", [&] (b2World*, const tmx::Object&) {
             kult::type self = kult::entity();
 
             return self;
@@ -119,6 +124,10 @@ public:
                 kult::add<collider>(self);
                 kult::add<raycast>(self);
             }
+            {
+            kult::get<raycast>(self).is_hit = false;
+            }
+
             b2Body* body = nullptr;
             {
                 b2BodyDef bd;
@@ -262,6 +271,7 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
                     DEBUG_VALUE_AND_TYPE_OF(props);
 
                     if(props.count("class")) {
+                        DEBUG_LOG("creating object at {}, {}", object.getPosition().x, object.getPosition().y);
                         register_factories::object_factory::instance().create(props["class"], world, object);
                     }
                     
@@ -272,8 +282,8 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
                     DEBUG_LOG("object has {} properties", 
                         object_properties.size());
                     for(const auto& object_property : object_properties) {
-                        if(object_property.getName() == "type") {
-                            if(object_property.getStringValue() == "spawnPoint") {
+                        if(object_property.getName() == "class") {
+                            if(object_property.getStringValue() == "spawn") {
                                 spawnPoint->x = (int)position.x;
                                 spawnPoint->y = (int)position.y;
                             }
@@ -407,7 +417,7 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
         shape.m_p.Set(0.0f, 0.0f);//
         shape.m_radius = SCREEN_TO_WORLD(10.0f);
         b2FixtureDef fd;
-        fd.filter.categoryBits = 0xffff;//!0;//(uint16_t)collision_filter::player;
+        fd.filter.categoryBits = E_CATEGORY_PLAYER;//!0;//(uint16_t)collision_filter::player;
         fd.filter.maskBits = 0xffff;//!0;//(uint16_t)collision_filter::any;
         fd.density = 1.0f;
         fd.restitution = 0.0f;
@@ -416,6 +426,18 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
         fd.userData = reinterpret_cast<void*>(self);
 
         fixture = body->CreateFixture(&fd);
+    }
+
+    SDL_Texture* texture = nullptr;
+    {
+        texture = assets<SDL_Texture>::instance().load("@player", ::as_lvalue(
+            std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/Player Red") + "playerRed_roll.png", std::ios::binary)
+        ));
+
+        kult::add<visual>(self);
+        auto& v = kult::get<visual>(self);
+        v.texture = texture;
+        SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
     }
     kult::add<rigidbody>(self).body = body;
     kult::add<collider>(self).fixture = fixture;
@@ -463,10 +485,11 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
     return self;
 }
 
-kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src) {
+kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src, const SDL_RendererFlip& flip, float radians) {
     kult::type self = kult::entity();
-    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White , 0};
-    kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, 0.0f};
+    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, 0, flip};
+    kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, radians};
+
     return self;
 }
 
@@ -485,8 +508,8 @@ public:
         _debugdraw.SetFlags(
             b2Draw::e_shapeBit          | //= 0x0001, 
             b2Draw::e_jointBit          | //= 0x0002, 
-            b2Draw::e_aabbBit           | //= 0x0004, 
-            b2Draw::e_pairBit           | //= 0x0008, 
+            //b2Draw::e_aabbBit           | //= 0x0004, 
+            //b2Draw::e_pairBit           | //= 0x0008, 
             b2Draw::e_centerOfMassBit   | //= 0x0010, 
             //e_particleBit// = 0x0020 
             0
@@ -520,7 +543,14 @@ public:
         
         p  = create_player(_world, spawnPoint);
         b1 = create_block(_world, { -16, -300, 32, 32 });
-        _rope = create_rope_between(_world, p, b1, kult::get<rigidbody>(b1).body->GetWorldCenter());
+        
+        b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
+        b2Vec2 temp = { 0.0f, -1000.0f };
+        b2Vec2 pb = SCREEN_TO_WORLD(temp);
+
+        b2RayCastClosest rc;
+        rc.RayCast(_world, pa, pb);
+
 
         tmx::Map tiled_map;
         tiled_map.load(pt);
@@ -536,13 +566,15 @@ public:
 
         auto& map_tilesets = tiled_map.getTilesets();
         for(auto& tset : map_tilesets) {
+            auto first_gid = tset.getFirstGID();
+
             auto* tex = wee::assets<SDL_Texture>::instance().load(
                 tset.getImagePath(),
                 ::as_lvalue(
                     std::ifstream(tset.getImagePath(), std::ios::binary)
                 )
             );
-            tilesets.insert(std::pair<gid, SDL_Texture*>(tset.getFirstGID(), tex));
+            tilesets.insert(std::pair<gid, SDL_Texture*>(first_gid, tex));
         }
 
         const auto& map_layers = tiled_map.getLayers();
@@ -558,6 +590,12 @@ public:
                 for(int x=0; x < cols; x++) {
                     int ix = x + y * cols;
                     gid cur_gid = layer_tiles[ix].ID;
+
+                    //DEBUG_VALUE_OF(flipFlags);
+                    //
+
+
+
                     if(0 == cur_gid) {
                         continue;
                     }
@@ -580,17 +618,32 @@ public:
                     SDL_QueryTexture(tilesets[tset_gid],
                             NULL, NULL, &ts_w, &ts_h);
 
-                    int region_x = (cur_gid % (ts_w / tile_w)) * tile_w;
-                    int region_y = (cur_gid / (ts_w / tile_h)) * tile_h;
+                    int set_width = ts_w / tile_w;
+
+                    int region_x = (cur_gid % set_width) * tile_w;
+                    int region_y = std::floor(cur_gid / set_width) * tile_h;
 
                     int x_pos = x * tile_w;
                     int y_pos = y * tile_h;
 
-                    /*DEBUG_VALUE_OF(region_x);
+                    auto flipFlags = layer_tiles[ix].flipFlags;
+                    int flip = SDL_FLIP_NONE;
+                    flip |= (flipFlags & tmx::TileLayer::Horizontal)  ? static_cast<int>(SDL_FLIP_HORIZONTAL)  : static_cast<int>(SDL_FLIP_NONE);
+                    flip |= (flipFlags & tmx::TileLayer::Vertical)    ? static_cast<int>(SDL_FLIP_VERTICAL)    : static_cast<int>(SDL_FLIP_NONE);
+
+                    float theta = 0.0f;
+                    if(flipFlags & tmx::TileLayer::Diagonal) {
+                        theta = 90.0f;
+                    }
+
+
+                    DEBUG_VALUE_OF(region_x);
                     DEBUG_VALUE_OF(region_y);
-                    DEBUG_VALUE_OF(x_pos);
-                    DEBUG_VALUE_OF(y_pos);*/
-                    tile(tilesets[tset_gid], {x_pos, y_pos}, {region_x, region_y, tile_w, tile_h});
+                    DEBUG_VALUE_OF(tile_w);
+                    DEBUG_VALUE_OF(tile_h);
+
+
+                    tile(tilesets[tset_gid], {x_pos, y_pos}, {region_x, region_y, tile_w, tile_h}, static_cast<SDL_RendererFlip>(flip), theta);
 
                 }
             }
@@ -606,8 +659,10 @@ public:
             if(r.is_hit) {
                 r.is_hit = false;
                 if(a.joint) {
+                    DEBUG_LOG("destroy old joint");
                     _world->DestroyJoint(a.joint);
                 }
+                DEBUG_LOG("create new joint");
                 _rope = create_rope_between(_world, p, e, b2Vec2{r.point.x, r.point.y});
             }
         }
@@ -641,10 +696,13 @@ public:
                     v.src.w, 
                     v.src.h
                 };
-                SDL_RenderCopy(renderer, 
+                SDL_RenderCopyEx(renderer, 
                     v.texture,
                     &v.src,
-                    &dst
+                    &dst,
+                    t.t,
+                    NULL,
+                    v.flip
                 );
             }
 

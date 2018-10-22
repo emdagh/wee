@@ -68,7 +68,9 @@ typedef struct {
     SDL_Texture* texture = NULL;
     SDL_Rect     src;
     SDL_Color    color = {255,255,255,255};
-    int layer;
+    int layer  = 0;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+
 } visual_t;
 
 

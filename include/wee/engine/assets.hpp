@@ -85,10 +85,15 @@ namespace wee {
             DEBUG_METHOD();
             DEBUG_VALUE_AND_TYPE_OF(name);
             DEBUG_VALUE_AND_TYPE_OF(surface);
+
+
             if(!after) {
                 throw std::logic_error("no surface -> texture callback defined for asset manager, did you forget to create an application instance?");
             }
             resources[name] = after(surface);
+            int w, h;
+            SDL_QueryTexture(resources[name], NULL, NULL, &w, &h);
+            DEBUG_LOG("{}x{}", w, h);
             return resources[name];
         }
 
