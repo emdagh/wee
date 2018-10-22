@@ -2,8 +2,11 @@
 wee
 
 ## Build instructions
-* Navigate to the folder where you cloned thie repository
-* Create a folder called `build`
+* Navigate to the folder where you cloned this repository
+* `cd scripts`
+* `./pup.sh`
+* `cd ..`
+* `mkdir build && cd build`
 
 and run the following commands (respective of your OS)
 ### Linux
