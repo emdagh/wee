@@ -70,7 +70,7 @@ typedef struct {
     SDL_Color    color = {255,255,255,255};
     int layer  = 0;
     SDL_RendererFlip flip = SDL_FLIP_NONE;
-
+    wee::vec2 offset = {0.f, 0.f};
 } visual_t;
 
 

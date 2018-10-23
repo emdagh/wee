@@ -32,6 +32,7 @@ namespace wee {
         }
     };
 
+
     template <>
     struct assets<TTF_Font> : singleton<assets<TTF_Font> > {
         typename dictionary<TTF_Font*>::type resources;

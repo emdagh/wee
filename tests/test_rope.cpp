@@ -2,10 +2,13 @@
 #include "common/components.hpp"
 #include "common/Box2DEXT.hpp"
 #include <engine/assets.hpp>
+#include <engine/sprite_sheet.hpp>
 #include <core/logstream.hpp>
 #include <core/factory.hpp>
 #include <core/zip.hpp>
 #include <core/map.hpp>
+#include <core/lexical_cast.hpp>
+#include <core/mat4.hpp>
 #include <prettyprint.hpp>
 #include <kult.hpp>
 #include <Box2D/Box2D.h>
@@ -15,18 +18,114 @@
 #include <string>
 #include <list>
 
+using wee::lexical_cast;
 using nlohmann::json;
 using namespace wee;
 typedef int gid;
 
 typedef kult::type entity_type;
 
-#define E_CATEGORY_ENVIRONMENT  1 << 1
-#define E_CATEGORY_PICKUP       1 << 2
-#define E_CATEGORY_PLAYER       1 << 3
+#define E_CATEGORY_ENVIRONMENT  (1 << 1)
+#define E_CATEGORY_PICKUP       (1 << 2)
+#define E_CATEGORY_PLAYER       (1 << 3)
+
+#define MAX_SHAKE_X     5.f
+#define MAX_SHAKE_Y     5.f
+
+using wee::mat4;
+
+struct __random {
+    __random() {
+        std::srand(std::time(nullptr));
+    }
+
+    float next(float mx) {
+        return mx * static_cast<float>(std::rand()) / RAND_MAX;
+    }
+
+    float next(float mn, float mx) {
+        return mn + ((mx - mn) * (static_cast<float>(std::rand()) / RAND_MAX));
+    }
+};
+
+class camera {
+    mat4 _transform;
+    float _zoom;
+    float _rotation;
+    bool _changed = true;
+    bool _shaking = false;
+    bool _restore_after;
+    vec2 _position;
+    vec2 _stored_position;
+    vec2 _viewport;
+    int _shaketime;
+
+
+    void set_position(const vec2& p) {
+        _position = p;
+        _changed = true;
+
+    }
+
+    void shake(int t, bool restorePositionAfter = true) {
+        if(_shaking) 
+            return;
+
+        _shaking = t > 0;
+        _shaketime = t;
+        _restore_after = restorePositionAfter;
+        _stored_position = _position;
+    }
+
+    void end_shake() {
+        _shaketime = 0;
+        _shaking = false;
+        if(_restore_after) 
+            set_position(_stored_position);
+    }
+
+    void update(int dt) {
+        static __random rnd;
+        if(!_shaking) return;
+        _shaketime -= dt;
+        if(_shaketime <= 0)
+            return end_shake();
+
+        int pos = 1;
+        if(rnd.next(10) >= 5) {
+            pos -= 1;
+        }
+
+        float px, py;
+        px = _position.x + rnd.next(-MAX_SHAKE_X, MAX_SHAKE_X) * pos;
+        py = _position.y + rnd.next(-MAX_SHAKE_Y, MAX_SHAKE_Y) * pos;
+        set_position({px, py});
+    }
+
+    void _update_transform() {
+        mat4 Mt, Mr, Ms, Mt2;
+        Mt = mat4::create_translation(-_position.x, -_position.y, 0.0f);
+        Ms = mat4::create_scale(_zoom, _zoom, 1.0f);
+        Mr = mat4::create_rotation(0.f, 0.f, _rotation);
+        Mt2 = mat4::create_translation(_viewport.x * 0.5f,
+            _viewport.y * 0.5f, 
+            0.0f);
+
+        _transform = mat4::mul(
+            mat4::mul(
+                Mt,
+                mat4::mul(
+                    Mr, Ms
+                )
+            ), Mt2
+        );
+        _changed = false;
+    }
+
+};
 
 typedef struct {
-    int value = 1;
+    int value;
     int type;
 } pickup_t;
 
@@ -159,12 +258,59 @@ public:
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
 
+            /**
+             * TODO: based on the pickup value, this entity will have 
+             * a visual.
+             *
+             * TODO: remove visual representation from the tile map
+             */
+
+
             kult::type self = kult::entity();
             {
                 kult::add<rigidbody>(self);
                 kult::add<collider>(self);
                 kult::add<pickup>(self);
+                kult::add<visual>(self);
+                kult::add<transform>(self);
             }
+            /** 
+             * determing visuals based on
+             * pickup value.
+             */
+            static sprite_sheet* s = nullptr;
+            if(!s) {
+                s = new sprite_sheet;
+                json j;
+                std::ifstream is(wee::get_resource_path("assets/img") + "pickups.json");
+                if(is.is_open()) {
+                    is >> j; 
+                    from_json(j, *s);
+                    is.close();
+                }
+            }
+
+            visual_t& v = kult::get<visual>(self);
+            v.texture = s->_texture;
+        
+
+            std::map<std::string, std::string> props;
+            for(const auto& p : obj.getProperties()) {
+                props.emplace(p.getName(), p.getStringValue());
+            }
+            if(props.count("value")) {
+                pickup_t& p = kult::get<pickup>(self);
+                p.value = lexical_cast<int>(props.at("value"));
+                if(p.value == 10) {
+                    v.src = s->get("blueGem.png");
+                }
+
+                v.offset.x = -.5f * v.src.w;
+                v.offset.y = -.5f * v.src.h;
+            }
+            /**
+             * physics stuff
+             */
             b2Body* body = nullptr;
             {
                 b2BodyDef bd;
@@ -340,9 +486,6 @@ public:
     }
 };
 
-struct camera {
-    SDL_Rect rect;
-};
 
 kult::type create_sensor(b2World* world, kult::type parent, const vec2f& offset, float radius, const collision_callback&) {
     kult::type self = kult::entity();
@@ -438,7 +581,12 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
         auto& v = kult::get<visual>(self);
         v.texture = texture;
         SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
+        v.src.x = v.src.y = 0;
+        v.offset.x = -v.src.w / 2;
+        v.offset.y = -v.src.h / 2;
+
     }
+    kult::add<transform>(self);
     kult::add<rigidbody>(self).body = body;
     kult::add<collider>(self).fixture = fixture;
     return self;
@@ -493,6 +641,28 @@ kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src,
     return self;
 }
 
+        auto copy_transform_to_physics = [] () {
+            for(auto& e : kult::join<transform, rigidbody>()) {
+                const vec2& p = kult::get<transform>(e).p;
+                float r = kult::get<transform>(e).t;
+                kult::get<rigidbody>(e).body->SetTransform({ 
+                        SCREEN_TO_WORLD(p.x), 
+                        SCREEN_TO_WORLD(p.y) 
+                    }, r
+                );
+            }
+        };
+
+        auto copy_physics_to_transform = [] () {
+            for(auto& e : kult::join<transform, rigidbody>()) {
+                const b2Transform b2t = kult::get<rigidbody>(e).body->GetTransform();
+                const b2Vec2& vec = b2t.p;
+                
+                kult::get<transform>(e).p.x = WORLD_TO_SCREEN(vec.x);
+                kult::get<transform>(e).p.y = WORLD_TO_SCREEN(vec.y);
+                kult::get<transform>(e).t   = kult::get<rigidbody>(e).body->GetAngle();
+            }
+        };
 
 class game : public applet {
     b2World* _world;
@@ -503,6 +673,7 @@ class game : public applet {
     vec2f _mouse_pos;
     kult::type _rope;
     b2DebugDrawImpl _debugdraw;
+    camera _cam;
 public:
     game() {
         _debugdraw.SetFlags(
@@ -546,7 +717,7 @@ public:
         
         b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
         b2Vec2 temp = { 0.0f, -1000.0f };
-        b2Vec2 pb = SCREEN_TO_WORLD(temp);
+        b2Vec2 pb = pa + SCREEN_TO_WORLD(temp);
 
         b2RayCastClosest rc;
         rc.RayCast(_world, pa, pb);
@@ -636,23 +807,25 @@ public:
                         theta = 90.0f;
                     }
 
-
-                    DEBUG_VALUE_OF(region_x);
-                    DEBUG_VALUE_OF(region_y);
-                    DEBUG_VALUE_OF(tile_w);
-                    DEBUG_VALUE_OF(tile_h);
-
-
-                    tile(tilesets[tset_gid], {x_pos, y_pos}, {region_x, region_y, tile_w, tile_h}, static_cast<SDL_RendererFlip>(flip), theta);
+                    tile(tilesets[tset_gid], 
+                        {x_pos, y_pos}, 
+                        {region_x, region_y, tile_w, tile_h}, 
+                        static_cast<SDL_RendererFlip>(flip), 
+                        theta
+                    );
 
                 }
             }
         }
+
+        copy_physics_to_transform();
 		return 0;
     }
 
     int update(int ) {
+        copy_transform_to_physics();
         _world->Step(1.0f / (float)60, 4, 3);
+        copy_physics_to_transform();
         articulation_t& a = kult::get<articulation>(_rope);
         for(auto& e : kult::join<raycast>()) {
             raycast_t& r = kult::get<raycast>(e);
@@ -691,8 +864,8 @@ public:
                 const visual_t& v = kult::get<visual>(e);
                 const transform_t& t = kult::get<transform>(e);
                 SDL_Rect dst = {
-                    cx + (int)t.p.x, 
-                    cy + (int)t.p.y,
+                    cx + (int)(t.p.x + v.offset.x + .5f), 
+                    cy + (int)(t.p.y + v.offset.y + .5f),
                     v.src.w, 
                     v.src.h
                 };
@@ -739,9 +912,18 @@ public:
         int cx = -_camera.x + (_camera.w >> 1);
         int cy = -_camera.y + (_camera.h >> 1);
 
-        b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
-        b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
-        b2Vec2 pb = SCREEN_TO_WORLD(temp);
+        vec2 a = kult::get<transform>(p).p;
+        vec2 b = a + _mouse_pos - (vec2) { (float)cx, (float)cy }; 
+
+        DEBUG_VALUE_OF(a);
+        DEBUG_VALUE_OF(b);
+
+        //b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
+        /*b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
+        b2Vec2 pb = SCREEN_TO_WORLD(temp);*/
+
+        b2Vec2 pa = { WORLD_TO_SCREEN(a.x), WORLD_TO_SCREEN(a.y) };
+        b2Vec2 pb = { WORLD_TO_SCREEN(b.x), WORLD_TO_SCREEN(b.y) };
 
         //_world->RayCast(&_raycast, pa, pb);
         b2RayCastClosest rc;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/mat4.h>
+#include <cmath>
 
 namespace wee {
     struct vec3;
@@ -14,6 +15,46 @@ namespace wee {
             };
             float cell[16];
         };
+
+        static mat4 create_scale(float sx, float sy, float sz) {
+            mat4 res;
+            res.m11 = sx;
+            res.m22 = sy;
+            res.m33 = sz;
+            res.m44 = 1.0f;
+            return res;
+        }
+
+        static mat4 create_rotation(float rx, float ry, float rz) {
+            auto mrx = mat4::create_rotation_x(rx);
+            auto mry = mat4::create_rotation_y(ry);
+            auto mrz = mat4::create_rotation_z(rz);
+            return mat4::mul(mat4::mul(mrx, mry), mrz);
+        }
+        static mat4 create_rotation_x(float a) {
+            mat4 res;
+            float ct = std::cos(a);
+            float st = std::sin(a);
+            res.m22 =  ct;            res.m23 = -st;
+            res.m32 =  st;            res.m33 =  ct;
+            return res;
+        }
+        static mat4 create_rotation_y(float a) {
+            mat4 res;
+            float ct = std::cos(a);
+            float st = std::sin(a);
+            res.m11 =  ct;            res.m13 = st;
+            res.m31 = -st;            res.m33 = ct;
+            return res;
+        }
+        static mat4 create_rotation_z(float a) {
+            mat4 res;
+            float ct = std::cos(a);
+            float st = std::sin(a);
+            res.m11 =  ct;            res.m12 = -st;
+            res.m21 =  st;            res.m22 =  ct;
+            return res;
+        }
 
         static mat4 create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
             mat4 res;
