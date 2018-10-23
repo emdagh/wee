@@ -438,7 +438,6 @@ struct game : applet {
             SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
             SDL_RenderClear(renderer);
 
-            b2DebugDrawEXT(world_, renderer, camera_);
                 
 
             int cx = -camera_.x + (camera_.w >> 1);

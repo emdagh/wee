@@ -16,8 +16,10 @@ namespace wee {
             float cell[16];
         };
 
+        static const mat4 identity;
+
         static mat4 create_scale(float sx, float sy, float sz) {
-            mat4 res;
+            mat4 res = identity;
             res.m11 = sx;
             res.m22 = sy;
             res.m33 = sz;
@@ -32,7 +34,7 @@ namespace wee {
             return mat4::mul(mat4::mul(mrx, mry), mrz);
         }
         static mat4 create_rotation_x(float a) {
-            mat4 res;
+            mat4 res = identity;
             float ct = std::cos(a);
             float st = std::sin(a);
             res.m22 =  ct;            res.m23 = -st;
@@ -40,7 +42,7 @@ namespace wee {
             return res;
         }
         static mat4 create_rotation_y(float a) {
-            mat4 res;
+            mat4 res = identity;
             float ct = std::cos(a);
             float st = std::sin(a);
             res.m11 =  ct;            res.m13 = st;
@@ -48,7 +50,7 @@ namespace wee {
             return res;
         }
         static mat4 create_rotation_z(float a) {
-            mat4 res;
+            mat4 res = identity;
             float ct = std::cos(a);
             float st = std::sin(a);
             res.m11 =  ct;            res.m12 = -st;
@@ -57,7 +59,7 @@ namespace wee {
         }
 
         static mat4 create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
-            mat4 res;
+            mat4 res = identity;
             res.m11 = 2.0f / (right - left);
             res.m22 = 2.0f / (top - bottom);
             res.m33 = 2.0f / (far - near);
@@ -68,7 +70,7 @@ namespace wee {
         }
 
         static mat4 create_translation(float x, float y, float z) {
-            mat4 res;
+            mat4 res = identity;
             res.m41 = x;
             res.m42 = y;
             res.m43 = z;
@@ -76,7 +78,7 @@ namespace wee {
         }
 
         static mat4 transposed(const mat4& in) {
-            mat4 res;
+            mat4 res = identity;
             res.m11 = in.m11;
             res.m12 = in.m21;
             res.m13 = in.m31;
@@ -106,7 +108,7 @@ namespace wee {
 
         static mat4 mul(const mat4& a, const mat4& b) {
             mat4 res;
-            matmul4(&a.cell[0], &b.cell[0], &res.cell[0]);
+            matmul4_c(&a.cell[0], &b.cell[0], &res.cell[0]);
             return res;
         }
 

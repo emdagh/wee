@@ -9,6 +9,7 @@
 #include <core/map.hpp>
 #include <core/lexical_cast.hpp>
 #include <core/mat4.hpp>
+#include <core/vec3.hpp>
 #include <prettyprint.hpp>
 #include <kult.hpp>
 #include <Box2D/Box2D.h>
@@ -50,58 +51,16 @@ struct __random {
 
 class camera {
     mat4 _transform;
-    float _zoom;
-    float _rotation;
+    float _zoom = 1.0f;;
+    float _rotation = 0.0f;
     bool _changed = true;
     bool _shaking = false;
-    bool _restore_after;
-    vec2 _position;
-    vec2 _stored_position;
-    vec2 _viewport;
-    int _shaketime;
-
-
-    void set_position(const vec2& p) {
-        _position = p;
-        _changed = true;
-
-    }
-
-    void shake(int t, bool restorePositionAfter = true) {
-        if(_shaking) 
-            return;
-
-        _shaking = t > 0;
-        _shaketime = t;
-        _restore_after = restorePositionAfter;
-        _stored_position = _position;
-    }
-
-    void end_shake() {
-        _shaketime = 0;
-        _shaking = false;
-        if(_restore_after) 
-            set_position(_stored_position);
-    }
-
-    void update(int dt) {
-        static __random rnd;
-        if(!_shaking) return;
-        _shaketime -= dt;
-        if(_shaketime <= 0)
-            return end_shake();
-
-        int pos = 1;
-        if(rnd.next(10) >= 5) {
-            pos -= 1;
-        }
-
-        float px, py;
-        px = _position.x + rnd.next(-MAX_SHAKE_X, MAX_SHAKE_X) * pos;
-        py = _position.y + rnd.next(-MAX_SHAKE_Y, MAX_SHAKE_Y) * pos;
-        set_position({px, py});
-    }
-
+    bool _restore_after = true;
+    vec2 _position = { 0.0f, 0.0f };
+    vec2 _stored_position = { 0.0f, 0.0f };
+    vec2 _viewport = { 0.0f, 0.0f };
+    int _shaketime = 0;
+protected:
     void _update_transform() {
         mat4 Mt, Mr, Ms, Mt2;
         Mt = mat4::create_translation(-_position.x, -_position.y, 0.0f);
@@ -120,6 +79,62 @@ class camera {
             ), Mt2
         );
         _changed = false;
+    }
+public:
+
+    void set_viewport(int w, int h) {
+        _viewport.x = (float)w;
+        _viewport.y = (float)h;
+        _changed = true;
+    }
+
+    void set_position(float x, float y) {
+        _position.x = x;
+        _position.y = y;
+        _changed = true;
+
+    }
+
+    void shake(int t, bool restorePositionAfter = true) {
+        if(_shaking) 
+            return;
+
+        _shaking = t > 0;
+        _shaketime = t;
+        _restore_after = restorePositionAfter;
+        _stored_position = _position;
+    }
+
+    void end_shake() {
+        _shaketime = 0;
+        _shaking = false;
+        if(_restore_after) 
+            set_position(_stored_position.x, _stored_position.y);
+    }
+
+    void update(int dt) {
+        static __random rnd;
+        if(!_shaking) return;
+        _shaketime -= dt;
+        if(_shaketime <= 0)
+            return end_shake();
+
+        int pos = 1;
+        if(rnd.next(10) >= 5) {
+            pos -= 1;
+        }
+
+        float px, py;
+        px = _position.x + rnd.next(-MAX_SHAKE_X, MAX_SHAKE_X) * pos;
+        py = _position.y + rnd.next(-MAX_SHAKE_Y, MAX_SHAKE_Y) * pos;
+        set_position(px, py);
+    }
+
+
+    const mat4& get_transform() {
+        if(_changed) 
+            _update_transform();
+        return _transform;
     }
 
 };
@@ -822,7 +837,7 @@ public:
 		return 0;
     }
 
-    int update(int ) {
+    int update(int dt) {
         copy_transform_to_physics();
         _world->Step(1.0f / (float)60, 4, 3);
         copy_physics_to_transform();
@@ -841,9 +856,9 @@ public:
         }
 
         b2Vec2 pos = WORLD_TO_SCREEN(kult::get<rigidbody>(p).body->GetPosition());
-        _camera.x = pos.x;
-        _camera.y = pos.y;
-        _debugdraw.SetCameraPosition(_camera.x, _camera.y);
+        _cam.set_position(pos.x, pos.y);
+        _cam.update(dt);
+        _debugdraw.SetCameraTransform(_cam.get_transform());
 		return 0;
 
     }
@@ -855,6 +870,8 @@ public:
         SDL_RenderGetLogicalSize(renderer, &_camera.w, &_camera.h);
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
+
+        _cam.set_viewport(_camera.w, _camera.h);
         int cx = -_camera.x + (_camera.w >> 1);
         int cy = -_camera.y + (_camera.h >> 1);
         {
@@ -863,9 +880,19 @@ public:
             for(const auto& e : kult::join<transform, visual>()) {
                 const visual_t& v = kult::get<visual>(e);
                 const transform_t& t = kult::get<transform>(e);
+
+                vec3 position = { 
+                    t.p.x + v.offset.x,
+                    t.p.y + v.offset.y,
+                    0.0f
+                };
+
+                vec3 positionCS = vec3::transform(position, _cam.get_transform());
+
+
                 SDL_Rect dst = {
-                    cx + (int)(t.p.x + v.offset.x + .5f), 
-                    cy + (int)(t.p.y + v.offset.y + .5f),
+                    (int)(positionCS.x + 0.5f), //cx + (int)(t.p.x + v.offset.x + .5f), 
+                    (int)(positionCS.y + 0.5f), //cy + (int)(t.p.y + v.offset.y + .5f),
                     v.src.w, 
                     v.src.h
                 };
@@ -912,22 +939,15 @@ public:
         int cx = -_camera.x + (_camera.w >> 1);
         int cy = -_camera.y + (_camera.h >> 1);
 
-        vec2 a = kult::get<transform>(p).p;
-        vec2 b = a + _mouse_pos - (vec2) { (float)cx, (float)cy }; 
 
-        DEBUG_VALUE_OF(a);
-        DEBUG_VALUE_OF(b);
-
-        //b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
-        /*b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
-        b2Vec2 pb = SCREEN_TO_WORLD(temp);*/
-
-        b2Vec2 pa = { WORLD_TO_SCREEN(a.x), WORLD_TO_SCREEN(a.y) };
-        b2Vec2 pb = { WORLD_TO_SCREEN(b.x), WORLD_TO_SCREEN(b.y) };
+        b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
+        b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
+        b2Vec2 pb = SCREEN_TO_WORLD(temp);
 
         //_world->RayCast(&_raycast, pa, pb);
         b2RayCastClosest rc;
         rc.RayCast(_world, pa, pb);
+        _cam.shake(1000, false);
         return 0;
     }
 

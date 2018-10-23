@@ -4,9 +4,16 @@
 #include <limits>
 using namespace wee;
 
+const mat4 mat4::identity = { 
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+};
+
 mat4 mat4::inverted(const mat4& in) 
 {
-    mat4 res;
+    mat4 res = mat4::identity;
     
 
 	float num23 = (in.m33 * in.m44) - (in.m34 * in.m43);
