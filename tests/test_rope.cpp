@@ -66,10 +66,11 @@ protected:
         Mt = mat4::create_translation(-_position.x, -_position.y, 0.0f);
         Ms = mat4::create_scale(_zoom, _zoom, 1.0f);
         Mr = mat4::create_rotation(0.f, 0.f, _rotation);
-        Mt2 = mat4::create_translation(_viewport.x * 0.5f,
+        Mt2 = mat4::create_translation(
+            _viewport.x * 0.5f,
             _viewport.y * 0.5f, 
-            0.0f);
-
+            0.0f
+        );
         _transform = mat4::mul(
             mat4::mul(
                 Mt,
@@ -135,6 +136,17 @@ public:
         if(_changed) 
             _update_transform();
         return _transform;
+    }
+
+    void screen_to_world(const vec3& src, vec3* dst) {
+        mat4 T, I;
+        T = get_transform();
+        I = mat4::inverted(T);
+        vec3 Pa = { src.x, src.y, 0.0f }; // 0.0 for z-axis, flatten vector.
+        Pa = vec3::transform(Pa, I);
+        dst->x = Pa.x;
+        dst->y = Pa.y;
+        dst->z = Pa.z;
     }
 
 };
@@ -872,8 +884,6 @@ public:
         SDL_RenderClear(renderer);
 
         _cam.set_viewport(_camera.w, _camera.h);
-        int cx = -_camera.x + (_camera.w >> 1);
-        int cy = -_camera.y + (_camera.h >> 1);
         {
             /*std::vector<kult::type> entities;*/
 
@@ -917,16 +927,29 @@ public:
         
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
 
-        b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
-        b2Vec2 temp = { _mouse_pos.x, _mouse_pos.y };
-        b2Vec2 pb = SCREEN_TO_WORLD(temp);
+        vec2 pa = kult::get<transform>(p).p;
+        vec3 playerPos = vec3::transform ({pa.x, pa.y, 0.0f}, _cam.get_transform());
+        pa.x = playerPos.x;
+        pa.y = playerPos.y;
 
-        pa = WORLD_TO_SCREEN(pa);
-        pb = WORLD_TO_SCREEN(pb);
+        //vec3 mousePositionWS = vec3::transform({_mouse_pos.x, _mouse_pos.y, 0.0f }, _cam.get_transform());
+        //vec2 pb = { mousePositionWS.x, mousePositionWS.y };
+        //
+        //vec3 pbb;
+        //_cam.to_screen((vec3){_mouse_pos.x, _mouse_pos.y, 0.0f}, &pbb);
+        //vec2 pb = { pa.x + pbb.x, pa.y + pbb.y };
+        vec2 pb = { _mouse_pos.x, _mouse_pos.y };
+        //pa = WORLD_TO_SCREEN(pa);
+        //pb = WORLD_TO_SCREEN(pb);
 
 
 
-        SDL_RenderDrawLine(renderer, cx + (int)pa.x, cy + (int)pa.y, (int)pb.x, (int)pb.y);
+        SDL_RenderDrawLine(renderer, 
+            (int)pa.x, 
+            (int)pa.y, 
+            (int)pb.x, 
+            (int)pb.y
+        );
         
         SDL_RenderPresent(renderer);
 		return 0;
@@ -936,15 +959,24 @@ public:
         for(auto& e : kult::join<raycast>()) {
             kult::get<raycast>(e).is_hit = false;
         }
-        int cx = -_camera.x + (_camera.w >> 1);
-        int cy = -_camera.y + (_camera.h >> 1);
+        //int cx = -_camera.x + (_camera.w >> 1);
+        //int cy = -_camera.y + (_camera.h >> 1);
+
+        vec2 playerPosition = kult::get<transform>(p).p;
+
+        //b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
+        vec3 mousePosition = {
+            _mouse_pos.x,
+            _mouse_pos.y,// - _camera.h / 2, 
+            0.0f
+        };
+
+        mousePosition = vec3::transform(mousePosition, mat4::inverted(_cam.get_transform()));
+        
+        b2Vec2 pa = SCREEN_TO_WORLD(b2Vec2(playerPosition.x, playerPosition.y));
+        b2Vec2 pb = SCREEN_TO_WORLD(b2Vec2(mousePosition.x, mousePosition.y));
 
 
-        b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
-        b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
-        b2Vec2 pb = SCREEN_TO_WORLD(temp);
-
-        //_world->RayCast(&_raycast, pa, pb);
         b2RayCastClosest rc;
         rc.RayCast(_world, pa, pb);
         _cam.shake(1000, false);

@@ -1,7 +1,13 @@
 
 #include <core/vec3.hpp>
 #include <core/mat4.hpp>
-#include <iostream>
+
+namespace wee {
+
+std::ostream& operator << (std::ostream& os, const vec3& self) {
+    return os << "["<<self.x<<","<<self.y<<","<<self.z<<"]";
+}
+}
 
 using namespace wee;
         
@@ -20,8 +26,3 @@ vec3 vec3::transform(const vec3& a, const mat4& b) {
 }
 
 
-template <typename S, typename T>
-S& operator << (S& os, const vec3& self) 
-{
-    return os << "["<<self.x<<","<<self.y<<","<<self.z<<"]", os;
-}

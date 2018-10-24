@@ -11,6 +11,11 @@
 using wee::mat4;
 using wee::vec3;
 
+std::ostream& operator << (std::ostream& os, const b2Vec2& v) {
+    os << v.x << ", " << v.y;
+    return os;
+}
+
 b2Vec2 transform_mat4(const b2Vec2& in, const mat4& m) {
     vec3 temp = {
         in.x, in.y, 0.0f

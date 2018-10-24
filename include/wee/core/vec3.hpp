@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 
 namespace wee {
 
@@ -120,4 +121,6 @@ namespace wee {
         }
 
     };
+
+    std::ostream& operator << (std::ostream&, const vec3&);
 }
