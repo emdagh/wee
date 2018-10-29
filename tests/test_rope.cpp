@@ -600,9 +600,12 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
 
     SDL_Texture* texture = nullptr;
     {
-        texture = assets<SDL_Texture>::instance().load("@player", ::as_lvalue(
-            std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/Player Red") + "playerRed_roll.png", std::ios::binary)
-        ));
+       
+        
+        auto is = std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/PlayerRed") + "playerRed_roll.png", std::ios::binary);
+        DEBUG_VALUE_OF(is.is_open());
+        assert(is.is_open());
+        texture = assets<SDL_Texture>::instance().load("@player",is);
 
         kult::add<visual>(self);
         auto& v = kult::get<visual>(self);
@@ -717,23 +720,6 @@ public:
         _camera = { 0, 0, 0, 0 };
     }
     int load_content() {
-
-        assets<SDL_Texture>::instance().load("@BG_mountains", ::as_lvalue(
-            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
-        ));
-        assets<SDL_Texture>::instance().load("@BG_clouds", ::as_lvalue(
-            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
-        ));
-        assets<SDL_Texture>::instance().load("@MG_clouds_1", ::as_lvalue(
-            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
-        ));
-        assets<SDL_Texture>::instance().load("@MG_clouds_2", ::as_lvalue(
-            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
-        ));
-        assets<SDL_Texture>::instance().load("@MG_clouds_3", ::as_lvalue(
-            std::ifstream(get_resource_path("assets/img") + "mountains.png", std::ios::binary)
-        ));
-
         std::string pt = wee::get_resource_path("assets/levels") + "level.tmx";
 
         SDL_Point spawnPoint;
@@ -853,19 +839,18 @@ public:
         copy_transform_to_physics();
         _world->Step(1.0f / (float)60, 4, 3);
         copy_physics_to_transform();
-        articulation_t& a = kult::get<articulation>(_rope);
+
         for(auto& e : kult::join<raycast>()) {
             raycast_t& r = kult::get<raycast>(e);
             if(r.is_hit) {
                 r.is_hit = false;
-                if(a.joint) {
-                    DEBUG_LOG("destroy old joint");
-                    _world->DestroyJoint(a.joint);
-                }
                 DEBUG_LOG("create new joint");
                 _rope = create_rope_between(_world, p, e, b2Vec2{r.point.x, r.point.y});
+                break;
             }
         }
+
+        
 
         b2Vec2 pos = WORLD_TO_SCREEN(kult::get<rigidbody>(p).body->GetPosition());
         _cam.set_position(pos.x, pos.y);
@@ -956,6 +941,14 @@ public:
     }
 
     int on_click() {
+
+        articulation_t& a = kult::get<articulation>(_rope);
+        if(a.joint) {
+            DEBUG_LOG("destroy old joint");
+            _world->DestroyJoint(a.joint);
+            a.joint = NULL;
+        }
+
         for(auto& e : kult::join<raycast>()) {
             kult::get<raycast>(e).is_hit = false;
         }
