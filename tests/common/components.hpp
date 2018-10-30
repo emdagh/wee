@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include <core/vec2.hpp>
+#include <core/logstream.hpp>
 #include <Box2D/Box2D.h>
 
 struct collision {
@@ -22,6 +23,7 @@ struct raycast_hit {
 } ;
 
 #define DEFAULT_COLLIDER_CALLBACK [] (const collision&) {} 
+#define DEFAULT_TRIGGER_CALLBACK [] (const kult::type&) { DEBUG_LOG("default trigger callback called, replace this."); }
 
 typedef std::function<void(const collision&)> collision_callback;
 typedef std::function<void(const raycast_hit&)> raycast_callback;
@@ -30,8 +32,8 @@ typedef struct {
     b2Fixture* fixture = NULL;
     collision_callback enter = DEFAULT_COLLIDER_CALLBACK;
     collision_callback leave = DEFAULT_COLLIDER_CALLBACK;
-    std::function<void(const kult::type&)> on_trigger_enter = nullptr;
-    std::function<void(const kult::type&)> on_trigger_leave = nullptr;
+    std::function<void(const kult::type&)> on_trigger_enter = DEFAULT_TRIGGER_CALLBACK;
+    std::function<void(const kult::type&)> on_trigger_leave = DEFAULT_TRIGGER_CALLBACK;
 
 } collider_t; 
 

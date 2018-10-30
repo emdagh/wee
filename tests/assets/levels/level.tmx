@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="32" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="18" nextobjectid="33">
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="32" height="12" tilewidth="64" tileheight="64" infinite="0" nextlayerid="20" nextobjectid="43">
  <tileset firstgid="1" name="spritesheet_tiles" tilewidth="64" tileheight="64" tilecount="264" columns="22">
   <image source="../img/Assets/Tilesheet/tilesheet_complete.png" width="1408" height="768"/>
  </tileset>
  <tileset firstgid="265" name="spritesheet_enemies" tilewidth="64" tileheight="64" tilecount="16" columns="4">
   <image source="../img/Assets/Spritesheet/spritesheet_enemies.png" width="256" height="256"/>
  </tileset>
- <layer id="17" name="bg" width="32" height="16">
+ <layer id="18" name="bg" width="32" height="12">
   <data encoding="csv">
 0,0,3221225512,3221225559,3221225559,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,3221225537,3221225537,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -19,14 +19,10 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233
 </data>
  </layer>
- <layer id="16" name="fg" width="32" height="16">
+ <layer id="19" name="fg" width="32" height="12">
   <data encoding="csv">
 3221225475,3221225474,0,0,0,3221225476,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225474,3221225683,3221225683,3221225683,3221225683,0,3221225683,3221225683,3221225683,3221225683,3221225476,3221225475,3221225475,3221225475,3221225475,3221225475,
 0,3221225710,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -39,11 +35,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,
-255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
  <objectgroup id="3" name="colliders">
@@ -131,12 +123,6 @@
    </properties>
    <ellipse/>
   </object>
-  <object id="19" x="0" y="896">
-   <properties>
-    <property name="class" value="environment"/>
-   </properties>
-   <polyline points="0,0 2048,0"/>
-  </object>
   <object id="20" x="320" y="0" width="768" height="64">
    <properties>
     <property name="class" value="environment"/>
@@ -191,6 +177,33 @@
     <property name="class" value="norope"/>
    </properties>
    <polyline points="-160,0 -160,192"/>
+  </object>
+  <object id="33" x="0" y="704">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
+   <polyline points="0,32 2048,32"/>
+  </object>
+  <object id="40" x="240" y="304" width="32" height="32">
+   <properties>
+    <property name="class" value="pickup"/>
+    <property name="value" value="10"/>
+   </properties>
+   <ellipse/>
+  </object>
+  <object id="41" x="304" y="336" width="32" height="32">
+   <properties>
+    <property name="class" value="pickup"/>
+    <property name="value" value="10"/>
+   </properties>
+   <ellipse/>
+  </object>
+  <object id="42" x="368" y="304" width="32" height="32">
+   <properties>
+    <property name="class" value="pickup"/>
+    <property name="value" value="10"/>
+   </properties>
+   <ellipse/>
   </object>
  </objectgroup>
  <objectgroup id="9" name="checkpoints">

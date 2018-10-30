@@ -1,6 +1,7 @@
 #include "common/common.hpp"
 #include "common/components.hpp"
 #include "common/Box2DEXT.hpp"
+#include "common/collisions.hpp"
 #include <engine/assets.hpp>
 #include <engine/sprite_sheet.hpp>
 #include <core/logstream.hpp>
@@ -331,6 +332,9 @@ public:
                 if(p.value == 10) {
                     v.src = s->get("blueGem.png");
                 }
+                if(p.value == 100) {
+                    v.src = s->get("redGem.png");
+                }
 
                 v.offset.x = -.5f * v.src.w;
                 v.offset.y = -.5f * v.src.h;
@@ -359,6 +363,15 @@ public:
                 fixture                = body->CreateFixture(&fd);
             }
             kult::get<collider>(self).fixture = fixture;
+
+            kult::get<collider>(self).on_trigger_enter = [&] (const kult::type& self) {
+                DEBUG_METHOD();
+                DEBUG_VALUE_OF(self);
+                kult::purge(self);
+                /**
+                 * TODO: Destroy the b2Body / b2Fiture
+                 */
+            };
 
             return self;
         });
@@ -588,7 +601,7 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
         shape.m_radius = SCREEN_TO_WORLD(10.0f);
         b2FixtureDef fd;
         fd.filter.categoryBits = E_CATEGORY_PLAYER;//!0;//(uint16_t)collision_filter::player;
-        fd.filter.maskBits = 0xffff;//!0;//(uint16_t)collision_filter::any;
+        fd.filter.maskBits = E_CATEGORY_ENVIRONMENT | E_CATEGORY_PICKUP;//!0;//(uint16_t)collision_filter::any;
         fd.density = 1.0f;
         fd.restitution = 0.0f;
         fd.shape = &shape;
@@ -600,10 +613,7 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
 
     SDL_Texture* texture = nullptr;
     {
-       
-        
-        auto is = std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/PlayerRed") + "playerRed_roll.png", std::ios::binary);
-        DEBUG_VALUE_OF(is.is_open());
+        auto is = std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/Player Red") + "playerRed_roll.png", std::ios::binary);
         assert(is.is_open());
         texture = assets<SDL_Texture>::instance().load("@player",is);
 
@@ -619,6 +629,11 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
     kult::add<transform>(self);
     kult::add<rigidbody>(self).body = body;
     kult::add<collider>(self).fixture = fixture;
+
+    kult::get<collider>(self).enter = [&] (const collision& col) {
+        DEBUG_METHOD();
+        DEBUG_VALUE_OF(col.self);
+    };
     return self;
 }
 
@@ -704,6 +719,7 @@ class game : public applet {
     kult::type _rope;
     b2DebugDrawImpl _debugdraw;
     camera _cam;
+    collisions _contacts;
 public:
     game() {
         _debugdraw.SetFlags(
@@ -717,6 +733,7 @@ public:
         ) ;
         _world = new b2World({0.0f, 9.8f});
         _world->SetDebugDraw(&_debugdraw);
+        _world->SetContactListener(&_contacts);
         _camera = { 0, 0, 0, 0 };
     }
     int load_content() {

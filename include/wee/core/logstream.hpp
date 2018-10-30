@@ -49,7 +49,7 @@ namespace wee {
         {
             std::string _context = context;
             os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
-            os << RED "> " << RESET;
+            os << "[" << _context << "] " << RED "> " << RESET;
         }
 
         virtual ~log() {
@@ -74,6 +74,12 @@ namespace wee {
 
     };
 }
+
+#define LOGW(...)   log(std::cout, __FUNCTION__).write(YELLOW   + fmt::format(__VA_ARGS__) + RESET)
+#define LOGE(...)   log(std::cout, __FUNCTION__).write(RED      + fmt::format(__VA_ARGS__) + RESET)
+#define LOG(...)    log(std::cout, __FUNCTION__).write(WHITE    + fmt::format(__VA_ARGS__) + RESET)
+#define LOGV(x)     log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, false))
+
 #define DEBUG_METHOD()              wee::log(std::cout, __FUNCTION__).write(__FUNCTION__) 
 #define DEBUG_LOG(...)              wee::log(std::cout, __FUNCTION__).write(fmt::format(__VA_ARGS__))
 #define DEBUG_VALUE_OF(x)           wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, false))
