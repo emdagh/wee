@@ -6,7 +6,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":30},
-	"sourceSize": {"w":32,"h":30}
+	"sourceSize": {"w":32,"h":30},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "blueGem.png":
 {
@@ -14,7 +15,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":22,"h":22},
-	"sourceSize": {"w":22,"h":22}
+	"sourceSize": {"w":22,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "blueJewel.png":
 {
@@ -22,7 +24,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":22},
-	"sourceSize": {"w":24,"h":22}
+	"sourceSize": {"w":24,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "discGreen.png":
 {
@@ -30,7 +33,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":34,"h":35},
-	"sourceSize": {"w":34,"h":35}
+	"sourceSize": {"w":34,"h":35},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "discRed.png":
 {
@@ -38,7 +42,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":34,"h":35},
-	"sourceSize": {"w":34,"h":35}
+	"sourceSize": {"w":34,"h":35},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "greenCrystal.png":
 {
@@ -46,7 +51,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":30},
-	"sourceSize": {"w":32,"h":30}
+	"sourceSize": {"w":32,"h":30},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "greenGem.png":
 {
@@ -54,7 +60,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":22,"h":22},
-	"sourceSize": {"w":22,"h":22}
+	"sourceSize": {"w":22,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "greenJewel.png":
 {
@@ -62,7 +69,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":22},
-	"sourceSize": {"w":24,"h":22}
+	"sourceSize": {"w":24,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "keyGreen.png":
 {
@@ -70,7 +78,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":29,"h":30},
-	"sourceSize": {"w":29,"h":30}
+	"sourceSize": {"w":29,"h":30},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "keyRed.png":
 {
@@ -78,7 +87,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":29,"h":30},
-	"sourceSize": {"w":29,"h":30}
+	"sourceSize": {"w":29,"h":30},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlineCrystal.png":
 {
@@ -86,7 +96,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":38,"h":36},
-	"sourceSize": {"w":38,"h":36}
+	"sourceSize": {"w":38,"h":36},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlineDisc.png":
 {
@@ -94,7 +105,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":41},
-	"sourceSize": {"w":40,"h":41}
+	"sourceSize": {"w":40,"h":41},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlineDisc_alt.png":
 {
@@ -102,7 +114,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":41},
-	"sourceSize": {"w":40,"h":41}
+	"sourceSize": {"w":40,"h":41},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlineGem.png":
 {
@@ -110,7 +123,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":28,"h":28},
-	"sourceSize": {"w":28,"h":28}
+	"sourceSize": {"w":28,"h":28},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlineJewel.png":
 {
@@ -118,7 +132,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":30,"h":28},
-	"sourceSize": {"w":30,"h":28}
+	"sourceSize": {"w":30,"h":28},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlineKey.png":
 {
@@ -126,7 +141,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":36,"h":36},
-	"sourceSize": {"w":36,"h":36}
+	"sourceSize": {"w":36,"h":36},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "outlinePuzzle.png":
 {
@@ -134,7 +150,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":40},
-	"sourceSize": {"w":40,"h":40}
+	"sourceSize": {"w":40,"h":40},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "puzzleGreen.png":
 {
@@ -142,7 +159,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":34,"h":34},
-	"sourceSize": {"w":34,"h":34}
+	"sourceSize": {"w":34,"h":34},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "puzzleRed.png":
 {
@@ -150,7 +168,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":34,"h":34},
-	"sourceSize": {"w":34,"h":34}
+	"sourceSize": {"w":34,"h":34},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "redCrystal.png":
 {
@@ -158,7 +177,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":30},
-	"sourceSize": {"w":32,"h":30}
+	"sourceSize": {"w":32,"h":30},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "redGem.png":
 {
@@ -166,7 +186,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":22,"h":22},
-	"sourceSize": {"w":22,"h":22}
+	"sourceSize": {"w":22,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "redJewel.png":
 {
@@ -174,7 +195,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":22},
-	"sourceSize": {"w":24,"h":22}
+	"sourceSize": {"w":24,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "yellowCrystal.png":
 {
@@ -182,7 +204,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":30},
-	"sourceSize": {"w":32,"h":30}
+	"sourceSize": {"w":32,"h":30},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "yellowGem.png":
 {
@@ -190,7 +213,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":22,"h":22},
-	"sourceSize": {"w":22,"h":22}
+	"sourceSize": {"w":22,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 },
 "yellowJewel.png":
 {
@@ -198,7 +222,8 @@
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":22},
-	"sourceSize": {"w":24,"h":22}
+	"sourceSize": {"w":24,"h":22},
+	"anchor": {"x":0.5,"y":0.5}
 }},
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
@@ -207,6 +232,6 @@
 	"format": "RGBA8888",
 	"size": {"w":120,"h":222},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:717c9bcfcf863c677997110e69f7c527:dd4a816931b2bd767096a32c2ffa3d47:0b493ebb21a2f089d30c9be1399b2817$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c688227e478c0cae7939cb4fe8bde8b3:dd4a816931b2bd767096a32c2ffa3d47:0b493ebb21a2f089d30c9be1399b2817$"
 }
 }

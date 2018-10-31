@@ -19,12 +19,12 @@ include_directories(
 )
 
 file(GLOB SDL_mixer_src
-    SDL_mixer/*.c
+    ${DIR_MIXER}/*.c
     ${DIR_OGG}/src/*.c
     ${DIR_VORBIS}/lib/*.c
     ${DIR_EXTERNAL}/external/libvorbisidec-1.2.1/*.c
     ${DIR_EXTERNAL}/libmodplug-0.8.8.4/*.c
-    SDL_mixer/timidity/*.c
+    ${DIR_MIXER}/timidity/*.c
 )
 
 list(REMOVE_ITEM SDL_mixer_src "${DIR_VORBIS}/lib/psytune.c")

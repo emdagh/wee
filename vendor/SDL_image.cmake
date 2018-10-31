@@ -21,6 +21,7 @@ file(GLOB SDL_IMAGE_SOURCES
     SDL2_image/IMG_pcx.c
     SDL2_image/IMG_png.c
     SDL2_image/IMG_pnm.c
+    SDL2_image/IMG_svg.c
     SDL2_image/IMG_tga.c
     SDL2_image/IMG_tif.c
     SDL2_image/IMG_xcf.c
@@ -33,26 +34,26 @@ file(GLOB SDL_IMAGE_SOURCES
 )
 
 FILE(GLOB SRC_LIBPNG 
-   SDL2_image/external/libpng-1.6.2/png.c 
-   SDL2_image/external/libpng-1.6.2/pngerror.c
-   SDL2_image/external/libpng-1.6.2/pngget.c 
-   SDL2_image/external/libpng-1.6.2/pngmem.c 
-   SDL2_image/external/libpng-1.6.2/pngpread.c 
-   SDL2_image/external/libpng-1.6.2/pngread.c 
-   SDL2_image/external/libpng-1.6.2/pngrio.c 
-   SDL2_image/external/libpng-1.6.2/pngrtran.c 
-   SDL2_image/external/libpng-1.6.2/pngrutil.c
-   SDL2_image/external/libpng-1.6.2/pngset.c 
-   SDL2_image/external/libpng-1.6.2/pngtrans.c 
-   SDL2_image/external/libpng-1.6.2/pngwio.c 
-   SDL2_image/external/libpng-1.6.2/pngwrite.c 
-   SDL2_image/external/libpng-1.6.2/pngwtran.c 
-   SDL2_image/external/libpng-1.6.2/pngwutil.c
+   SDL2_image/external/libpng-1.6.32/png.c 
+   SDL2_image/external/libpng-1.6.32/pngerror.c
+   SDL2_image/external/libpng-1.6.32/pngget.c 
+   SDL2_image/external/libpng-1.6.32/pngmem.c 
+   SDL2_image/external/libpng-1.6.32/pngpread.c 
+   SDL2_image/external/libpng-1.6.32/pngread.c 
+   SDL2_image/external/libpng-1.6.32/pngrio.c 
+   SDL2_image/external/libpng-1.6.32/pngrtran.c 
+   SDL2_image/external/libpng-1.6.32/pngrutil.c
+   SDL2_image/external/libpng-1.6.32/pngset.c 
+   SDL2_image/external/libpng-1.6.32/pngtrans.c 
+   SDL2_image/external/libpng-1.6.32/pngwio.c 
+   SDL2_image/external/libpng-1.6.32/pngwrite.c 
+   SDL2_image/external/libpng-1.6.32/pngwtran.c 
+   SDL2_image/external/libpng-1.6.32/pngwutil.c
 )
 
 #if(ATOM_PLATFORM_ANDROID)
 file(GLOB SRC_LIBZ
-   SDL2_image/external/zlib-1.2.8/*.c
+   SDL2_image/external/zlib-1.2.11/*.c
 )
 #endif(ATOM_PLATFORM_ANDROID)
 
@@ -63,10 +64,10 @@ file(GLOB SDL_IMAGE_SOURCES_PLATFORM
 )
 endif(ATOM_PLATFORM_IOS)
 
-add_library(z_1.2.8 ${SRC_LIBZ})
-add_library(png_1.6.2 ${SRC_LIBPNG})
+add_library(z_1.2.8 SHARED ${SRC_LIBZ})
+add_library(png_1.6.2 SHARED ${SRC_LIBPNG})
 
-add_library(SDL2_image ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
+add_library(SDL2_image SHARED ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 
 if(ATOM_PLATFORM_IOS)
     set(SDL_IMAGE_COMPILE_FLAGS "-fno-objc-arc")
