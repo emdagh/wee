@@ -4,10 +4,14 @@ PROJECT(SDL2_image C)
 
 add_definitions(-DLOAD_PNG)
 
+SET(PNG_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_image/external/libpng-1.6.32)
+SET(Z_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_image/external/zlib-1.2.11)
+
+
 #if(ATOM_PLATFORM_ANDROID)
 include_directories(
-    SDL2_image/external/libpng-1.6.2
-    SDL2_image/external/zlib-1.2.8
+    SDL2_image/external/libpng-1.6.32
+    SDL2_image/external/zlib-1.2.11
 )
 #endif(ATOM_PLATFORM_ANDROID)
 
