@@ -1,13 +1,13 @@
 #undef KULT_BUILD_TESTS
-#include "common/common.hpp"
-#include "common/collisions.hpp"
-#include "common/components.hpp"
+
+#include <engine/ecs.hpp>
+#include <engine/b2Adapters.hpp>
+
 #include "common/Box2DEXT.hpp"
 #include "common/camera.hpp"
+#include "common/components.hpp"
 
-#include <kult.hpp>
 
-#include <Box2D/Box2D.h>
 
 
 #include <nlohmann/json.hpp>
@@ -102,7 +102,7 @@ struct particle_collision_emitter {
 
         b2BodyDef bd;
         bd.type = b2_staticBody;
-        kult::add<rigidbody>(id).body = world->CreateBody(&bd);
+        kult::add<physics>(id).body = world->CreateBody(&bd);
 
 
 
@@ -122,7 +122,7 @@ struct avatar {
             b2BodyDef bd;
             bd.type = b2_dynamicBody; 
             bd.linearDamping = 0.05f;
-            kult::add<rigidbody>(self) = { world->CreateBody(&bd) };
+            kult::add<physics>(self) = { world->CreateBody(&bd) };
         }
 
         kult::add<transform>(self) = {at, 0.0f};
@@ -139,9 +139,9 @@ struct avatar {
             fd.shape = &shape;
             fd.userData = (void*)self;
 
-            kult::add<collider>(self).fixture = kult::get<rigidbody>(self).body->CreateFixture(&fd);
-            kult::get<collider>(self).enter = [_particles] (const collision& c) {
-                b2Body* body = kult::get<rigidbody>(c.self).body;
+            kult::get<physics>(self).body->CreateFixture(&fd);
+            kult::get<physics>(self).on_collision_enter = [_particles] (const collision& c) {
+                b2Body* body = kult::get<physics>(c.self).body;
 
                 /*
                  * TODO: this sort of merits a "particles" component. What would it look like though?
@@ -153,15 +153,12 @@ struct avatar {
                  *
                  * I prefer option 2 because a singleton is usually a canary-in-the-colemine for bad design.
                  */
-                DEBUG_VALUE_OF(c.normal);//vec2f::length(c.normal));
-                particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), c.normal);
+                DEBUG_VALUE_OF(c.n);//vec2f::length(c.normal));
+                particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), c.n);
 
                 //kult::get<input>(c.self).is_jumping = false;
                 //kult::get<input>(c.self).N = c.normal;
 
-            };
-            kult::get<collider>(self).leave = [&] (const collision&) {
-                //kult::get<input>(c.self).is_jumping = true;
             };
 
             SDL_Texture* texture = nullptr;
@@ -175,8 +172,10 @@ struct avatar {
                 v.texture = texture;
                 SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
                 v.src.x = v.src.y = 0;
-                v.offset.x = -v.src.w / 2;
-                v.offset.y = -v.src.h / 2;
+
+                auto& n = kult::add<nested>(self);
+                n.offset.x = -v.src.w / 2;
+                n.offset.y = -v.src.h / 2;
 
             }
             
@@ -185,14 +184,14 @@ struct avatar {
     }
 
     static void limit_velocity(kult::type _player) {
-        b2Vec2 vel = kult::get<rigidbody>(_player).body->GetLinearVelocity();
+        b2Vec2 vel = kult::get<physics>(_player).body->GetLinearVelocity();
         const float MIN_VELOCITY_X = 3.0f;
         const float MAX_VELOCITY_X = 25.0f;
         const float MIN_VELOCITY_Y = -40.0f;
         const float MAX_VELOCITY_Y = 8.0f;
         vel.x = std::max(std::min(vel.x, MAX_VELOCITY_X), MIN_VELOCITY_X);
         vel.y = std::max(std::min(vel.y, MAX_VELOCITY_Y), MIN_VELOCITY_Y);
-        kult::get<rigidbody>(_player).body->SetLinearVelocity(vel);
+        kult::get<physics>(_player).body->SetLinearVelocity(vel);
     }
 };
 
@@ -200,10 +199,10 @@ struct avatar {
 using namespace wee;
 
 auto copy_transform_to_physics = [] () {
-    for(auto& e : kult::join<transform, rigidbody>()) {
-        const vec2& p = kult::get<transform>(e).p;
-        float r = kult::get<transform>(e).t;
-        kult::get<rigidbody>(e).body->SetTransform({ 
+    for(auto& e : kult::join<transform, physics>()) {
+        const vec2& p = kult::get<transform>(e).position;
+        float r = kult::get<transform>(e).rotation * M_PI / 180.0f;
+        kult::get<physics>(e).body->SetTransform({ 
                 SCREEN_TO_WORLD(p.x), 
                 SCREEN_TO_WORLD(p.y) 
             }, r
@@ -212,13 +211,13 @@ auto copy_transform_to_physics = [] () {
 };
 
 auto copy_physics_to_transform = [] () {
-    for(auto& e : kult::join<transform, rigidbody>()) {
-        const b2Transform b2t = kult::get<rigidbody>(e).body->GetTransform();
+    for(auto& e : kult::join<transform, physics>()) {
+        const b2Transform b2t = kult::get<physics>(e).body->GetTransform();
         const b2Vec2& vec = b2t.p;
         
-        kult::get<transform>(e).p.x = WORLD_TO_SCREEN(vec.x);
-        kult::get<transform>(e).p.y = WORLD_TO_SCREEN(vec.y);
-        kult::get<transform>(e).t   = kult::get<rigidbody>(e).body->GetAngle() * 180.0f / M_PI;
+        kult::get<transform>(e).position.x = WORLD_TO_SCREEN(vec.x);
+        kult::get<transform>(e).position.y = WORLD_TO_SCREEN(vec.y);
+        kult::get<transform>(e).rotation   = kult::get<physics>(e).body->GetAngle() *  180.0f / M_PI;
     }
 };
 
@@ -237,9 +236,8 @@ struct terrain_chunk {
         b2BodyDef bd;
         b2Body* body = world->CreateBody(&bd);
         
-        kult::add<collider>(res);
         kult::add<terrain>(res);
-        kult::add<rigidbody>(res).body = body;
+        kult::add<physics>(res).body = body;
 
         kult::get<terrain>(res).last = { -1024.f, 0.f };
         
@@ -260,7 +258,7 @@ struct terrain_chunk {
     static void reset(kult::type self,  const vec2& start) {
 
 
-        auto* body = kult::get<rigidbody>(self).body;
+        auto* body = kult::get<physics>(self).body;
         
         b2DestroyAllFixtures(body);
 
@@ -304,7 +302,7 @@ struct terrain_chunk {
         b2FixtureDef fdef;
         fdef.shape = &shape;
 
-        kult::get<collider>(self).fixture = body->CreateFixture(&fdef);
+        body->CreateFixture(&fdef);
     }
 
 };
@@ -400,7 +398,7 @@ struct game : applet {
 
         world_ = new b2World({0.0f, 9.8f});
 
-        world_->SetContactListener(new collisions);
+        world_->SetContactListener(new b2ContactListenerImpl);
         world_->SetDebugDraw(&_debugdraw);
 
         DEBUG_VALUE_OF(_particles);
@@ -429,9 +427,9 @@ struct game : applet {
 
 
         const transform_t& tx = kult::get<transform>(_player);
-        viewport_.x = tx.p.x;
-        viewport_.y = tx.p.y;
-        _cam.set_position(tx.p.x, tx.p.y);
+        /*viewport_.x = tx.p.x;
+        viewport_.y = tx.p.y;*/
+        _cam.set_position(tx.position.x, tx.position.y);
         _cam.update(dt);
         _debugdraw.SetCameraTransform(_cam.get_transform());
 
@@ -439,7 +437,7 @@ struct game : applet {
             for(auto& id : kult::join<terrain>()) {
                 terrain_t& t = kult::get<terrain>(id);
 
-                if((tx.p.x - viewport_.w / 2) > t.last.x) {
+                if((tx.position.x - viewport_.w / 2) > t.last.x) {
                     terrain_chunk::reset(id, kult::get<terrain>(t.next).last);
                 }
             }
@@ -448,7 +446,7 @@ struct game : applet {
         {
 
 
-                auto* body = kult::get<rigidbody>(_player).body;
+                auto* body = kult::get<physics>(_player).body;
                 if(this->mouse_is_down) {
                     body->ApplyForceToCenter(b2Vec2(.5f, 9.0f), true);
                 }
@@ -507,13 +505,14 @@ struct game : applet {
                 }
             });
 
-            for(const auto& e : kult::join<transform, visual>()) {
+            for(const auto& e : kult::join<transform, visual, nested>()) {
                 const visual_t& v = kult::get<visual>(e);
                 const transform_t& t = kult::get<transform>(e);
+                const nested_t& n = kult::get<nested>(e);
 
                 vec3 position = { 
-                    t.p.x + v.offset.x,
-                    t.p.y + v.offset.y,
+                    t.position.x + n.offset.x,
+                    t.position.y + n.offset.y,
                     0.0f
                 };
 
@@ -530,7 +529,7 @@ struct game : applet {
                     v.texture,
                     &v.src,
                     &dst,
-                    t.t,
+                    t.rotation,
                     NULL,
                     v.flip
                 );

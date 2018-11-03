@@ -75,6 +75,7 @@ configure_file(
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/vendor/SDL2/include
+    ${CMAKE_SOURCE_DIR}/vendor
     ${CMAKE_BINARY_DIR}/include/wee
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/wee

@@ -15,31 +15,6 @@ namespace wee {
         v.y = j["y"];
     }
 }
-std::ostream& operator << (std::ostream& os, const timeout_t&) {
-    return os;
-}
-std::ostream& operator << (std::ostream& os, const articulation_t&) {
-    return os;
-}
-std::ostream& operator << (std::ostream& os, const raycast_t&) {
-    return os;
-}
-std::ostream& operator << (std::ostream& os, const collider_t&) {
-    return os << "collider_t";
-}
-
-std::ostream& operator << (std::ostream& os, const rigidbody_t& rb) {
-    return os << rb.body;
-}
-std::ostream& operator << (std::ostream& os, const transform_t&) {
-    return os;
-}
-std::ostream& operator << (std::ostream& os, const nested_t& ) {
-    return os;
-}
-std::ostream& operator << (std::ostream& os, const visual_t& ) {
-    return os;
-}
 std::ostream& operator << (std::ostream& os, const terrain_t& t) {
     json j = {
         {"last", t.last},

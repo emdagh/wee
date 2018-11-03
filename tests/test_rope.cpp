@@ -1,8 +1,9 @@
 #include "common/common.hpp"
 #include "common/components.hpp"
 #include "common/Box2DEXT.hpp"
-#include "common/collisions.hpp"
-#include "common/camera.hpp"
+#include <engine/b2Adapters.hpp>
+#include <engine/ecs.hpp>
+#include <engine/camera.hpp>
 #include <engine/assets.hpp>
 #include <engine/sprite_sheet.hpp>
 #include <core/logstream.hpp>
@@ -21,9 +22,8 @@
 #include <string>
 #include <list>
 
-using wee::lexical_cast;
-using nlohmann::json;
 using namespace wee;
+using nlohmann::json;
 typedef int gid;
 
 typedef kult::type entity_type;
@@ -50,17 +50,15 @@ struct __random {
 };
 
 auto clean_physics = [] (b2World* world) {
-    for(auto& self : kult::join<rigidbody>()) {
-        if(!kult::get<rigidbody>(self).is_cleanup) 
+    for(auto& self : kult::join<physics>()) {
+        if(!kult::get<physics>(self).is_cleanup) 
             continue;
-        b2Body* rb = kult::get<rigidbody>(self).body;
+        b2Body* rb = kult::get<physics>(self).body;
 
-        if(kult::has<collider>(self)) {
-            for(auto* ptr = rb->GetFixtureList(); ptr; ptr = ptr->GetNext()) {
-                rb->DestroyFixture(ptr);
-            }
-            world->DestroyBody(rb);
+        for(auto* ptr = rb->GetFixtureList(); ptr; ptr = ptr->GetNext()) {
+            rb->DestroyFixture(ptr);
         }
+        world->DestroyBody(rb);
         kult::purge(self);
     }
 };
@@ -161,12 +159,11 @@ public:
 
             kult::type self = kult::entity();
             {
-                kult::add<rigidbody>(self);
-                kult::add<collider>(self);
+                kult::add<physics>(self);
                 kult::add<raycast>(self);
             }
             {
-            kult::get<raycast>(self).is_hit = false;
+            kult::get<raycast>(self).hit = false;
             }
 
             b2Body* body = nullptr;
@@ -176,9 +173,8 @@ public:
                 bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
                 body = world->CreateBody(&bd);
             }
-            kult::get<rigidbody>(self).body = body;
+            kult::get<physics>(self).body = body;
             
-            b2Fixture* fixture = nullptr;
             {
                 b2FixtureDef fd;
                 auto shape = std::unique_ptr<b2Shape>(b2ShapeFactory::instance().create(obj.getShape(), obj));
@@ -187,9 +183,8 @@ public:
                 fd.filter.categoryBits = E_CATEGORY_ENVIRONMENT;
                 fd.filter.maskBits     = E_CATEGORY_PLAYER;
                 fd.userData            = reinterpret_cast<void*>(self);
-                fixture                = body->CreateFixture(&fd);
+                body->CreateFixture(&fd);
             }
-            kult::get<collider>(self).fixture = fixture;
 
 
             return self;
@@ -210,8 +205,7 @@ public:
 
             kult::type self = kult::entity();
             {
-                kult::add<rigidbody>(self);
-                kult::add<collider>(self);
+                kult::add<physics>(self);
                 kult::add<pickup>(self);
                 kult::add<visual>(self);
                 kult::add<transform>(self);
@@ -263,9 +257,8 @@ public:
                 bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
                 body = world->CreateBody(&bd);
             }
-            kult::get<rigidbody>(self).body = body;
+            kult::get<physics>(self).body = body;
             
-            b2Fixture* fixture = nullptr;
             {
                 b2FixtureDef fd;
                 auto shape = std::unique_ptr<b2Shape>(b2ShapeFactory::instance().create(obj.getShape(), obj));
@@ -274,13 +267,12 @@ public:
                 fd.filter.categoryBits = E_CATEGORY_PICKUP;
                 fd.filter.maskBits     = E_CATEGORY_PLAYER;
                 fd.userData            = reinterpret_cast<void*>(self);
-                fixture                = body->CreateFixture(&fd);
+                body->CreateFixture(&fd);
             }
-            kult::get<collider>(self).fixture = fixture;
 
-            kult::get<collider>(self).on_trigger_enter = [&] (const collision& col) {
+            kult::get<physics>(self).on_trigger_enter = [&] (const collision& col) {
                 DEBUG_METHOD();
-                kult::get<rigidbody>(col.self).is_cleanup = true;
+                kult::get<physics>(col.self).is_cleanup = true;
                 if(kult::has<player>(col.other)) {
                     kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
                 }
@@ -298,7 +290,6 @@ public:
 /**
  * every level chunk has:
  * a spawn point
- * a first-connected collider
  * a pointer to the next chunk
  * a pointer to the previous chunk 
  *
@@ -406,44 +397,11 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
 
 }
 
-class b2RayCastClosest : public b2RayCastCallback {
-    b2Fixture* _fixture;
-    b2Vec2 _point, _normal;
-    float _fraction= 1.f;
-public:
-    void RayCast(b2World* world, const b2Vec2& p1, const b2Vec2& p2) {
-        _fixture = NULL;
-        _fraction = 1.0f;
-        world->RayCast(this, p1, p2);
-        if(_fixture) {
-            kult::type self = reinterpret_cast<kult::type>(_fixture->GetUserData());
-            raycast_t& r = kult::get<raycast>(self);
-            r.is_hit     = true;
-            r.point      = {_point.x, _point.y};
-            r.normal     = {_normal.x, _normal.y};
-        }
-
-    }
-    float32 ReportFixture(b2Fixture* fixture, 
-            const b2Vec2& point, 
-            const b2Vec2& normal, 
-            float32 fraction) {
-        //auto self = reinterpret_cast<kult::type>(fixture->GetUserData());
-        //raycast_t& r = kult::get<raycast>(self);
-        _fixture    = fixture;
-        _fraction   = fraction;
-        _point      = point;
-        _normal     = normal;
-        
-        return fraction;
-    }
-};
 
 
 kult::type create_sensor(b2World* world, kult::type parent, const vec2f& offset, float radius, const collision_callback&) {
     kult::type self = kult::entity();
     b2Body* body = nullptr;
-    b2Fixture* fixture = nullptr;
     {
 
         b2BodyDef def;
@@ -456,11 +414,10 @@ kult::type create_sensor(b2World* world, kult::type parent, const vec2f& offset,
         b2FixtureDef def;
         def.shape = &shape;
         def.isSensor = true;
-        fixture = body->CreateFixture(&def);
+        body->CreateFixture(&def);
 
     }
-    kult::add<collider>(self).fixture = fixture;
-    kult::add<rigidbody>(self).body = body;
+    kult::add<physics>(self).body = body;
     kult::add<nested>(parent);
     {
         nested_t& n = kult::get<nested>(parent);
@@ -474,16 +431,16 @@ kult::type create_sensor(b2World* world, kult::type parent, const vec2f& offset,
 entity_type create_rope_between(b2World* world, entity_type a, entity_type b, const b2Vec2& bPosWS) {
 
 
-    b2Body* body = kult::get<rigidbody>(b).body;
+    b2Body* body = kult::get<physics>(b).body;
     if(!body) {
-        throw std::logic_error("entity must have a rigidbody attached");
+        throw std::logic_error("entity must have a physics attached");
     }
     kult::type e = kult::entity();
 
     b2RopeJointDef def;
     def.userData = reinterpret_cast<void*>(e);
-    def.bodyA = kult::get<rigidbody>(a).body; 
-    def.bodyB = kult::get<rigidbody>(b).body; 
+    def.bodyA = kult::get<physics>(a).body; 
+    def.bodyB = kult::get<physics>(b).body; 
     def.collideConnected = true;
     // center of player
     def.localAnchorA = b2Vec2 {0.0f, 0.0f};
@@ -500,7 +457,6 @@ entity_type create_rope_between(b2World* world, entity_type a, entity_type b, co
 entity_type create_player(b2World* world, const SDL_Point& at) {
     entity_type self = kult::entity();
     b2Body* body = nullptr;
-    b2Fixture* fixture = nullptr;
     {
         b2BodyDef bd;
         bd.type = b2_dynamicBody; 
@@ -521,7 +477,7 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
         fd.isSensor = false;
         fd.userData = reinterpret_cast<void*>(self);
 
-        fixture = body->CreateFixture(&fd);
+        body->CreateFixture(&fd);
     }
 
     SDL_Texture* texture = nullptr;
@@ -540,11 +496,10 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
 
     }
     kult::add<transform>(self);
-    kult::add<rigidbody>(self).body = body;
-    kult::add<collider>(self).fixture = fixture;
+    kult::add<physics>(self).body = body;
     kult::add<player>(self);
 
-    kult::get<collider>(self).enter = [&] (const collision& col) {
+    kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
         DEBUG_METHOD();
         DEBUG_VALUE_OF(col.self);
     };
@@ -554,7 +509,6 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
 entity_type create_block(b2World* world, const SDL_Rect& r) {
     entity_type self = kult::entity();
     b2Body* body = nullptr;
-    b2Fixture* fixture=  nullptr;
 
     float half_w = (float)(r.w >> 1);
     float half_h = (float)(r.h >> 1);
@@ -582,29 +536,28 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
         def.filter.maskBits = 0xffff;
         def.userData = reinterpret_cast<void*>(self);
         
-        fixture = body->CreateFixture(&def);
+        body->CreateFixture(&def);
     }
 
-    kult::add<rigidbody>(self).body = body;
-    kult::add<collider>(self).fixture = fixture;
-    kult::add<raycast>(self).is_hit = false;
+    kult::add<physics>(self).body = body;
+    kult::add<raycast>(self).hit = false;
 
     return self;
 }
 
 kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src, const SDL_RendererFlip& flip, float radians) {
     kult::type self = kult::entity();
-    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, 0, flip};
+    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, flip};
     kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, radians};
 
     return self;
 }
 
         auto copy_transform_to_physics = [] () {
-            for(auto& e : kult::join<transform, rigidbody>()) {
-                const vec2& p = kult::get<transform>(e).p;
-                float r = kult::get<transform>(e).t;
-                kult::get<rigidbody>(e).body->SetTransform({ 
+            for(auto& e : kult::join<transform, physics>()) {
+                const vec2& p = kult::get<transform>(e).position;
+                float r = kult::get<transform>(e).rotation;
+                kult::get<physics>(e).body->SetTransform({ 
                         SCREEN_TO_WORLD(p.x), 
                         SCREEN_TO_WORLD(p.y) 
                     }, r
@@ -613,13 +566,13 @@ kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src,
         };
 
         auto copy_physics_to_transform = [] () {
-            for(auto& e : kult::join<transform, rigidbody>()) {
-                const b2Transform b2t = kult::get<rigidbody>(e).body->GetTransform();
+            for(auto& e : kult::join<transform, physics>()) {
+                const b2Transform b2t = kult::get<physics>(e).body->GetTransform();
                 const b2Vec2& vec = b2t.p;
                 
-                kult::get<transform>(e).p.x = WORLD_TO_SCREEN(vec.x);
-                kult::get<transform>(e).p.y = WORLD_TO_SCREEN(vec.y);
-                kult::get<transform>(e).t   = kult::get<rigidbody>(e).body->GetAngle();
+                kult::get<transform>(e).position.x = WORLD_TO_SCREEN(vec.x);
+                kult::get<transform>(e).position.y = WORLD_TO_SCREEN(vec.y);
+                kult::get<transform>(e).rotation   = kult::get<physics>(e).body->GetAngle();
             }
         };
 
@@ -633,7 +586,7 @@ class game : public applet {
     kult::type _rope;
     b2DebugDrawImpl _debugdraw;
     camera _cam;
-    collisions _contacts;
+    b2ContactListenerImpl _contacts;
 public:
     game() {
         _debugdraw.SetFlags(
@@ -659,7 +612,7 @@ public:
         p  = create_player(_world, spawnPoint);
         b1 = create_block(_world, { -16, -300, 32, 32 });
         
-        b2Vec2 pa = kult::get<rigidbody>(p).body->GetPosition();
+        b2Vec2 pa = kult::get<physics>(p).body->GetPosition();
         b2Vec2 temp = { 0.0f, -1000.0f };
         b2Vec2 pb = pa + SCREEN_TO_WORLD(temp);
 
@@ -773,8 +726,8 @@ public:
 
         for(auto& e : kult::join<raycast>()) {
             raycast_t& r = kult::get<raycast>(e);
-            if(r.is_hit) {
-                r.is_hit = false;
+            if(r.hit) {
+                r.hit = false;
                 DEBUG_LOG("create new joint");
                 _rope = create_rope_between(_world, p, e, b2Vec2{r.point.x, r.point.y});
                 break;
@@ -783,7 +736,7 @@ public:
 
         
 
-        b2Vec2 pos = WORLD_TO_SCREEN(kult::get<rigidbody>(p).body->GetPosition());
+        b2Vec2 pos = WORLD_TO_SCREEN(kult::get<physics>(p).body->GetPosition());
         _cam.set_position(pos.x, pos.y);
         _cam.update(dt);
         _debugdraw.SetCameraTransform(_cam.get_transform());
@@ -803,13 +756,14 @@ public:
         {
             /*std::vector<kult::type> entities;*/
 
-            for(const auto& e : kult::join<transform, visual>()) {
+            for(const auto& e : kult::join<transform, visual, nested>()) {
                 const visual_t& v = kult::get<visual>(e);
                 const transform_t& t = kult::get<transform>(e);
+                const nested_t& n = kult::get<nested>(e);
 
                 vec3 position = { 
-                    t.p.x + v.offset.x,
-                    t.p.y + v.offset.y,
+                    t.position.x + n.offset.x,
+                    t.position.y + n.offset.y,
                     0.0f
                 };
 
@@ -826,7 +780,7 @@ public:
                     v.texture,
                     &v.src,
                     &dst,
-                    t.t,
+                    t.rotation,
                     NULL,
                     v.flip
                 );
@@ -843,7 +797,7 @@ public:
         
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
 
-        vec2 pa = kult::get<transform>(p).p;
+        vec2 pa = kult::get<transform>(p).position;
         vec3 playerPos = vec3::transform ({pa.x, pa.y, 0.0f}, _cam.get_transform());
         pa.x = playerPos.x;
         pa.y = playerPos.y;
@@ -873,7 +827,7 @@ public:
 
     int on_click() {
 
-        articulation_t& a = kult::get<articulation>(_rope);
+        joint_t& a = kult::get<joint>(_rope);
         if(a.joint) {
             DEBUG_LOG("destroy old joint");
             _world->DestroyJoint(a.joint);
@@ -881,12 +835,12 @@ public:
         }
 
         for(auto& e : kult::join<raycast>()) {
-            kult::get<raycast>(e).is_hit = false;
+            kult::get<raycast>(e).hit = false;
         }
         //int cx = -_camera.x + (_camera.w >> 1);
         //int cy = -_camera.y + (_camera.h >> 1);
 
-        vec2 playerPosition = kult::get<transform>(p).p;
+        vec2 playerPosition = kult::get<transform>(p).position;
 
         //b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
         vec3 mousePosition = {

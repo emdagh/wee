@@ -154,11 +154,11 @@ struct game : wee::applet {
         };
 
 
-        kult::add<visual>(e) = {
+        kult::add<visual>(e) = (visual_t){
             assets<SDL_Texture>::instance().get("assets/img/skeleton.png"),
             { 0, 0, 0, 0 },
             { 255, 255, 255, 255 },
-            0
+            SDL_FLIP_NONE
         };
 
         kult::add<timeout>(e) = {
@@ -191,8 +191,8 @@ struct game : wee::applet {
             const visual_t& v = kult::get<visual>(e);
             const transform_t& t = kult::get<transform>(e);
             SDL_Rect dst = {
-                (int)(t.p.x + 0.5f), 
-                (int)(t.p.y + 0.5f),
+                (int)(t.position.x + 0.5f), 
+                (int)(t.position.y + 0.5f),
                 v.src.w, 
                 v.src.h
             };
