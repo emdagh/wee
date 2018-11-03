@@ -3,6 +3,7 @@
 #include "common/collisions.hpp"
 #include "common/components.hpp"
 #include "common/Box2DEXT.hpp"
+#include "common/camera.hpp"
 
 #include <kult.hpp>
 
@@ -113,7 +114,7 @@ struct particle_collision_emitter {
     }
 };*/
 
-struct player {
+struct avatar {
     static kult::type create(b2World* world, const vec2& at, wee::particles<pstate>* _particles) {
         DEBUG_VALUE_OF(_particles);
         kult::type self = kult::entity();
@@ -162,6 +163,22 @@ struct player {
             kult::get<collider>(self).leave = [&] (const collision&) {
                 //kult::get<input>(c.self).is_jumping = true;
             };
+
+            SDL_Texture* texture = nullptr;
+            {
+                auto is = std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/Player Red") + "playerRed_roll.png", std::ios::binary);
+                assert(is.is_open());
+                texture = assets<SDL_Texture>::instance().load("@player",is);
+
+                kult::add<visual>(self);
+                auto& v = kult::get<visual>(self);
+                v.texture = texture;
+                SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
+                v.src.x = v.src.y = 0;
+                v.offset.x = -v.src.w / 2;
+                v.offset.y = -v.src.h / 2;
+
+            }
             
         }
         return self;
@@ -201,7 +218,7 @@ auto copy_physics_to_transform = [] () {
         
         kult::get<transform>(e).p.x = WORLD_TO_SCREEN(vec.x);
         kult::get<transform>(e).p.y = WORLD_TO_SCREEN(vec.y);
-        kult::get<transform>(e).t   = kult::get<rigidbody>(e).body->GetAngle();
+        kult::get<transform>(e).t   = kult::get<rigidbody>(e).body->GetAngle() * 180.0f / M_PI;
     }
 };
 
@@ -294,12 +311,14 @@ struct terrain_chunk {
 
 
 struct game : applet {
-    SDL_Rect camera_;
+    SDL_Rect viewport_;
     float zoom_;
     b2World* world_;
     kult::type _player;
+    b2DebugDrawImpl _debugdraw;
 
     particles<pstate>* _particles;
+    camera _cam;
 
     std::vector<kult::type> chunks;
 
@@ -339,6 +358,15 @@ struct game : applet {
 
     virtual int load_content() {
 		
+        _debugdraw.SetFlags(
+            b2Draw::e_shapeBit          | //= 0x0001, 
+            b2Draw::e_jointBit          | //= 0x0002, 
+            //b2Draw::e_aabbBit           | //= 0x0004, 
+            //b2Draw::e_pairBit           | //= 0x0008, 
+            b2Draw::e_centerOfMassBit   | //= 0x0010, 
+            //e_particleBit// = 0x0020 
+            0
+        ) ;
         //auto context = SDL_GL_GetCurrentContext();
 		try {
 			
@@ -373,9 +401,10 @@ struct game : applet {
         world_ = new b2World({0.0f, 9.8f});
 
         world_->SetContactListener(new collisions);
+        world_->SetDebugDraw(&_debugdraw);
 
         DEBUG_VALUE_OF(_particles);
-        _player = player::create(world_, { 5.0f, -150 }, _particles);
+        _player = avatar::create(world_, { 5.0f, -150 }, _particles);
 
         kult::type prev = kult::none();
         for(int i=0; i < NUM_CHUNKS; i++) {
@@ -385,27 +414,32 @@ struct game : applet {
         }
         kult::get<terrain>(chunks.back()).next = chunks.front();
 
-        camera_ = {
+        viewport_ = {
             0, 240, 0, 0
         };
         return 0; 
     }
     virtual int update(int dt) {
+
         static float t = 0.f;
         t += (float)dt;
         copy_transform_to_physics();
         world_->Step(1.0f / 60.0f, 6, 3);
         copy_physics_to_transform();
 
+
         const transform_t& tx = kult::get<transform>(_player);
-        camera_.x = tx.p.x;
-        camera_.y = tx.p.y;
+        viewport_.x = tx.p.x;
+        viewport_.y = tx.p.y;
+        _cam.set_position(tx.p.x, tx.p.y);
+        _cam.update(dt);
+        _debugdraw.SetCameraTransform(_cam.get_transform());
 
         {
             for(auto& id : kult::join<terrain>()) {
                 terrain_t& t = kult::get<terrain>(id);
 
-                if((camera_.x - camera_.w / 2) > t.last.x) {
+                if((tx.p.x - viewport_.w / 2) > t.last.x) {
                     terrain_chunk::reset(id, kult::get<terrain>(t.next).last);
                 }
             }
@@ -423,7 +457,7 @@ struct game : applet {
                     _airtime += dt;
                 } else {
                 }*/
-            player::limit_velocity(_player);
+            avatar::limit_velocity(_player);
         }
 
         _particles->update(dt);
@@ -432,36 +466,16 @@ struct game : applet {
     }
     virtual int draw(SDL_Renderer* renderer) { 
         
-        SDL_RenderGetLogicalSize(renderer, &camera_.w, &camera_.h);
+        _debugdraw.SetRenderer(renderer);
+        SDL_RenderGetLogicalSize(renderer, &viewport_.w, &viewport_.h);
+        _cam.set_viewport(viewport_.w, viewport_.h);
         {
             SDL_SetRenderTarget(renderer, NULL);
             SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
             SDL_RenderClear(renderer);
-
-                
-
-            int cx = -camera_.x + (camera_.w >> 1);
-            int cy = -camera_.y + (camera_.h >> 1);
-            for(auto& id : kult::join<transform, visual>()) {
-                const visual_t& vis = kult::get<visual>(id);
-                const transform_t& tx = kult::get<transform>(id);
-                SDL_Rect dst = {
-                    cx + static_cast<int>(tx.p.x) - (vis.src.w >> 1),
-                    cy + static_cast<int>(tx.p.y) - (vis.src.h >> 1),
-                    vis.src.w,
-                    vis.src.h
-                };
-
-                SDL_RenderCopyEx(renderer, 
-                    vis.texture,
-                    &vis.src,
-                    &dst,
-                    tx.t,
-                    NULL,
-                    SDL_FLIP_NONE);
-
-            }
-
+            
+            world_->DrawDebugData();
+            
             _particles->draw([&] (const particles<pstate>::container_type& particles) {
                 SDL_Texture* tex = assets<SDL_Texture>::instance().get("@dirt");
                 int w, h;
@@ -469,8 +483,8 @@ struct game : applet {
 
                 SDL_Rect src = { 0, 0, w, h };
 
-                int cx = -camera_.x + (camera_.w >> 1);
-                int cy = -camera_.y + (camera_.h >> 1);
+                int cx = -viewport_.x + (viewport_.w >> 1);
+                int cy = -viewport_.y + (viewport_.h >> 1);
                 SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
                 for(size_t i=0; i < particles.size(); ++i) {
                     auto& ref = particles[i];
@@ -492,6 +506,36 @@ struct game : applet {
                     SDL_RenderCopyEx(renderer, tex, &src, &dst, ref.state.rotation, NULL, SDL_FLIP_NONE);
                 }
             });
+
+            for(const auto& e : kult::join<transform, visual>()) {
+                const visual_t& v = kult::get<visual>(e);
+                const transform_t& t = kult::get<transform>(e);
+
+                vec3 position = { 
+                    t.p.x + v.offset.x,
+                    t.p.y + v.offset.y,
+                    0.0f
+                };
+
+                vec3 positionCS = vec3::transform(position, _cam.get_transform());
+
+
+                SDL_Rect dst = {
+                    (int)(positionCS.x + 0.5f), //cx + (int)(t.p.x + v.offset.x + .5f), 
+                    (int)(positionCS.y + 0.5f), //cy + (int)(t.p.y + v.offset.y + .5f),
+                    v.src.w, 
+                    v.src.h
+                };
+                SDL_RenderCopyEx(renderer, 
+                    v.texture,
+                    &v.src,
+                    &dst,
+                    t.t,
+                    NULL,
+                    v.flip
+                );
+            }
+
 
             SDL_RenderPresent(renderer);
 

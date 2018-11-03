@@ -47,4 +47,7 @@ std::ostream& operator << (std::ostream& os, const terrain_t& t) {
     };
     return os << j;
 }
+std::ostream& operator << (std::ostream& os, const player_t&) {
+    return os;
+}
 
