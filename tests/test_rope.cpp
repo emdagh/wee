@@ -491,8 +491,9 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
         v.texture = texture;
         SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
         v.src.x = v.src.y = 0;
-        v.offset.x = -v.src.w / 2;
-        v.offset.y = -v.src.h / 2;
+        auto& n = kult::add<nested>(self);
+        n.offset.x = -v.src.w / 2;
+        n.offset.y = -v.src.h / 2;
 
     }
     kult::add<transform>(self);
