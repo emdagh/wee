@@ -44,7 +44,7 @@ pstate pstate::_ = { 0.0f, 0.0f, 0.0f, 0.0f };
 struct particle_helper {
     static void spray(particles<pstate>* em, const b2Vec2& pos, const b2Vec2& vel, const vec2& n) {
         DEBUG_METHOD();
-        DEBUG_VALUE_OF(em);
+        DEBUG_VALUE_OF(n);
 
         float vlen_sq = vel.LengthSquared() / 8.0f;
 
@@ -53,9 +53,9 @@ struct particle_helper {
             res.x = pos.x;
             res.y = pos.y;
             res.t = 0;
-            res.ttl = 1000 + (int)randf(2000.0f);
+            res.ttl = random::instance().next_int(1000, 2000);//1000 + (int)randf(2000.0f);
             res.color = SDL_ColorPresetEXT::White;
-            float fs = randf();
+            float fs = random::instance().next_real(0.f, 1.f);;
             res.state = { 
                 n.x * vlen_sq * fs, 
                 n.y * vlen_sq * fs, 
@@ -153,7 +153,6 @@ struct avatar {
                  *
                  * I prefer option 2 because a singleton is usually a canary-in-the-colemine for bad design.
                  */
-                DEBUG_VALUE_OF(c.n);//vec2f::length(c.normal));
                 particle_helper::spray(_particles, WORLD_TO_SCREEN(body->GetWorldCenter()), body->GetLinearVelocity(), c.n);
 
                 //kult::get<input>(c.self).is_jumping = false;
@@ -481,18 +480,19 @@ struct game : applet {
 
                 SDL_Rect src = { 0, 0, w, h };
 
-                int cx = -viewport_.x + (viewport_.w >> 1);
-                int cy = -viewport_.y + (viewport_.h >> 1);
                 SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
                 for(size_t i=0; i < particles.size(); ++i) {
                     auto& ref = particles[i];
+
+                    vec3 pos = { ref.x, ref.y, 0.0f };
+                    vec3 posWS = vec3::transform(pos, _cam.get_transform());
 
                     int ww = (int)(w * ref.state.scale);
                     int hh = (int)(h * ref.state.scale);
 
                     SDL_Rect dst = { 
-                        cx + static_cast<int>((ref.x - w / 2)), 
-                        cy + static_cast<int>((ref.y - h / 2)), 
+                        static_cast<int>((posWS.x - w / 2)), 
+                        static_cast<int>((posWS.y - h / 2)), 
                         ww,
                         hh
                     };

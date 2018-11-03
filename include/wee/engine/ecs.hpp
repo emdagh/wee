@@ -14,19 +14,21 @@ namespace wee {
     struct collision {
         entity_t self;
         entity_t other;
-        vec2f point;
         vec2f n;
+        vec2f point;
     };
     typedef std::function<void(const collision&)> collision_callback;
+
+#define DEFAULT_COLLISION_CALLBACK [] (const collision&) { }
 
     typedef struct {
         b2Body* body    = nullptr;
         bool do_cleanup = false;
 
-        collision_callback on_collision_enter = nullptr;
-        collision_callback on_collision_leave = nullptr;
-        collision_callback on_trigger_enter = nullptr;
-        collision_callback on_trigger_leave = nullptr;
+        collision_callback on_collision_enter = DEFAULT_COLLISION_CALLBACK;
+        collision_callback on_collision_leave = DEFAULT_COLLISION_CALLBACK;
+        collision_callback on_trigger_enter   = DEFAULT_COLLISION_CALLBACK;
+        collision_callback on_trigger_leave   = DEFAULT_COLLISION_CALLBACK;
     } physics_t;
 
     typedef  struct {

@@ -51,7 +51,7 @@ struct __random {
 
 auto clean_physics = [] (b2World* world) {
     for(auto& self : kult::join<physics>()) {
-        if(!kult::get<physics>(self).is_cleanup) 
+        if(!kult::get<physics>(self).do_cleanup) 
             continue;
         b2Body* rb = kult::get<physics>(self).body;
 
@@ -208,6 +208,7 @@ public:
                 kult::add<physics>(self);
                 kult::add<pickup>(self);
                 kult::add<visual>(self);
+                kult::add<nested>(self);
                 kult::add<transform>(self);
             }
             /** 
@@ -244,8 +245,9 @@ public:
                     v.src = s->get("redGem.png");
                 }
 
-                v.offset.x = -.5f * v.src.w;
-                v.offset.y = -.5f * v.src.h;
+                auto& n = kult::get<nested>(self);
+                n.offset.x = -.5f * v.src.w;
+                n.offset.y = -.5f * v.src.h;
             }
             /**
              * physics stuff
@@ -272,7 +274,7 @@ public:
 
             kult::get<physics>(self).on_trigger_enter = [&] (const collision& col) {
                 DEBUG_METHOD();
-                kult::get<physics>(col.self).is_cleanup = true;
+                kult::get<physics>(col.self).do_cleanup = true;
                 if(kult::has<player>(col.other)) {
                     kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
                 }
@@ -448,8 +450,7 @@ entity_type create_rope_between(b2World* world, entity_type a, entity_type b, co
     def.localAnchorB = body->GetLocalPoint(bPosWS);
     def.maxLength = (def.bodyA->GetPosition() - bPosWS).Length();//SCREEN_TO_WORLD(0.0f);
 
-    auto* joint = world->CreateJoint(&def);
-    kult::add<articulation>(e).joint = joint;//world->CreateJoint(&def);
+    kult::add<joint>(e).joint = world->CreateJoint(&def);
     return e;
 }
 
@@ -550,6 +551,7 @@ kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src,
     kult::type self = kult::entity();
     kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, flip};
     kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, radians};
+    kult::add<nested>(self) = { { 0.f, 0.f }, 0.f, self };
 
     return self;
 }

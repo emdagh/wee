@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC  -fpic -Wall -Wextra -Werror -std=c++17 -msse -msse2 -g  -shared -Wl,-soname,libwee_gfx.so -o ../../lib/Debug/libwee_gfx.so CMakeFiles/wee_gfx.dir/.stub.cpp.o CMakeFiles/wee_gfx.dir/SDL_ColorEXT.cpp.o CMakeFiles/wee_gfx.dir/SDL_RendererEXT.cpp.o CMakeFiles/wee_gfx.dir/SDL_SurfaceEXT.cpp.o  -L/home/emda/git/wee/build/lib/Debug 
