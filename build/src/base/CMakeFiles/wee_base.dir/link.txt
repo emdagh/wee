@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC  -fpic -Wall -Wextra -Werror -std=c++17 -msse -msse2 -g  -shared -Wl,-soname,libwee_base.so -o ../../lib/Debug/libwee_base.so CMakeFiles/wee_base.dir/SDL_Application.c.o CMakeFiles/wee_base.dir/application.cpp.o  -L/home/emda/git/wee/build/lib/Debug 
