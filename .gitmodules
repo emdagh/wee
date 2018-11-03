@@ -10,9 +10,6 @@
 [submodule "vendor/date"]
 	path = vendor/date
 	url = https://github.com/HowardHinnant/date.git
-[submodule "vendor/cxx-prettyprint"]
-	path = vendor/cxx-prettyprint
-	url = https://github.com/louisdx/cxx-prettyprint.git
 [submodule "vendor/json"]
 	path = vendor/json
 	url = https://github.com/nlohmann/json.git
