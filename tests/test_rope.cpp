@@ -277,6 +277,7 @@ public:
                 kult::get<physics>(col.self).do_cleanup = true;
                 if(kult::has<player>(col.other)) {
                     kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
+                    DEBUG_VALUE_OF(kult::get<player>(col.other).score);
                 }
             };
 
