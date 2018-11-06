@@ -25,7 +25,7 @@ gamescreen::gamescreen()
     , _pos(1.0f)
     , _popup(false)
     , _manager(NULL)
-    , OnExit(nullptr)
+    , _on_exit(nullptr)
 {
 }
 
@@ -51,8 +51,8 @@ void gamescreen::update(int dt, bool, bool coveredByOtherScreen)
         {
             _manager->remove(this);
 //            _exiting = false;
-            if(OnExit != nullptr)
-                OnExit(*this);
+            if(_on_exit!= nullptr)
+                _on_exit(*this);
         }
     }
     else if(coveredByOtherScreen)

@@ -26,7 +26,7 @@ namespace wee {
 		float _pos;
 		bool  _popup;
 		gamescreen_manager* _manager;
-		callback_fn OnExit;
+		callback_fn _on_exit;
 
 	protected:
 		bool update_transition(int dt, int time, int direction);
@@ -64,7 +64,7 @@ namespace wee {
 			return _popup != false;
 		}
 
-		void setExitCallback(const callback_fn& fn) { OnExit = fn; }
+		void on_exit(const callback_fn& fn) { _on_exit = fn; }
 	};
 
 	class gamescreen_manager
