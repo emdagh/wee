@@ -1,0 +1,23 @@
+# Ignore .p4ignore files
+.p4ignore
+
+# Ignore object files, shared libraries, executables
+*.dll
+*.so
+*.exe
+*.o
+
+# Ignore all HTML files except the readme file
+*.html
+!readme.html
+
+# Ignore the bin directory
+build/
+vendor/
+!vendor/*.cmake
+
+# Ignore the build.properties file in this directory
+#/build.properties
+
+# Ignore all text files in test directories
+#test/**.txt
