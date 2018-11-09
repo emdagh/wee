@@ -27,7 +27,7 @@ namespace wee {
 		bool  _popup;
 		gamescreen_manager* _manager;
 		callback_fn _on_exit;
-        static std::vector<gamescreen*> _all = {};
+        static std::vector<gamescreen*> _all;
 
 	protected:
 		bool update_transition(int dt, int time, int direction);

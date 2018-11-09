@@ -6,6 +6,8 @@
 
 using namespace wee;
 
+std::vector<gamescreen*> gamescreen::_all;
+
 bool gamescreen::update_transition(int dt, int time, int direction)
 {
     float td = time == 0 ? 1.0f : (float)dt / (float)time;
@@ -49,7 +51,7 @@ void gamescreen::update(int dt, bool, bool coveredByOtherScreen)
         _state = E_STATE_TRANSITION_OFF;
         if(!update_transition(dt, _time_off, 1))
         {
-            _manager->remove(this);
+            _all.erase(std::find(_all.begin(), _all.end(), this));//remove(this);
 //            _exiting = false;
             if(_on_exit!= nullptr)
                 _on_exit(*this);
@@ -102,7 +104,7 @@ void gamescreen::quit()
 
 void gamescreen::update_all(int dt)
 {
-    if(_screens.size() == 0) {
+    if(_all.size() == 0) {
         return;
     }
     /**
@@ -113,8 +115,8 @@ void gamescreen::update_all(int dt)
     static std::vector<gamescreen*> screensToUpdate;
     screensToUpdate.clear();
 
-    for (size_t i = 0; i < _screens.size(); i++) {
-        screensToUpdate.push_back(_screens[i]);
+    for (size_t i = 0; i < _all.size(); i++) {
+        screensToUpdate.push_back(_all[i]);
     }
 
     bool otherScreenHasFocus = false; //!Game.IsActive;
@@ -147,12 +149,12 @@ void gamescreen::update_all(int dt)
     }
 }
 
-void gamescreen_manager::draw(SDL_Renderer* ren)
+void gamescreen::draw_all(SDL_Renderer* ren)
 {
     static std::vector<gamescreen*> screensToDraw;
     screensToDraw.clear();
 
-    for(auto i : _screens)
+    for(auto i : _all)
         screensToDraw.emplace_back(i);
 
     for(auto i : screensToDraw)
