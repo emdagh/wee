@@ -100,36 +100,7 @@ void gamescreen::quit()
 }
 
 
-gamescreen_manager::gamescreen_manager()
-{
-}
-
-gamescreen_manager::~gamescreen_manager()
-{
-}
-
-void gamescreen_manager::add(gamescreen* screen_)
-{
-    gamescreen_manager* owner = screen_->get_owner();
-    if(owner != this && owner != NULL)
-    {
-        screen_->get_owner()->remove(screen_);
-        screen_->unload_content();
-    }
-    screen_->set_owner(this);
-    screen_->load_content();
-    _screens.emplace_back(screen_);
-}
-
-void gamescreen_manager::remove(gamescreen* screen)
-{
-    std::vector<gamescreen*>::iterator it = std::find(_screens.begin(), _screens.end(), screen);
-    if(it != _screens.end()) {
-        _screens.erase(it);
-    }
-}
-
-void gamescreen_manager::update(int, int dt)
+void gamescreen::update_all(int dt)
 {
     if(_screens.size() == 0) {
         return;

@@ -19,7 +19,7 @@ namespace wee {
         vec2 _stored_position = { 0.0f, 0.0f };
         vec2 _viewport = { 0.0f, 0.0f };
         int _shaketime = 0;
-        protected:
+    protected:
         void _update_transform() {
             mat4 Mt, Mr, Ms, Mt2;
             Mt = mat4::create_translation(-_position.x, -_position.y, 0.0f);
@@ -107,7 +107,6 @@ namespace wee {
             dst->y = Pa.y;
             dst->z = Pa.z;
         }
-
     };
 }
 

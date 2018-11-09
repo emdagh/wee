@@ -27,6 +27,7 @@ namespace wee {
 		bool  _popup;
 		gamescreen_manager* _manager;
 		callback_fn _on_exit;
+        static std::vector<gamescreen*> _all = {};
 
 	protected:
 		bool update_transition(int dt, int time, int direction);
@@ -65,6 +66,11 @@ namespace wee {
 		}
 
 		void on_exit(const callback_fn& fn) { _on_exit = fn; }
+
+        //static const std::vector<gamescreen*> all();
+        static void update_all(int);
+        static void draw_all(SDL_Renderer*);
+
 	};
 
 	class gamescreen_manager
