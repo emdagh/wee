@@ -73,15 +73,4 @@ namespace wee {
 
 	};
 
-	class gamescreen_manager
-	{
-		std::vector<gamescreen*> _screens;
-		public:
-		gamescreen_manager();
-		virtual ~gamescreen_manager();
-		void add(gamescreen*);
-		void remove(gamescreen*);
-		void update(int, int);
-		void draw(SDL_Renderer*);
-	};
 }
