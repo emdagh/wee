@@ -41,7 +41,7 @@ namespace wee {
 
         std::string image_path = get_resource_path("") + j["meta"]["image"].get<std::string>();
 
-        is.open(image_path);
+        is.open(image_path, std::ios::binary);
         if(is.is_open()) {
             s._texture= assets<SDL_Texture>::instance().load(j["meta"]["image"], is);
         } else {

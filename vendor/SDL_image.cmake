@@ -85,7 +85,7 @@ if(ATOM_PLATFORM_IOS)
     )
 endif(ATOM_PLATFORM_IOS)
 target_link_libraries(png_1.6.2 z_1.2.8)
-target_link_libraries(SDL2_image png_1.6.2)
+target_link_libraries(SDL2_image SDL2 png_1.6.2 z_1.2.8)
 install(TARGETS SDL2_image DESTINATION .)
 
 
