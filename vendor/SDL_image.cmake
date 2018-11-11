@@ -84,7 +84,8 @@ if(ATOM_PLATFORM_IOS)
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
     )
 endif(ATOM_PLATFORM_IOS)
-target_link_libraries(SDL2_image png_1.6.2 z_1.2.8)
+target_link_libraries(png_1.6.2 z_1.2.8)
+target_link_libraries(SDL2_image png_1.6.2)
 install(TARGETS SDL2_image DESTINATION .)
 
 

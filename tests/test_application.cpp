@@ -78,18 +78,18 @@ struct particle_helper {
             SDL_Color c;
 
             SDL_CreateColorRGB(255, 255, 255, &c),
-            em->emit((particles<pstate>::particle)
-            {
-                x + random(-spawnRadius, spawnRadius),
-                y + random(-spawnRadius, spawnRadius), 
+            em->emit((particles<pstate>::particle) {
+            
+                x + wee::random::instance().next_real(-spawnRadius, spawnRadius),
+                y + wee::random::instance().next_real(-spawnRadius, spawnRadius), 
                 0, 
-                1000 + (int)random(0.0f, 1000.0f),
+                1000 + (int)random::instance().next_real(0.0f, 1000.0f),
                 c,
                 { 
-                    random(-1.f, 1.f) * random(0.f, 2.f), 
-                    random(-1.f, 1.f) * random(0.f, 2.f) 
+                    wee::random::instance().next_real(-1.f, 1.f) * wee::random::instance().next_real(0.f, 2.f), 
+                    wee::random::instance().next_real(-1.f, 1.f) * wee::random::instance().next_real(0.f, 2.f) 
                 } 
-            });
+                });
         }
     }
 };

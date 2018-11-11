@@ -6,19 +6,15 @@ using namespace wee;
         int x = 0;
         int y = 0;
 		const wee::font_info& finfo = font->_info;
-		int yy = y - finfo.height - finfo.descent;// + (finfo.ascent + finfo.descent);
+//		int yy = y - finfo.height - finfo.descent;// + (finfo.ascent + finfo.descent);
         for(const auto& c : what) {
             const wee::glyph_info& info = font->_ginfo[c];
-            const SDL_Rect& src = font->get(c);
-            SDL_Rect dst = {
-                x + info.minx, 
-                yy,// - info.maxy,
-                src.w, src.h
-            };
-            //SDL_RenderCopy(renderer, font->_texture, &src, &dst);
+            //const SDL_Rect& src = font->get(c);
             x += info.advance;
             y = std::max(y, finfo.ascent - finfo.descent);
         }
+        *w = x;
+        *h = y;
     }
 	void draw_string(SDL_Renderer* renderer, 
             wee::sprite_font* font, 
