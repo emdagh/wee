@@ -6,9 +6,9 @@ namespace wee {
 
     template <typename T>
         struct state {
-            virtual void on_enter(T*) = 0;
-            virtual void on_update(T*, int) = 0;
-            virtual void on_leave(T*) = 0;
+            virtual void enter(T*) = 0;
+            virtual void update(T*, int) = 0;
+            virtual void leave(T*) = 0;
         };
 
     template <typename T>

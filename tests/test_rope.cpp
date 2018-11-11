@@ -35,20 +35,6 @@ typedef kult::type entity_type;
 
 using wee::mat4;
 
-struct __random {
-    __random() {
-        std::srand(std::time(nullptr));
-    }
-
-    float next(float mx) {
-        return mx * static_cast<float>(std::rand()) / RAND_MAX;
-    }
-
-    float next(float mn, float mx) {
-        return mn + ((mx - mn) * (static_cast<float>(std::rand()) / RAND_MAX));
-    }
-};
-
 auto clean_physics = [] (b2World* world) {
     for(auto& self : kult::join<physics>()) {
         if(!kult::get<physics>(self).do_cleanup) 
@@ -310,10 +296,7 @@ struct level {
 
 
 void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
-
-
     tmx::Map map;
-
     if(map.load(pt)) {
         DEBUG_LOG("loaded map version: {}.{}", 
                 map.getVersion().upper,
@@ -367,10 +350,6 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
                         DEBUG_LOG("creating object at {}, {}", object.getPosition().x, object.getPosition().y);
                         register_factories::object_factory::instance().create(props["class"], world, object);
                     }
-                    
-
-
-
                     const auto& object_properties = object.getProperties();
                     DEBUG_LOG("object has {} properties", 
                         object_properties.size());
@@ -393,11 +372,8 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
                 );
 
             }
-
         }
-
     }
-
 }
 
 
@@ -579,6 +555,25 @@ kult::type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src,
                 kult::get<transform>(e).rotation   = kult::get<physics>(e).body->GetAngle();
             }
         };
+#include <engine/gui/gamescreen.hpp>
+#include <engine/sprite_font.hpp>
+
+struct splash : gamescreen {
+    wee::sprite_font* _font;
+
+    virtual void load_content() {
+        std::string pt = wee::get_resource_path("assets/ttf") + "BlackCastleMF.ttf";//Boxy-Bold.ttf";
+        _font = new wee::sprite_font("@foofont",
+	        wee::assets<TTF_Font>::instance().load("@foofont", 32, ::as_lvalue(std::ifstream(pt)))
+		);
+    }
+    virtual void update(int, bool, bool) {}
+    virtual void draw(SDL_Renderer* renderer) {
+        int w, h;
+        SDL_RenderGetLogicalSize(renderer, &w, &h);
+
+    } 
+};
 
 class game : public applet {
     b2World* _world;

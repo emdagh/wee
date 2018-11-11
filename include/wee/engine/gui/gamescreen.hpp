@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <core/fsm.hpp>
 
 struct SDL_Renderer;
 
@@ -70,6 +71,7 @@ namespace wee {
         //static const std::vector<gamescreen*> all();
         static void update_all(int);
         static void draw_all(SDL_Renderer*);
+        static std::vector<gamescreen*>& all() { return _all; }
 
 	};
 

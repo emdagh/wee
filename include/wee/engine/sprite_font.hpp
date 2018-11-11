@@ -113,7 +113,13 @@ namespace wee {
             SDL_FreeSurface(surface);
         }
     };
-
-
     typedef basic_sprite_font<char> sprite_font;
+	
+    void draw_string(SDL_Renderer* renderer, 
+            wee::sprite_font* font, 
+            const std::string& what, 
+            const SDL_Point& where, 
+            const SDL_Color& color);
+    void measure_string(wee::sprite_font* font, const std::string& what);
+
 }
