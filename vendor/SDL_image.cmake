@@ -68,8 +68,8 @@ file(GLOB SDL_IMAGE_SOURCES_PLATFORM
 )
 endif(ATOM_PLATFORM_IOS)
 
-add_library(z_1.2.8 SHARED ${SRC_LIBZ})
-add_library(png_1.6.2 SHARED ${SRC_LIBPNG})
+add_library(z_1.2.8 STATIC  ${SRC_LIBZ})
+add_library(png_1.6.2 STATIC ${SRC_LIBPNG})
 
 add_library(SDL2_image SHARED ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 
