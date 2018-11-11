@@ -3,6 +3,7 @@
 #include <wee/wee.hpp>
 #include <SDL.h>
 #include <vector>
+#include <algorithm>
 
 namespace wee {
 

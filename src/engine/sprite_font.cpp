@@ -5,6 +5,8 @@ using namespace wee;
     void measure_string(wee::sprite_font* font, const std::string& what, int* w, int* h) {
         int x = 0;
         int y = 0;
+		const wee::font_info& finfo = font->_info;
+		int yy = y - finfo.height - finfo.descent;// + (finfo.ascent + finfo.descent);
         for(const auto& c : what) {
             const wee::glyph_info& info = font->_ginfo[c];
             const SDL_Rect& src = font->get(c);
@@ -15,7 +17,7 @@ using namespace wee;
             };
             //SDL_RenderCopy(renderer, font->_texture, &src, &dst);
             x += info.advance;
-            y = std::max(y, info.ascent - info.descent);
+            y = std::max(y, finfo.ascent - finfo.descent);
         }
     }
 	void draw_string(SDL_Renderer* renderer, 

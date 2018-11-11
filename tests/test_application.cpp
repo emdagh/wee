@@ -11,22 +11,17 @@
 #include <base/application.hpp>
 #include <base/applet.hpp>
 #include <engine/particles.hpp>
+#include <core/random.hpp>
 
 using namespace wee;
 
-template <typename T>
-T random(T lower, T upper) {
-    static std::mt19937 eng; // This is the Mersenne Twister
-    std::uniform_real_distribution<T> dist(lower, upper);
-    return dist(eng);
-}
 
 
 
 
 
 SDL_Rect SDL_ScaleRect(const SDL_Rect& r, float scale) {
-    return (SDL_Rect) {
+    return {
         (int)((r.x - (r.w >> 1) * scale) + 0.5f),
         (int)((r.y - (r.h >> 1) * scale) + 0.5f),
         (int)((r.w * scale) + 0.5f),
@@ -111,8 +106,8 @@ public:
                 p.x += p.state.vx * dt;
                 p.y += p.state.vy * dt;
 
-                p.state.vx *= 0.8;
-                p.state.vy *= 0.8;
+                p.state.vx *= 0.8f;
+                p.state.vy *= 0.8f;
 
                 p.color.a = (uint8_t)(1.0f - ((float)p.t / p.ttl) * 255);
         });

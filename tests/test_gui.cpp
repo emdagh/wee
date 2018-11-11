@@ -7,6 +7,7 @@
 #include <core/logstream.hpp>
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <functional>
 
 #define GEN_ID  __LINE__
 
