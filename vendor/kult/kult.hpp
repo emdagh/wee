@@ -130,19 +130,19 @@ namespace kult {
             all().erase(this);
         }
 
-        operator type const () const {
+        operator type () const {
             return id;
         }
         template<typename component>
-        decltype(component::value_type) &operator []( const component &t ) const {
+        decltype(component::value_type) &operator []( const component & ) const {
             return kult::add<component>(id), kult::get<component>(id);
         }
         template<typename component>
-        const entity &operator +=( const component &t ) const {
+        const entity &operator +=( const component & ) const {
             return kult::add<component>(id), *this;
         }
         template<typename component>
-        const entity &operator -=( const component &t ) const {
+        const entity &operator -=( const component & ) const {
             return kult::del<component>(id), *this;
         }
         template<typename component>
@@ -299,7 +299,8 @@ namespace kult {
         // }
 
         virtual std::string name() const {
-            return std::string { (NAME >> 24) & 0xff, (NAME >> 16) & 0xff, (NAME >> 8) & 0xff, NAME & 0xff };
+            return std::to_string(NAME);
+            //return std::string { (NAME >> 24) & 0xff, (NAME >> 16) & 0xff, (NAME >> 8) & 0xff, NAME & 0xff };
         }
 
         virtual void purge( const type &id ) const {

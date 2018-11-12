@@ -34,7 +34,6 @@ foreach( testsourcefile ${APP_SOURCES} )
         SDL_ttf
         SDL2_image
         SDL2
-        fmt
         ${PLATFORM_LIBS}
 
     )
