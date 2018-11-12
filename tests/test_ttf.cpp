@@ -141,7 +141,7 @@ int main(int, char* []) {
 
         return app.start();
     } catch(const std::exception& e) {
-        DEBUG_ERROR(e.what());
+        DEBUG_LOG(std::string("error: ") + e.what());
     }
 
     return 0;

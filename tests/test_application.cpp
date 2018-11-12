@@ -175,7 +175,7 @@ int main(int , char* []) {
 
         return app.start();
     } catch(const file_not_found& e) {
-        DEBUG_ERROR(e.what());
+        DEBUG_LOG(std::string("error:") + e.what());
     } catch(...) {
         std::cout << "exception caught" << std::endl;
     }
