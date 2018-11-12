@@ -80,9 +80,9 @@ namespace wee {
 #define LOGV(x)     log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, false))
 
 #define DEBUG_METHOD()              wee::log(std::cout, __FUNCTION__).write(__FUNCTION__) 
-#define DEBUG_LOG(...)              wee::log(std::cout, __FUNCTION__).write(fmt::format(__VA_ARGS__))
+#define DEBUG_LOG(...)              wee::log(std::cout, __FUNCTION__).write(__VA_ARGS__)
 #define DEBUG_VALUE_OF(x)           wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, false))
-#define DEBUG_ERROR(...)            wee::log(std::cout, __FUNCTION__).write(RED + fmt::format(__VA_ARGS__) + RESET)
+#define DEBUG_ERROR(...)            wee::log(std::cout, __FUNCTION__).write(RED + __VA_ARGS__ + RESET)
 #define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, true))
 #define TRACE(...)                  wee::log(std::cout, __FILE__##":"##__LINE__).write(__VA_ARGS__)
 
