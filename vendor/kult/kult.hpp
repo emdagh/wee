@@ -46,7 +46,7 @@ namespace kult {
 
     template<typename V>             using set = std::set<V>;   // unordered_set
     template<typename K, typename V> using map = std::map<K,V>; // unordered_map
-    using type = unsigned;
+    using type = intptr_t;
 
     // kult::helpers
 
