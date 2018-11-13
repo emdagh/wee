@@ -72,6 +72,16 @@ SDL_RWops* SDL_RWFromStream(std::istream& is) {
 
 
 namespace wee {
+    std::ifstream open_ifstream(const std::string& pt) {
+        std::string abs_path = get_resource_path(pt);
+        DEBUG_LOG("loading: " + abs_path);
+        std::ifstream res(abs_path);
+        if(!res.is_open()) {
+            throw file_not_found(abs_path);
+        }
+        return res;
+    }
+
     std::string get_resource_path(const std::string& subDir) {
 #if !defined(__IOS__)
         static std::string baseRes;

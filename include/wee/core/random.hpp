@@ -24,8 +24,19 @@ namespace wee {
         T next_int(T a, T b) {
             std::uniform_int_distribution<T> distr(a, b);
             return distr(_gen);
-
         }
-            
+
+        template <typename T>
+        T next_normal(T u, T o) {
+            std::normal_distribution<T> d{u, o};
+            return d(_gen);
+        }
     };
+
+    template <typename T>
+    T randi(T a, T b) {
+        return random::instance().next_int(a, b);
+    }
+
+    float randf(float a = 0.f, float b = 1.0f); 
 }

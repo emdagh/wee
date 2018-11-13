@@ -4,7 +4,7 @@ PROJECT(ropey)
 
 INCLUDE_DIRECTORIES(
     ${INCLUDE_DIRECTORIES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/classes
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 FILE(GLOB SRC
@@ -12,3 +12,19 @@ FILE(GLOB SRC
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SRC})
+
+TARGET_LINK_LIBRARIES(
+    ${PROJECT_NAME}
+        wee_engine
+        wee_base
+        wee_gfx
+        wee_core
+        tmxlite
+        liquidfun
+        ${OPENGL_gl_LIBRARY}
+        SDL_ttf
+        SDL2_image
+        SDL2
+        ${PLATFORM_LIBS}
+
+    )

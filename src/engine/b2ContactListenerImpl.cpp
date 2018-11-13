@@ -1,9 +1,15 @@
-#include <engine/b2Adapters.hpp>
+#include <Box2D/Box2D.h>
+#include <engine/b2ContactListenerImpl.hpp>
 #include <engine/ecs.hpp>
+#include <core/mat4.hpp>
+#include <core/vec3.hpp>
 
 using namespace wee;
+
+
 b2ContactListenerImpl::~b2ContactListenerImpl() {
 }
+
 void b2ContactListenerImpl::BeginContact(b2Contact* contact) 
 {
     const b2Fixture* fA = contact->GetFixtureA();

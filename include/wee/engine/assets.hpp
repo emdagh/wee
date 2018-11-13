@@ -18,12 +18,15 @@ SDL_RWops* SDL_RWFromStream(std::istream&);
 
 namespace wee {
 
+
+
     template <typename T>
     struct dictionary {
         typedef std::map<std::string, T> type;
     };
 
     std::string get_resource_path(const std::string&);
+
 
     template <typename T>
     struct assets : singleton<assets<T> > {
@@ -110,17 +113,11 @@ namespace wee {
 
     namespace asset_helper {
 
+        std::ifstream open_ifstream(const std::string& pt); 
 
         template <typename T>
         T* from_file(const std::string& name, const std::string& pt) {
-            std::string abs_path = get_resource_path("") + pt;
-            DEBUG_VALUE_OF(abs_path);
-            std::ifstream is;
-            is.open(abs_path);
-            if(!is.is_open()) { 
-                throw file_not_found(abs_path);
-                return NULL;
-            }
+            std::ifstream is = open_ifstream(pt);
             return assets<T>::instance().load(name, is);
         }
     };

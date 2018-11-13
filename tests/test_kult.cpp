@@ -18,6 +18,8 @@
 #include <base/application.hpp>
 #include <base/applet.hpp>
 #include <engine/particles.hpp>
+#include <engine/b2DebugDrawImpl.hpp>
+#include <engine/b2ContactListenerImpl.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 
@@ -60,7 +62,7 @@ struct particle_helper {
                 n.x * vlen_sq * fs, 
                 n.y * vlen_sq * fs, 
                 1.0f, 
-                randf() * 2.0f * (float)M_PI 
+                wee::randf() * 2.0f * (float)M_PI 
             };
             
 
