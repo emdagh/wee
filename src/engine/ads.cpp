@@ -66,7 +66,7 @@ namespace wee {
             json j = json::parse(rw);
             for(auto& jc : j) {
                 DEBUG_VALUE_OF(j);
-                ad* obj = factory<ad*>::instance().create(jc["type"]);
+                ad* obj = factory<ad>::instance().create(jc["type"]);
                 if(nullptr != obj) {
                     obj->set_app_id(jc["app-id"]);
                     obj->set_publisher_id(jc["pub-id"]);

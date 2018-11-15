@@ -2,6 +2,7 @@
 #include <core/logstream.hpp>
 #include <SDL.h>
 #include <SDL_mixer.h>
+#include <cstring>
 
 #ifdef _WIN32
 #define PATH_SEP '\\'
@@ -72,8 +73,34 @@ SDL_RWops* SDL_RWFromStream(std::istream& is) {
 
 
 namespace wee {
+
+    std::string dirname(const std::string& in) {
+        char* path = const_cast<char*>(in.c_str());
+        constexpr static const char* dot = ".";
+        char* last_delim = !in.empty() ? strrchr(path, '/') : NULL;
+        if(last_delim == path) {
+            ++last_delim;
+        } else if(last_delim && last_delim[1] == '\0') {
+            last_delim = (char*)memchr(path, last_delim - path, '/');
+        }
+
+        if(last_delim) {
+            last_delim[0] = '\0';
+
+        } else {
+            path = (char*)dot;
+        }
+
+        return std::string(path);
+    }
+
+    std::string basename(const std::string& in) {
+        const char* p = strrchr(in.c_str(), PATH_SEP);
+        return p ? std::string(p + 1) : in;
+    }
     std::ifstream open_ifstream(const std::string& pt) {
-        std::string abs_path = get_resource_path(pt);
+        std::string base_name = wee::basename(pt);
+        std::string abs_path = get_resource_path(dirname(pt)) + basename(pt);
         DEBUG_LOG("loading: " + abs_path);
         std::ifstream res(abs_path);
         if(!res.is_open()) {

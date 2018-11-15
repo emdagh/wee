@@ -4,10 +4,13 @@
 #include <algorithm>
 #include <functional>
 #include <core/fsm.hpp>
+#include <nlohmann/json.hpp>
 
 struct SDL_Renderer;
 
 namespace wee {
+
+    using nlohmann::json;
 
 	enum gamescreen_state {
 		E_STATE_HIDDEN,
@@ -26,6 +29,7 @@ namespace wee {
 		int   _time_off;
 		float _pos;
 		bool  _popup;
+        bool _other_screen_has_focus;
 		gamescreen_manager* _manager;
 		callback_fn _on_exit;
         static std::vector<gamescreen*> _all;
@@ -66,9 +70,19 @@ namespace wee {
 			return _popup != false;
 		}
 
+        bool is_active() {
+            return !_other_screen_has_focus && (
+                _state == E_STATE_TRANSITION_ON || 
+                _state == E_STATE_ACTIVE
+            );
+        }
+
+        virtual void from_json(const json&);
+
 		void on_exit(const callback_fn& fn) { _on_exit = fn; }
 
         //static const std::vector<gamescreen*> all();
+        static void add(gamescreen*);
         static void update_all(int);
         static void draw_all(SDL_Renderer*);
         static std::vector<gamescreen*>& all() { return _all; }

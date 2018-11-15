@@ -2,14 +2,25 @@
 
 #include <wee/wee.hpp>
 #include <engine/gui/gamescreen.hpp>
+#include <vector>
+#include <core/factory.hpp>
 
-class splash_screen : public gamescreen {
+struct SDL_Texture;
+
+class splash_screen : public wee::gamescreen {
     std::vector<SDL_Texture*> _images;
 public:
-
-    void load_content() {
-        std::ifstream is = asset_helper::open_stream("assets/splash.json");
-        json j(is);
-
-    }
+    splash_screen();
+    virtual ~splash_screen ();
+    void load_content(); 
 };
+
+class main_menu_screen : public wee::gamescreen {
+public:
+    main_menu_screen();
+    virtual ~main_menu_screen();
+    void load_content();
+};
+
+typedef wee::factory<wee::gamescreen> gamescreen_factory;
+

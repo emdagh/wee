@@ -12,7 +12,7 @@ template <typename T, typename ClassId = std::string, typename... Args>
 struct factory 
 : public singleton<factory<T, ClassId, Args...> >
 {
-    typedef std::function<T(Args...)> create_fn; //T*(*create_fn)(void);
+    typedef std::function<T*(Args...)> create_fn; //T*(*create_fn)(void);
     typedef ClassId classid_t;
     
     void register_class(const classid_t& id, const create_fn& fn) {
@@ -23,11 +23,11 @@ struct factory
         _reg[id] = fn;
     }
 
-    T create(const classid_t& id, const Args&... args) {
+    T* create(const classid_t& id, const Args&... args) {
         auto it = _reg.find(id);
         if(it != _reg.end() ) 
             return (*it).second((args)...);
-        return *((T*)NULL);
+        return NULL;
     }
     
 protected:
@@ -36,8 +36,8 @@ protected:
 
 
 template <typename S, typename T, typename C = std::string>
-void register_factory(const C& id, const typename factory<S, C>::create_fn& fn) {
-    factory<S, C>::instance().register_class(id, fn);
+void register_factory(const C& id) {
+    factory<S, C>::instance().register_class(id, [] (void) { return new S; });
 }
 
 }

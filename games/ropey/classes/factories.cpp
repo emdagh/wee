@@ -19,8 +19,6 @@
 using nlohmann::json;
 using namespace wee;
     
-typedef factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
-typedef factory<b2Shape*,   tmx::Object::Shape, const tmx::Object&> b2ShapeFactory;
 
 register_factories::register_factories() {
     b2ShapeFactory::instance().register_class(tmx::Object::Shape::Polygon, [] (const tmx::Object& obj) {
@@ -72,24 +70,24 @@ register_factories::register_factories() {
     });
     /*TODO: Text*/
 
-    object_factory::instance().register_class("norope", [&] (b2World*, const tmx::Object&) {
-            kult::type self = kult::entity();
+    object_factory::instance().register_class("norope", [&] (b2World*, const tmx::Object&, entity_type& self) {
+            self = kult::entity();
 
-            return self;
+            return &self;
             });
 
-    object_factory::instance().register_class("spawn", [&] (b2World*, const tmx::Object&) {
-            kult::type self = kult::entity();
+    object_factory::instance().register_class("spawn", [&] (b2World*, const tmx::Object&, entity_type& self) {
+        self = kult::entity();
 
-            return self;
-            });
+        return &self;
+    });
 
-    object_factory::instance().register_class("environment", [&] (b2World* world, const tmx::Object& obj) {
+    object_factory::instance().register_class("environment", [&] (b2World* world, const tmx::Object& obj, entity_type& self) -> entity_type* {
             const auto& pos  = obj.getPosition();
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
 
-            kult::type self = kult::entity();
+            self = kult::entity();
             {
             kult::add<physics>(self);
             kult::add<raycast>(self);
@@ -119,10 +117,10 @@ register_factories::register_factories() {
             }
 
 
-            return self;
+            return &self;
     });
 
-    object_factory::instance().register_class("pickup", [&] (b2World* world, const tmx::Object& obj) {
+    object_factory::instance().register_class("pickup", [&] (b2World* world, const tmx::Object& obj, entity_type& self) {
             const auto& pos  = obj.getPosition();
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
@@ -135,7 +133,7 @@ register_factories::register_factories() {
              */
 
 
-            kult::type self = kult::entity();
+            self = kult::entity();
             {
             kult::add<physics>(self);
             kult::add<pickup>(self);
@@ -213,7 +211,7 @@ register_factories::register_factories() {
                 }
             };
 
-            return self;
+            return &self;
     });
 }
 

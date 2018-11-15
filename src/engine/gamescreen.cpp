@@ -43,8 +43,9 @@ void gamescreen::handle_input()
 {
 }
 
-void gamescreen::update(int dt, bool, bool coveredByOtherScreen)
+void gamescreen::update(int dt, bool otherScreenHasFocus, bool coveredByOtherScreen)
 {
+    _other_screen_has_focus = otherScreenHasFocus;
     assert(_manager != NULL);
     if(_exiting)
     {
@@ -95,12 +96,21 @@ void gamescreen::unload_content()
 {
 }
 
+void gamescreen::from_json(const json& j) {
+    this->_time_on = j["transition_on"];
+    this->_time_off = j["transition_off"];
+}
+
 void gamescreen::quit()
 {
     std::wcout << "exiting screen" << std::endl;
     _exiting = true;
 }
 
+void gamescreen::add(gamescreen* s) {
+    s->load_content();
+    _all.push_back(s);
+}
 
 void gamescreen::update_all(int dt)
 {

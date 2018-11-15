@@ -16,8 +16,8 @@ class b2World;
 
 typedef kult::type entity_type;
 
-typedef wee::factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
-typedef wee::factory<b2Shape*,   tmx::Object::Shape, const tmx::Object&> b2ShapeFactory;
+//typedef wee::factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
+//typedef wee::factory<b2Shape*,   tmx::Object::Shape, const tmx::Object&> b2ShapeFactory;
 
 #define E_CATEGORY_ENVIRONMENT  (1 << 1)
 #define E_CATEGORY_PICKUP       (1 << 2)

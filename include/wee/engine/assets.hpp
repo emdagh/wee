@@ -111,9 +111,10 @@ namespace wee {
     };
 
 
+    std::ifstream open_ifstream(const std::string& pt); 
+
     namespace asset_helper {
 
-        std::ifstream open_ifstream(const std::string& pt); 
 
         template <typename T>
         T* from_file(const std::string& name, const std::string& pt) {
