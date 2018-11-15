@@ -1,0 +1,25 @@
+[
+    {
+        "name"  : "splash",
+        "class" : "splash_screen",
+        "next"  : "main menu",
+        "transition_on" : 1.5,
+        "transition_off" : 1.5
+    },
+    {
+        "name" : "main menu",
+        "class" : "main_menu_screen",
+        "items" : [
+            {
+                "id" : 0,
+                "text" : "new game",
+                "on_select" : "start_new_game"
+            },
+            {
+                "id" : 1,
+                "text" : "quit",
+                "on_select" : "quit"
+            }
+        ]
+    }
+]
