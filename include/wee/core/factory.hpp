@@ -37,7 +37,7 @@ protected:
 
 template <typename S, typename T, typename C = std::string>
 void register_factory(const C& id) {
-    factory<S, C>::instance().register_class(id, [] (void) { return new S; });
+    factory<S, C>::instance().register_class(id, [] (void) { return new T; });
 }
 
 }

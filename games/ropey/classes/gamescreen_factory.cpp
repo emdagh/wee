@@ -11,6 +11,10 @@ namespace {
             factory_type::instance().register_class("splash_screen", [] (void) {
                 return new splash_screen();
             });
+            factory_type::instance().register_class("main_menu_screen", [] (void) {
+                return new main_menu_screen();
+            });
+
         }
 
         virtual ~register_gamescreen_factories() {

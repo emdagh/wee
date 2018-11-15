@@ -81,8 +81,3 @@ namespace wee {
 #define TRACE(...)                  wee::log(std::cout, __FILE__##":"##__LINE__).write(__VA_ARGS__)
 
 
-/*
-#define DEBUG_METHOD()              wee::logstream __logstream(std::cout, __FUNCTION__) //; DEBUG_VALUE_OF(__FUNCTION__)
-#define DEBUG_VALUE_OF(x)           __logstream << wee::loglevel::debug << wee::value_of(#x, x, false) << std::endl
-#define DEBUG_VALUE_AND_TYPE_OF(x)  __logstream << wee::loglevel::debug << wee::value_of(#x, x, true) << std::endl
-#define DEBUG_LOG(...)              __logstream << wee::loglevel::info << __VA_ARGS__ << std::endl;*/

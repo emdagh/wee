@@ -19,10 +19,10 @@ int game::load_content() {
     try {
         std::ifstream is = wee::open_ifstream("assets/screens.json");
         json j = json::parse(is);
-        for(auto it : j) {
+        for(const auto& it : j) {
             gamescreen* s = gamescreen_factory::instance().create(it["class"]);
             if(s != NULL) {
-                s->from_json(j);
+                s->from_json(it);
                 _screens.push_back(s);
                 _screen_index[it["name"]] = _screens.size() - 1;
             }

@@ -3,8 +3,12 @@
         "name"  : "splash",
         "class" : "splash_screen",
         "next"  : "main menu",
-        "transition_on" : 1.5,
-        "transition_off" : 1.5
+        "transition_on" : 1500,
+        "transition_off" : 1500,
+        "screens" : [
+            { "name" : "@splash_0", "uri" : "assets/img/fa-image.png" },
+            { "name" : "@splash_1", "uri" : "assets/img/fa-image.png" }
+        ]
     },
     {
         "name" : "main menu",
