@@ -258,6 +258,8 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
             (int)pb.y
             );
 
+    gamescreen::draw(renderer);
+
 }
 
 int gameplay_screen::on_click() {
