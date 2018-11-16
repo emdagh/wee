@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
+#include <core/logstream.hpp>
 
 using namespace wee;
 
@@ -26,7 +27,6 @@ gamescreen::gamescreen()
     , _time_off(1000)
     , _pos(1.0f)
     , _popup(false)
-    , _manager(NULL)
     , _on_exit(nullptr)
 {
 }
@@ -46,31 +46,23 @@ void gamescreen::handle_input()
 void gamescreen::update(int dt, bool otherScreenHasFocus, bool coveredByOtherScreen)
 {
     _other_screen_has_focus = otherScreenHasFocus;
-    assert(_manager != NULL);
-    if(_exiting)
-    {
+    if(_exiting) {
         _state = E_STATE_TRANSITION_OFF;
-        if(!update_transition(dt, _time_off, 1))
-        {
+        if(!update_transition(dt, _time_off, 1)) {
+            unload_content();
             _all.erase(std::find(_all.begin(), _all.end(), this));//remove(this);
-//            _exiting = false;
-            if(_on_exit!= nullptr)
+            if(_on_exit != nullptr)
                 _on_exit(*this);
         }
-    }
-    else if(coveredByOtherScreen)
-    {
+    } else if(coveredByOtherScreen) {
         if(update_transition(dt, _time_off, 1))
         {
             _state = E_STATE_TRANSITION_OFF;
         } else {
             _state = E_STATE_HIDDEN;
         }
-    }
-    else
-    {
-        if(update_transition(dt, _time_on, -1))
-        {
+    } else {
+        if(update_transition(dt, _time_on, -1)) {
             _state = E_STATE_TRANSITION_ON;
         } else {
             _state = E_STATE_ACTIVE;
@@ -78,27 +70,28 @@ void gamescreen::update(int dt, bool otherScreenHasFocus, bool coveredByOtherScr
     }
 }
 
-void gamescreen::draw(SDL_Renderer* ren)
-{
+void gamescreen::draw(SDL_Renderer* renderer) {
     if(_popup) {
         return;
     }
     int rw, rh;
-    SDL_GetRendererOutputSize(ren, &rw, &rh);
+    SDL_GetRendererOutputSize(renderer, &rw, &rh);
     uint8_t a = (uint8_t)((transition()) * 255.f);
     SDL_Rect rc = { 0, 0, rw, rh };
-    SDL_SetRenderDrawColor(ren, 0, 0, 0, a);
-    SDL_RenderFillRect(ren, &rc);
-
+    uint8_t r,g,b;
+    SDL_GetRenderDrawColor(renderer, &r, &g, &b, NULL);
+    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+    SDL_RenderFillRect(renderer, &rc);
 }
 
-void gamescreen::unload_content()
-{
+void gamescreen::unload_content() {
 }
 
 void gamescreen::from_json(const json& j) {
-    this->_time_on = j["transition_on"];
-    this->_time_off = j["transition_off"];
+    DEBUG_METHOD();
+    DEBUG_VALUE_OF(j);
+    this->_time_on = j.at("transition_on");
+    this->_time_off = j.at("transition_off");
 }
 
 void gamescreen::quit()

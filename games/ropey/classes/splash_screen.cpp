@@ -1,4 +1,5 @@
 #include <classes/screens.hpp>
+#include <classes/gameplay_screen.hpp>
 #include <engine/assets.hpp>
 #include <nlohmann/json.hpp>
 #include <SDL.h>
@@ -7,6 +8,10 @@ using namespace wee;
 
 splash_screen::splash_screen() {
     DEBUG_METHOD();
+
+    this->_on_exit = [] (const gamescreen&) {
+        gamescreen::add(new gameplay_screen);
+    };
 }
 
 splash_screen::~splash_screen () {
@@ -30,6 +35,7 @@ void splash_screen::update(int dt, bool otherScreenHasFocus, bool) {
     
     if(_current >= _screens.size()) {
         coveredByOtherScreen = true;
+        DEBUG_LOG("splash screen quitting...");
         quit();
     }
 
@@ -38,6 +44,7 @@ void splash_screen::update(int dt, bool otherScreenHasFocus, bool) {
 
 void splash_screen::draw(SDL_Renderer* renderer) {
     int rw, rh;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_GetRendererOutputSize(renderer, &rw, &rh);
    
     auto* tex = _screens[_current];
@@ -57,38 +64,16 @@ void splash_screen::draw(SDL_Renderer* renderer) {
 }
 
 void splash_screen::from_json(const json& j) {
-
-    //std::map<std::string, json> m = j;
+    DEBUG_METHOD();
     for(const auto& kv : j["screens"]) {
         DEBUG_VALUE_OF(kv);
         _screens.push_back(
             assets<SDL_Texture>::instance().load(kv["name"], as_lvalue(wee::open_ifstream(kv["uri"])))
         );
     }
-    
-    //SDL_Texture* s = assets<SDL_Texture>::instance().load("@splash_0",
-    //    open_ifstream("assets/img/fa-image.png")
-    //);
     gamescreen::from_json(j);
 }
 
 void splash_screen::load_content() {
-    //std::ifstream is = wee::open_ifstream("assets/splash.json");
-    
-    /*json tmp = { 
-        { "transition_on", 1.5 },
-        { "transition_off", 1.5 },
-
-        "screens" , {
-            { "@splash_0", "assets/img/fa-image.png" },
-            { "@splash_1", "assets/img/fa-image.png" }
-        }
-    };*/
-    //from_json(tmp);
-    //json j(is);
-    
-    /*auto* _ = assets<SDL_Texture>::instance().load("@splash", 
-        ::as_lvalue(wee::open_ifstream("assets/img/fa-image.png"))
-    );*/
 
 }

@@ -28,7 +28,11 @@ int game::load_content() {
             }
         }
     } catch(...) {
-        return -1;
+        DEBUG_LOG("caught unhandled exception...");
+    }
+
+    if(_screens.size() > 0) {
+        gamescreen::add(_screens[0]);
     }
 
     //gamescreen::add(new splash_screen);

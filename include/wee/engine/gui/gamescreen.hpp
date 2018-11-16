@@ -30,7 +30,7 @@ namespace wee {
 		float _pos;
 		bool  _popup;
         bool _other_screen_has_focus;
-		gamescreen_manager* _manager;
+		//gamescreen_manager* _manager;
 		callback_fn _on_exit;
         static std::vector<gamescreen*> _all;
 
@@ -45,13 +45,7 @@ namespace wee {
 		virtual void draw(SDL_Renderer*);
 		virtual void unload_content();
 		virtual void quit();
-		void set_owner(gamescreen_manager* mgr) {
-			_manager = mgr;
-		}
 
-		gamescreen_manager* get_owner() {
-			return _manager;
-		}
 
 		inline float transition() const {
 			return _pos;
