@@ -13,7 +13,7 @@ namespace wee {
         std::map<std::string, callback> _callbacks;
     public:
         virtual void from_json(const json&);
-        virtual void set_callback(const std::string&, const std::string&, const std::string&, callback&&);
+        //virtual void set_callback(const std::string&, const std::string&, const std::string&, callback&&);
         
     };
 }

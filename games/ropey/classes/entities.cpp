@@ -34,7 +34,7 @@ entity_type create_player(b2World* world, const SDL_Point& at) {
 
     SDL_Texture* texture = nullptr;
     {
-        auto is = std::ifstream(wee::get_resource_path("assets/img/Assets/PNG/Players/Player Red") + "playerRed_roll.png", std::ios::binary);
+        auto is = open_ifstream("assets/img/playerRed_roll.png", std::ios::binary);
         assert(is.is_open());
         texture = assets<SDL_Texture>::instance().load("@player",is);
 

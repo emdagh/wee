@@ -149,7 +149,7 @@ register_factories::register_factories() {
             if(!s) {
                 s = new sprite_sheet;
                 json j;
-                std::ifstream is(wee::get_resource_path("assets/img") + "pickups.json", std::ios::binary);
+                std::ifstream is = open_ifstream("assets/pickups.json", std::ios::binary);
                 if(is.is_open()) {
                     is >> j; 
                     from_json(j, *s);

@@ -41,9 +41,7 @@ int game::load_content() {
 
 int game::update(int dt) {
     gamescreen::update_all(dt);
-    
     return 0;
-
 }
 
 int game::draw(SDL_Renderer* renderer) {

@@ -111,7 +111,7 @@ namespace wee {
     };
 
 
-    std::ifstream open_ifstream(const std::string& pt); 
+    std::ifstream open_ifstream(const std::string& pt, std::ios_base::openmode mode = std::ios_base::in); 
 
     namespace asset_helper {
 
