@@ -11,6 +11,7 @@
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <classes/tmx.hpp>
+#include <classes/input.hpp>
 
 using namespace wee;
 //typedef factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
@@ -141,6 +142,27 @@ void gameplay_screen::load_content() {
     copy_physics_to_transform();
 }
 
+void gameplay_screen::handle_input() {
+    static const int clickTimeout = 500;
+    static int mouseWasDown = 0;
+    static int mouseDownTime = 0;
+    if(input::instance().mouse_down) {
+        if(mouseWasDown == 0) {
+            mouseDownTime = SDL_GetTicks();
+        }
+        mouseWasDown = 1;
+    } else {
+        if(mouseWasDown) {
+            mouseWasDown = 0;
+            auto delta = SDL_GetTicks() - mouseDownTime;
+            DEBUG_VALUE_OF(delta);
+            if((delta) < clickTimeout) {
+                on_click();
+            }
+        }
+    }
+}
+
 void gameplay_screen::update(int dt, bool, bool) {
     copy_transform_to_physics();
     _world->Step(1.0f / (float)60, 4, 3);
@@ -213,6 +235,7 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
           });*/
     }
     //b2DebugDrawEXT(_world, renderer, _camera);
+    //
     _world->DrawDebugData();
 
     SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
@@ -222,16 +245,10 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
     pa.x = playerPos.x;
     pa.y = playerPos.y;
 
-    //vec3 mousePositionWS = vec3::transform({_mouse_pos.x, _mouse_pos.y, 0.0f }, _cam.get_transform());
-    //vec2 pb = { mousePositionWS.x, mousePositionWS.y };
-    //
-    //vec3 pbb;
-    //_cam.to_screen((vec3){_mouse_pos.x, _mouse_pos.y, 0.0f}, &pbb);
-    //vec2 pb = { pa.x + pbb.x, pa.y + pbb.y };
-    vec2 pb = { _mouse_pos.x, _mouse_pos.y };
-    //pa = WORLD_TO_SCREEN(pa);
-    //pb = WORLD_TO_SCREEN(pb);
-
+    vec2 pb = { 
+        (float)input::instance().mouse_x, 
+        (float)input::instance().mouse_y 
+    };
 
 
     SDL_RenderDrawLine(renderer, 
@@ -262,8 +279,8 @@ int gameplay_screen::on_click() {
 
     //b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
     vec3 mousePosition = {
-        _mouse_pos.x,
-        _mouse_pos.y,// - _camera.h / 2, 
+        (float)input::instance().mouse_x,
+        (float)input::instance().mouse_y,// - _camera.h / 2, 
         0.0f
     };
 

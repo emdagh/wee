@@ -45,16 +45,12 @@ namespace wee {
 		virtual void draw(SDL_Renderer*);
 		virtual void unload_content();
 		virtual void quit();
-
-
 		inline float transition() const {
 			return _pos;
 		}
-
 		inline bool exiting() {
 			return _exiting != false;
 		}
-
 		inline int state() const
 		{
 			return _state;

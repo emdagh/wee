@@ -1,5 +1,6 @@
 #include <classes/game.hpp>
 #include <classes/screens.hpp>
+#include <classes/input.hpp>
 #include <base/application.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
@@ -40,6 +41,7 @@ int game::load_content() {
 }
 
 int game::update(int dt) {
+    //gamescreen::handle_all_input();
     gamescreen::update_all(dt);
     return 0;
 }
@@ -52,31 +54,19 @@ int game::draw(SDL_Renderer* renderer) {
     return 0;
 }
 
-void game::set_callbacks(application* ) {
-    /*
+void game::set_callbacks(application* app) {
     app->on_mousedown += [&] (char) {
-        //this->_mousedown = true;
-        //this->_time_down = SDL_GetTicks();
+        input::instance().mouse_down = true;
         return 0;
     };
-
-    app->on_mouseup += [this] (char) {
-        this->_mousedown = false;
-        int dt = (SDL_GetTicks() - this->_time_down);
-        static const int TIMEOUT = 500;
-        DEBUG_VALUE_OF(dt);
-        if(dt < TIMEOUT) {
-            return this->on_click();
-        }
+    app->on_mouseup += [] (char) {
+        input::instance().mouse_down = false;
         return 0;
     };
-
-    app->on_mousemove += [this] (int , int ) {
-        
-        this->_mouse_pos.x = (float)x;
-        this->_mouse_pos.y = (float)y;
+    app->on_mousemove += [] (int x, int y) {
+        input::instance().mouse_x = x;
+        input::instance().mouse_y = y;
         
         return 0;
     };
-    */
 }

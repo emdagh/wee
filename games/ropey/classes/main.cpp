@@ -7,7 +7,7 @@ using namespace wee;
 int main(int, char*[]) {
     applet* let = new game();
     application app(let);
-    //static_cast<game*>(let)->callbacks(&app);
+    static_cast<game*>(let)->set_callbacks(&app);
     return app.start();
 }
 

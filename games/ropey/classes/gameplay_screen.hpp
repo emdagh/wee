@@ -20,7 +20,6 @@ class gameplay_screen : public wee::gamescreen {
     int _time_down = 0;
     SDL_Rect _camera;
     entity_type b0, p, b1;
-    wee::vec2f _mouse_pos;
     kult::type _rope;
     wee::b2DebugDrawImpl _debugdraw;
     wee::camera _cam;
@@ -29,6 +28,7 @@ public:
     gameplay_screen();
     virtual ~gameplay_screen();
     virtual void load_content();
+    virtual void handle_input();
     virtual void update(int, bool, bool);
     virtual void draw(SDL_Renderer*);
 public:
