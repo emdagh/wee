@@ -31,6 +31,7 @@ gameplay_screen::gameplay_screen() {
     _world->SetDebugDraw(&_debugdraw);
     _world->SetContactListener(&_contacts);
     _camera = { 0, 0, 0, 0 };
+    this->_time_on = 4500;
 }
 gameplay_screen::~gameplay_screen() {
 }
@@ -163,7 +164,7 @@ void gameplay_screen::handle_input() {
     }
 }
 
-void gameplay_screen::update(int dt, bool, bool) {
+void gameplay_screen::update(int dt, bool a, bool b) {
     copy_transform_to_physics();
     _world->Step(1.0f / (float)60, 4, 3);
     copy_physics_to_transform();
@@ -185,6 +186,8 @@ void gameplay_screen::update(int dt, bool, bool) {
     _cam.update(dt);
     _debugdraw.SetCameraTransform(_cam.get_transform());
     clean_physics(_world);
+
+    gamescreen::update(dt, a, b);
 }
 
 
@@ -274,12 +277,9 @@ int gameplay_screen::on_click() {
     for(auto& e : kult::join<raycast>()) {
         kult::get<raycast>(e).hit = false;
     }
-    //int cx = -_camera.x + (_camera.w >> 1);
-    //int cy = -_camera.y + (_camera.h >> 1);
 
     vec2 playerPosition = kult::get<transform>(p).position;
 
-    //b2Vec2 temp = { _mouse_pos.x - cx, _mouse_pos.y - cy };
     vec3 mousePosition = {
         (float)input::instance().mouse_x,
         (float)input::instance().mouse_y,// - _camera.h / 2, 
