@@ -37,21 +37,7 @@ void parse_tmx(b2World* world, const std::string& pt, SDL_Point* spawnPoint) {
                     DEBUG_LOG("object {}", object.getName());
 
                     const auto& position = object.getPosition();
-                    //const auto& type = object.getType();
-                    //const auto& shape = object.getShape();
-
-                    //b2Body* body = b2BodyBuilder::instance().build(world, object);
-                    //
-                    //
-                    //
                     auto in = object.getProperties();
-
-                    /*auto props = wee::zip(
-                      wee::map(in, [] (const tmx::Property& p) { return p.getName(); }), 
-                      wee::map(in, [] (const tmx::Property& p) { return p.getStringValue(); })
-                      );*/
-
-                    //std::vector<std::tuple<std::string, std::string> > props;
 
                     std::map<std::string, std::string> props;
                     for(const auto& p : object.getProperties()) {

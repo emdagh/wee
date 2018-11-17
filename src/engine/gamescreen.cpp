@@ -82,7 +82,6 @@ void gamescreen::draw(SDL_Renderer* renderer) {
     SDL_GetRenderDrawColor(renderer, &r, &g, &b, NULL);
     SDL_SetRenderDrawColor(renderer, r, g, b, a);
     SDL_RenderFillRect(renderer, &rc);
-    DEBUG_VALUE_OF((int)a);
 }
 
 void gamescreen::unload_content() {

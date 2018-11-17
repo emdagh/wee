@@ -261,6 +261,7 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
             (int)pb.y
             );
 
+    SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
     gamescreen::draw(renderer);
 
 }
