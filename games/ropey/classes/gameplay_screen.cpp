@@ -12,6 +12,7 @@
 #include <gfx/SDL_ColorEXT.hpp>
 #include <classes/tmx.hpp>
 #include <classes/input.hpp>
+#include <classes/level.hpp>
 
 using namespace wee;
 //typedef factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
@@ -36,8 +37,34 @@ gameplay_screen::gameplay_screen() {
 gameplay_screen::~gameplay_screen() {
 }
 void gameplay_screen::load_content() {
-    std::string pt = wee::get_resource_path("assets/levels") + "level.tmx";
+    //std::string pt = wee::get_resource_path("assets/levels") + "level.tmx";
+    //
+    std::vector<entity_type> beats;
+    std::ifstream ifs = wee::open_ifstream("assets/levels.json");
+    json j = json::parse(ifs);
+    for(const auto& i : j) {
+        std::string abs_path = get_resource_path(dirname(i)) + basename(i);
+        tmx::Map tiled_map;
+        tiled_map.load(abs_path);
 
+        level builder;
+        beats.push_back(
+            builder.source(&tiled_map)
+                .world(_world)
+                .build()
+        );
+    }
+    vec2f spawnPoint = kult::get<beat>(beats[0]).spawn;
+    p  = create_player(_world, spawnPoint);
+
+    /**
+     * TODO: 
+     *   - level beats should be entities
+     *   - all entitites within a beat should have the nested component to indicate a parent
+     *   - a `getCurrentBeat` function should be written for the player
+     */
+
+#if 0
     SDL_Point spawnPoint;
     parse_tmx(_world, pt, &spawnPoint);
 
@@ -129,17 +156,17 @@ void gameplay_screen::load_content() {
                     theta = 90.0f;
                 }
 
-                tile(tilesets[tset_gid], 
+                /*tile(tilesets[tset_gid], 
                         {x_pos, y_pos}, 
                         {region_x, region_y, tile_w, tile_h}, 
                         static_cast<SDL_RendererFlip>(flip), 
                         theta
-                    );
+                    );*/
 
             }
         }
     }
-
+#endif
     copy_physics_to_transform();
 }
 

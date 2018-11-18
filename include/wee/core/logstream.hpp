@@ -28,7 +28,7 @@ namespace wee {
             //int status = 0;
             auto ti = typeid(val).name();
             //auto realname = abi::__cxa_demangle(ti, 0, 0, &status);
-            ss << " (" << WHITE << ti << RESET << ")";
+            ss << " (" << GREEN << ti << RESET << ")";
         }
         ss << "=[" << BLUE << val << RESET << "]";
         return ss.str();

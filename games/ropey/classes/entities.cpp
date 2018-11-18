@@ -6,7 +6,7 @@
 #include <gfx/SDL_ColorEXT.hpp>
 using namespace wee;
 
-entity_type create_player(b2World* world, const SDL_Point& at) {
+entity_type create_player(b2World* world, const vec2f& at) {
     entity_type self = kult::entity();
     b2Body* body = nullptr;
     {
@@ -98,7 +98,7 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
     return self;
 }
 
-entity_type tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src, const SDL_RendererFlip& flip, float radians) {
+entity_type create_tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src, const SDL_RendererFlip& flip, float radians) {
     entity_type self = kult::entity();
     kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, flip};
     kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, radians};

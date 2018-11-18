@@ -76,11 +76,11 @@ register_factories::register_factories() {
             return &self;
             });
 
-    object_factory::instance().register_class("spawn", [&] (b2World*, const tmx::Object&, entity_type& self) {
+    /*object_factory::instance().register_class("spawn", [&] (b2World*, const tmx::Object&, entity_type& self) {
         self = kult::entity();
-
+        kult::add<transform>(self);
         return &self;
-    });
+    });*/
 
     object_factory::instance().register_class("environment", [&] (b2World* world, const tmx::Object& obj, entity_type& self) -> entity_type* {
             const auto& pos  = obj.getPosition();

@@ -74,6 +74,7 @@ SDL_RWops* SDL_RWFromStream(std::istream& is) {
 
 namespace wee {
 
+
     std::string dirname(const std::string& in) {
         char* path = const_cast<char*>(in.c_str());
         constexpr static const char* dot = ".";

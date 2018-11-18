@@ -110,6 +110,8 @@ namespace wee {
         delegate<SDL_Texture*(SDL_Surface*)> after;
     };
 
+    std::string dirname(const std::string&);
+    std::string basename(const std::string&);
 
     std::ifstream open_ifstream(const std::string& pt, std::ios_base::openmode mode = std::ios_base::in); 
 

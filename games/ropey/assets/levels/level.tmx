@@ -1,122 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="32" height="12" tilewidth="64" tileheight="64" infinite="0" nextlayerid="20" nextobjectid="43">
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="32" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="22" nextobjectid="44">
+ <properties>
+  <property name="difficulty" value="1"/>
+ </properties>
  <tileset firstgid="1" name="spritesheet_tiles" tilewidth="64" tileheight="64" tilecount="264" columns="22">
   <image source="../img/tilesheet_complete.png" width="1408" height="768"/>
  </tileset>
- <tileset firstgid="265" name="spritesheet_enemies" tilewidth="64" tileheight="64" tilecount="16" columns="4">
-  <image source="../img/spritesheet_enemies.png" width="256" height="256"/>
- </tileset>
- <layer id="18" name="bg" width="32" height="12">
+ <layer id="20" name="bg" width="32" height="8">
   <data encoding="csv">
 0,0,3221225512,3221225559,3221225559,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,3221225537,3221225537,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,3221225512,3221225559,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,3221225559,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,3221225537,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,3221225559,0,0,0,0,0,0,0,0,0,240,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,3221225537,0,0,0,0,0,0,0,6,7,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,3221225512,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="21" name="fg" width="32" height="8">
+  <data encoding="csv">
+3221225475,3221225474,0,0,0,3221225476,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225474,3221225683,3221225683,3221225476,3221225475,3221225474,3221225683,3221225683,3221225683,3221225683,3221225476,3221225475,3221225475,3221225475,3221225475,3221225475,
+0,3221225710,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1610612947,194,2684354771,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233,233
 </data>
  </layer>
- <layer id="19" name="fg" width="32" height="12">
-  <data encoding="csv">
-3221225475,3221225474,0,0,0,3221225476,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225475,3221225474,3221225683,3221225683,3221225683,3221225683,3221225477,3221225683,3221225683,3221225683,3221225683,3221225476,3221225475,3221225475,3221225475,3221225475,3221225475,
-0,3221225710,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1610612948,194,2684354772,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1610612948,194,2684354772,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,240,0,0,0,0,0,1610612948,194,2684354772,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,6,7,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-</data>
- </layer>
  <objectgroup id="3" name="colliders">
-  <object id="4" x="720" y="335" width="32" height="32">
+  <object id="4" x="720" y="144" width="32" height="32">
    <properties>
     <property name="class" value="pickup"/>
     <property name="value" value="10"/>
    </properties>
    <ellipse/>
   </object>
-  <object id="7" x="784" y="336" width="32" height="32">
+  <object id="7" x="784" y="145" width="32" height="32">
    <properties>
     <property name="class" value="pickup"/>
     <property name="value" value="10"/>
    </properties>
    <ellipse/>
   </object>
-  <object id="8" x="848" y="336" width="32" height="32">
+  <object id="8" x="848" y="145" width="32" height="32">
    <properties>
     <property name="class" value="pickup"/>
     <property name="value" value="10"/>
    </properties>
    <ellipse/>
   </object>
-  <object id="9" x="976" y="336" width="32" height="32">
+  <object id="9" x="976" y="145" width="32" height="32">
    <properties>
     <property name="class" value="pickup"/>
     <property name="value" value="10"/>
    </properties>
    <ellipse/>
   </object>
-  <object id="10" x="912" y="335" width="32" height="32">
+  <object id="10" x="912" y="144" width="32" height="32">
    <properties>
     <property name="class" value="pickup"/>
     <property name="value" value="10"/>
    </properties>
    <ellipse/>
   </object>
-  <object id="11" x="784" y="656" width="32" height="32">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="value" value="10"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="12" x="848" y="656" width="32" height="32">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="value" value="10"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="13" x="912" y="656" width="32" height="32">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="value" value="10"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="14" x="1296" y="527" width="32" height="32">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="value" value="10"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="15" x="1360" y="527" width="32" height="32">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="value" value="10"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="16" x="1424" y="527" width="32" height="32">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="value" value="10"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="17" x="1360" y="207" width="32" height="32">
+  <object id="17" x="1360" y="336" width="32" height="32">
    <properties>
     <property name="class" value="pickup"/>
     <property name="value" value="100"/>
@@ -134,17 +84,12 @@
     <property name="type" value="first"/>
    </properties>
   </object>
-  <object id="22" x="768" y="448" width="192" height="32">
+  <object id="22" x="768" y="257" width="192" height="32">
    <properties>
     <property name="class" value="environment"/>
    </properties>
   </object>
-  <object id="23" x="1344" y="256" width="64" height="192">
-   <properties>
-    <property name="class" value="environment"/>
-   </properties>
-  </object>
-  <object id="24" x="1344" y="0" width="64" height="64">
+  <object id="23" x="1344" y="192" width="64" height="64">
    <properties>
     <property name="class" value="environment"/>
    </properties>
@@ -158,7 +103,7 @@
    <properties>
     <property name="class" value="norope"/>
    </properties>
-   <polyline points="0,0 240,0 256,0"/>
+   <polyline points="0,0 120,0 128,0"/>
   </object>
   <object id="27" x="1408" y="0">
    <properties>
@@ -166,23 +111,17 @@
    </properties>
    <polyline points="0,0 256,0"/>
   </object>
-  <object id="28" x="1328" y="256">
+  <object id="28" x="1328" y="192">
    <properties>
     <property name="class" value="norope"/>
    </properties>
-   <polyline points="0,0 0,192"/>
+   <polyline points="0,0 0,64"/>
   </object>
-  <object id="32" x="1584" y="256">
+  <object id="32" x="1584" y="192">
    <properties>
     <property name="class" value="norope"/>
    </properties>
-   <polyline points="-160,0 -160,192"/>
-  </object>
-  <object id="33" x="0" y="704">
-   <properties>
-    <property name="class" value="deadzone"/>
-   </properties>
-   <polyline points="0,32 2048,32"/>
+   <polyline points="-160,0 -160,64"/>
   </object>
   <object id="40" x="240" y="304" width="32" height="32">
    <properties>
@@ -204,6 +143,9 @@
     <property name="value" value="10"/>
    </properties>
    <ellipse/>
+  </object>
+  <object id="43" x="0" y="512">
+   <polyline points="0,0 2048,0"/>
   </object>
  </objectgroup>
  <objectgroup id="9" name="checkpoints">
