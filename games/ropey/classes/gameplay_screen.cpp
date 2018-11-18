@@ -56,29 +56,24 @@ void gameplay_screen::load_content() {
     }
     vec2f spawnPoint = kult::get<beat>(beats[0]).spawn;
     p  = create_player(_world, spawnPoint);
-
-    /**
-     * TODO: 
-     *   - level beats should be entities
-     *   - all entitites within a beat should have the nested component to indicate a parent
-     *   - a `getCurrentBeat` function should be written for the player
-     */
-
-#if 0
-    SDL_Point spawnPoint;
-    parse_tmx(_world, pt, &spawnPoint);
-
-    p  = create_player(_world, spawnPoint);
-    b1 = create_block(_world, { -16, -300, 32, 32 });
-
+    
     b2Vec2 pa = kult::get<physics>(p).body->GetPosition();
     b2Vec2 temp = { 0.0f, -1000.0f };
     b2Vec2 pb = pa + SCREEN_TO_WORLD(temp);
-
+    
     b2RayCastClosest rc;
     rc.RayCast(_world, pa, pb);
 
+    /**
+     * TODO: 
+     *   = [ ] camera clipping of camera
+     *   - [x]level beats should be entities 
+     *   - [x] all entitites within a beat should have the nested component to indicate a parent
+     *      so that a player may know in which beat he/she resides.
+     *   - [ ] a `getCurrentBeat` function should be written for the player
+     */
 
+#if 0
     tmx::Map tiled_map;
     tiled_map.load(pt);
     auto map_dimensions = tiled_map.getTileCount();
@@ -200,8 +195,10 @@ void gameplay_screen::update(int dt, bool a, bool b) {
         raycast_t& r = kult::get<raycast>(e);
         if(r.hit) {
             r.hit = false;
-            DEBUG_LOG("create new joint");
             _rope = create_rope(_world, p, e, b2Vec2{r.point.x, r.point.y});
+
+            _current_beat = kult::get<nested>(e).parent;
+            
             break;
         }
     }

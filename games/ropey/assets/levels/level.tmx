@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="32" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="22" nextobjectid="44">
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="32" height="8" tilewidth="64" tileheight="64" infinite="0" nextlayerid="22" nextobjectid="46">
  <properties>
   <property name="difficulty" value="1"/>
  </properties>
@@ -145,7 +145,15 @@
    <ellipse/>
   </object>
   <object id="43" x="0" y="512">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
    <polyline points="0,0 2048,0"/>
+  </object>
+  <object id="44" x="1216" y="0" width="192" height="64">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
   </object>
  </objectgroup>
  <objectgroup id="9" name="checkpoints">
