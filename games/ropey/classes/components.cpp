@@ -17,3 +17,6 @@ std::ostream& operator << (std::ostream& os, const pickup_t& p) {
 std::ostream& operator << (std::ostream& os, const beat_t&) {
     return os;
 }
+std::ostream& operator << (std::ostream& os, const synch_t&) {
+    return os;
+}

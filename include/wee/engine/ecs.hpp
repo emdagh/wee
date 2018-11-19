@@ -30,7 +30,6 @@ namespace wee {
 
     typedef struct {
         b2Body* body    = nullptr;
-        bool do_cleanup = false;
 
         collision_callback on_collision_enter = DEFAULT_COLLISION_CALLBACK;
         collision_callback on_collision_leave = DEFAULT_COLLISION_CALLBACK;
@@ -48,6 +47,7 @@ namespace wee {
         SDL_Rect            src;
         SDL_Color           color;
         SDL_RendererFlip    flip = SDL_FLIP_NONE;
+        bool visible = true;
     } visual_t;
 
     typedef struct {

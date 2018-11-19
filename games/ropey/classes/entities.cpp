@@ -6,7 +6,35 @@
 #include <gfx/SDL_ColorEXT.hpp>
 using namespace wee;
 
+void destroy_entity(const entity_type& self) {
+    /**
+     * check if any nested entities are present,
+     * if so: they should also be destroyed.
+     */
+    for(const auto& i : kult::join<nested>() ) {
+        if(kult::get<nested>(i).parent == self) {
+            destroy_entity(i);
+        }
+    }
+    /**
+     * physics need to be cleaned properly
+     */
+    if(kult::has<physics>(self)) {
+        b2Body* rb = kult::get<physics>(self).body;
+
+        for(auto* ptr = rb->GetFixtureList(); ptr; ptr = ptr->GetNext()) {
+            rb->DestroyFixture(ptr);
+        }
+        b2World* world = rb->GetWorld();
+        world->DestroyBody(rb);
+    }
+    /**
+     * and finally, purge the entity.
+     */
+    kult::purge(self);
+}
 entity_type create_player(b2World* world, const vec2f& at) {
+    DEBUG_METHOD();
     entity_type self = kult::entity();
     b2Body* body = nullptr;
     {
@@ -43,14 +71,15 @@ entity_type create_player(b2World* world, const vec2f& at) {
         v.texture = texture;
         SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
         v.src.x = v.src.y = 0;
-        auto& n = kult::add<nested>(self);
-        n.offset.x = -v.src.w / 2;
-        n.offset.y = -v.src.h / 2;
+        v.visible = true;
+        
+        /*n.offset.x = -v.src.w / 2;
+        n.offset.y = -v.src.h / 2;*/
 
     }
     kult::add<transform>(self);
     kult::add<physics>(self).body = body;
-    kult::add<player>(self);
+    kult::add<player>(self).score = 0;
 
     kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
         DEBUG_METHOD();
@@ -60,6 +89,7 @@ entity_type create_player(b2World* world, const vec2f& at) {
 }
 
 entity_type create_block(b2World* world, const SDL_Rect& r) {
+    DEBUG_METHOD();
     entity_type self = kult::entity();
     b2Body* body = nullptr;
 
@@ -99,15 +129,20 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
 }
 
 entity_type create_tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src, const SDL_RendererFlip& flip, float radians) {
+    DEBUG_METHOD();
     entity_type self = kult::entity();
-    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, flip};
-    kult::add<transform>(self) = { {(float)dst.x, (float)dst.y}, radians};
-    kult::add<nested>(self) = { { 0.f, 0.f }, 0.f, self };
-
+    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, flip, true};
+    kult::add<transform>(self) = { vec2f{0.f, 0.f}, 0.f };//{ {(float)dst.x, (float)dst.y}, radians};
+    kult::add<nested>(self).offset = {
+        (float)(dst.x + (src.w >> 1)), 
+        (float)(dst.y + (src.h >> 1))
+    };
+    kult::get<nested>(self).rotation = radians;
     return self;
 }
 
 entity_type create_rope(b2World* world, entity_type a, entity_type b, const b2Vec2& bPosWS) {
+    DEBUG_METHOD();
 
 
     b2Body* body = kult::get<physics>(b).body;
@@ -131,6 +166,7 @@ entity_type create_rope(b2World* world, entity_type a, entity_type b, const b2Ve
     return e;
 }
 entity_type create_sensor(b2World* world, entity_type parent, const vec2f& offset, float radius, const collision_callback&) {
+    DEBUG_METHOD();
     entity_type self = kult::entity();
     b2Body* body = nullptr;
     {

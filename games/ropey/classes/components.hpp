@@ -18,11 +18,20 @@ using pickup = kult::component<1 << 10, pickup_t>;
  */
 struct beat_t {
     wee::vec2f spawn; 
+    wee::vec2f offset;
     int difficulty;
-    int respawn;
+    int respawn = 0;
+    float width;
 };
 using beat = kult::component<1 << 12, beat_t>;
+
+struct synch_t {
+    bool cleanup = false;
+};
+using synch = kult::component<1 << 13, synch_t>;
+
 
 std::ostream& operator << (std::ostream& os, const player_t& p) ;
 std::ostream& operator << (std::ostream& os, const pickup_t& p) ;
 std::ostream& operator << (std::ostream& os, const beat_t& p) ;
+std::ostream& operator << (std::ostream& os, const synch_t& p) ;

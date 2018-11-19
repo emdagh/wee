@@ -1,6 +1,10 @@
 #pragma once
 
 #include <engine/ecs.hpp>
+#include <classes/components.hpp>
+
+void destroy_entity(const entity_type&);
+void hide_entity(const entity_type&);
 
 namespace wee {
 
@@ -27,17 +31,20 @@ auto copy_physics_to_transform = [] () {
     }
 };
 
-auto clean_physics = [] (b2World* world) {
-    for(auto& self : kult::join<physics>()) {
-        if(!kult::get<physics>(self).do_cleanup) 
+auto synchronize_entities = [] (void) {
+    for(auto& self : kult::join<synch>()) {
+        if(kult::get<synch>(self).cleanup) {
+            destroy_entity(self);
+        }
+
+        /*if(!kult::get<physics>(self).do_cleanup) 
             continue;
         b2Body* rb = kult::get<physics>(self).body;
 
         for(auto* ptr = rb->GetFixtureList(); ptr; ptr = ptr->GetNext()) {
             rb->DestroyFixture(ptr);
         }
-        world->DestroyBody(rb);
-        kult::purge(self);
+        world->DestroyBody(rb);*/
     }
 };
 }

@@ -14,6 +14,8 @@
 #include <classes/components.hpp>
 #include <classes/factories.hpp>
 #include <classes/common.hpp>
+#include <classes/entities.hpp>
+#include <classes/systems.hpp>
 
 
 using nlohmann::json;
@@ -60,10 +62,7 @@ register_factories::register_factories() {
     b2ShapeFactory::instance().register_class(tmx::Object::Shape::Ellipse, [] (const tmx::Object& obj) {
             const auto& aabb = obj.getAABB();
             assert(aabb.width == aabb.height);
-            DEBUG_VALUE_OF(aabb.width);
-            DEBUG_VALUE_OF(aabb.height);
             float radius = aabb.width / 2.0f;
-            DEBUG_VALUE_OF(radius);
             b2Shape* shape = new b2CircleShape;
             ((b2CircleShape*)shape)->m_radius = SCREEN_TO_WORLD(radius);//obj.m_width / 2);
             return shape;
@@ -125,15 +124,8 @@ register_factories::register_factories() {
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
 
-            /**
-             * TODO: based on the pickup value, this entity will have 
-             * a visual.
-             *
-             * TODO: remove visual representation from the tile map
-             */
-
-
             self = kult::entity();
+            DEBUG_VALUE_OF(self);
             {
             kult::add<physics>(self);
             kult::add<pickup>(self);
@@ -159,6 +151,7 @@ register_factories::register_factories() {
 
             visual_t& v = kult::get<visual>(self);
             v.texture = s->_texture;
+            v.visible = true;
 
 
             std::map<std::string, std::string> props;
@@ -175,9 +168,15 @@ register_factories::register_factories() {
                     v.src = s->get("redGem.png");
                 }
 
-                auto& n = kult::get<nested>(self);
+                /*auto& n = kult::get<nested>(self);
                 n.offset.x = -.5f * v.src.w;
-                n.offset.y = -.5f * v.src.h;
+                n.offset.y = -.5f * v.src.h;*/
+            }
+            float px = pos.x + halfWS.x;
+            float py = pos.y + halfWS.y;
+
+            {
+                kult::get<nested>(self).offset= vec2f{px, py};
             }
             /**
              * physics stuff
@@ -186,7 +185,7 @@ register_factories::register_factories() {
             {
                 b2BodyDef bd;
                 bd.type = b2_staticBody;
-                bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+                bd.position.Set(SCREEN_TO_WORLD(px), SCREEN_TO_WORLD(py));
                 body = world->CreateBody(&bd);
             }
             kult::get<physics>(self).body = body;
@@ -202,9 +201,13 @@ register_factories::register_factories() {
                 body->CreateFixture(&fd);
             }
 
+            kult::add<synch>(self).cleanup = false;
+
             kult::get<physics>(self).on_trigger_enter = [&] (const collision& col) {
                 DEBUG_METHOD();
-                kult::get<physics>(col.self).do_cleanup = true;
+
+                kult::get<synch>(col.self).cleanup = true;
+                
                 if(kult::has<player>(col.other)) {
                     kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
                     DEBUG_VALUE_OF(kult::get<player>(col.other).score);

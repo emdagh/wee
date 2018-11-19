@@ -20,10 +20,14 @@ class gameplay_screen : public wee::gamescreen {
     int _time_down = 0;
     SDL_Rect _camera;
     entity_type b0, p, b1;
+    entity_type _current_beat;
     kult::type _rope;
     wee::b2DebugDrawImpl _debugdraw;
     wee::camera _cam;
     wee::b2ContactListenerImpl _contacts;
+protected:
+    void _restart();
+
 public:
     gameplay_screen();
     virtual ~gameplay_screen();
