@@ -38,12 +38,24 @@ gameplay_screen::gameplay_screen() {
 gameplay_screen::~gameplay_screen() {
 }
 
+void rotate(const vec2f& in, const vec2f& at, float t, vec2f* out) {
+    float c = std::cos(t);
+    float s = std::sin(t);
+
+    out->x = at.x + (in.x * c - in.x * s);
+    out->y = at.y + (in.y * s + in.y * c);
+}
+
 void nested_to_transform() {
     for(auto& self : kult::join<nested, transform>()) {
-
         const auto& n = kult::get<nested>(self);
         if(kult::has<transform>(n.parent)) {
-            kult::get<transform>(self).position = kult::get<transform>(n.parent).position + n.offset;
+            const auto& pt = kult::get<transform>(n.parent);
+
+            vec2f pos;
+            rotate(n.offset, pt.position, pt.rotation, &pos);
+
+            kult::get<transform>(self).position = pos;//kult::get<transform>(n.parent).position + n.offset;
             kult::get<transform>(self).rotation = kult::get<transform>(n.parent).rotation + n.rotation;
         } else {
             kult::get<transform>(self).position = n.offset;
