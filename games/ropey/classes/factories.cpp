@@ -82,24 +82,34 @@ register_factories::register_factories() {
     });*/
 
     object_factory::instance().register_class("environment", [&] (b2World* world, const tmx::Object& obj, entity_type& self) -> entity_type* {
+            DEBUG_LOG("factory::environment");
             const auto& pos  = obj.getPosition();
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
+            
+            float px = pos.x + halfWS.x;
+            float py = pos.y + halfWS.y;
 
             self = kult::entity();
             {
-            kult::add<physics>(self);
-            kult::add<raycast>(self);
+                kult::add<transform>(self);
+                kult::add<nested>(self);
+                kult::add<physics>(self);
+                kult::add<raycast>(self);
             }
             {
-            kult::get<raycast>(self).hit = false;
+                kult::get<raycast>(self).hit = false;
             }
+            {
+                kult::get<nested>(self).offset= vec2f{px, py};
+            }
+
 
             b2Body* body = nullptr;
             {
             b2BodyDef bd;
             bd.type = b2_staticBody;
-            bd.position.Set(SCREEN_TO_WORLD(pos.x + halfWS.x), SCREEN_TO_WORLD(pos.y + halfWS.y));
+            bd.position.Set(SCREEN_TO_WORLD(px), SCREEN_TO_WORLD(py));
             body = world->CreateBody(&bd);
             }
             kult::get<physics>(self).body = body;
@@ -120,6 +130,7 @@ register_factories::register_factories() {
     });
 
     object_factory::instance().register_class("pickup", [&] (b2World* world, const tmx::Object& obj, entity_type& self) {
+            DEBUG_LOG("factory::pickup");
             const auto& pos  = obj.getPosition();
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };

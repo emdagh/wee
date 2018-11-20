@@ -173,9 +173,10 @@ void gameplay_screen::handle_input() {
 }
 
 void gameplay_screen::_restart() {
+    const auto& beatTransform = kult::get<transform>(_current_beat);
     beat_t& b = kult::get<beat>(_current_beat);
     b.respawn++;
-    kult::get<transform>(p).position = b.spawn;
+    kult::get<transform>(p).position = b.spawn + beatTransform.position;
     kult::get<physics>(p).body->SetLinearVelocity(b2Vec2(0, 0));
     kult::get<physics>(p).body->SetAngularVelocity(0);
     
