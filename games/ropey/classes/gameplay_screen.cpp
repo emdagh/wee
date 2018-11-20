@@ -52,10 +52,9 @@ void nested_to_transform() {
         if(kult::has<transform>(n.parent)) {
             const auto& pt = kult::get<transform>(n.parent);
 
-            vec2f pos;
-            rotate(n.offset, pt.position, pt.rotation, &pos);
+            vec2f pos = vec2f::rotate_at(n.offset, pt.position, pt.rotation);
 
-            kult::get<transform>(self).position = pos;//kult::get<transform>(n.parent).position + n.offset;
+            kult::get<transform>(self).position = pos;
             kult::get<transform>(self).rotation = kult::get<transform>(n.parent).rotation + n.rotation;
         } else {
             kult::get<transform>(self).position = n.offset;
@@ -123,10 +122,10 @@ void gameplay_screen::load_content() {
 
         DEBUG_LOG("beat",id,"was created");
 
-        //disable_and_hide(id);
+        disable_and_hide(id);
     }
     _current_beat = beats[0];
-    //enable_and_show(_current_beat);
+    enable_and_show(_current_beat);
 
     vec2f spawnPoint = kult::get<beat>(_current_beat).spawn;
     p  = create_player(_world, spawnPoint);
@@ -190,6 +189,7 @@ void gameplay_screen::_restart() {
     rc.RayCast(_world, pa, pb);
 }
 
+
 void gameplay_screen::update(int dt, bool a, bool b) {
     nested_to_transform();
     copy_transform_to_physics();
@@ -207,23 +207,28 @@ void gameplay_screen::update(int dt, bool a, bool b) {
             break;
         }
     }
-
     b2Vec2 pos = WORLD_TO_SCREEN(kult::get<physics>(p).body->GetPosition());
-
     /**
      * rules for spawning a new beat:
      *  + player should be across half of the current beat. (px >= beat.width / 2)
      *  + there isn't already a beat spawned after the current beat.
      */
-    static bool spawnedNextBeat = false;
-    if(pos.x > kult::get<beat>(_current_beat).width * 0.5f) {
-        if(!spawnedNextBeat) {
+    auto& tx = kult::get<transform>(_current_beat);
+    const auto& bt = kult::get<beat>(_current_beat);
 
-            spawnedNextBeat = true;
+    if(pos.x > (tx.position.x + bt.width * 0.5f)) {
+        if(!_spawnedNextBeat) {
+            DEBUG_VALUE_OF(pos.x);
+            DEBUG_VALUE_OF(tx.position.x + bt.width * 0.5f);
+            _spawnedNextBeat = true;
+            /**
+             * TODO: set spawnedNextBeat to false when a new beat is entered (due to the player touching it).
+             */
+            //get_next_beat();
+            tx.position.x += bt.width;
+            copy_transform_to_physics();
         }
     }
-
-
     _cam.set_position(pos.x, pos.y);
     _cam.update(dt);
     _debugdraw.SetCameraTransform(_cam.get_transform());

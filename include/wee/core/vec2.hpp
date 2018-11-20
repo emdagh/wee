@@ -98,6 +98,18 @@ namespace wee {
             basic_vec2 n = normalize(a);
             return { -n.y, n.x };
         }
+
+        static basic_vec2 rotate_at(const basic_vec2& in, const basic_vec2& at, const T& t) {
+            float c = std::cos(t);
+            float s = std::sin(t);
+
+            basic_vec2 out;
+
+            out.x = at.x + (in.x * c - in.x * s);
+            out.y = at.y + (in.y * s + in.y * c);
+
+            return out;
+        }
     };
 
     typedef basic_vec2<float> vec2f;

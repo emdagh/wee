@@ -25,6 +25,7 @@ class gameplay_screen : public wee::gamescreen {
     wee::b2DebugDrawImpl _debugdraw;
     wee::camera _cam;
     wee::b2ContactListenerImpl _contacts;
+    bool _spawnedNextBeat = false;
 protected:
     void _restart();
 
