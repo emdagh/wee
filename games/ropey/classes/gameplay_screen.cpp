@@ -226,7 +226,9 @@ void gameplay_screen::update(int dt, bool a, bool b) {
              */
             //get_next_beat();
             tx.position.x += bt.width;
+            nested_to_transform();
             copy_transform_to_physics();
+            
         }
     }
     _cam.set_position(pos.x, pos.y);
