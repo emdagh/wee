@@ -38,22 +38,22 @@ namespace wee {
     } physics_t;
 
     typedef  struct {
-        vec2f position;
-        float rotation;
+        vec2f position = { 0.f, 0.f };
+        float rotation = 0.f;
     } transform_t;
 
     typedef struct {
-        SDL_Texture*        texture;
+        SDL_Texture*        texture     = nullptr;
         SDL_Rect            src;
         SDL_Color           color;
-        SDL_RendererFlip    flip = SDL_FLIP_NONE;
-        bool visible = true;
+        SDL_RendererFlip    flip        = SDL_FLIP_NONE;
+        bool                visible     = true;
     } visual_t;
 
     typedef struct {
-        vec2f    offset;
-        float    rotation;
-        entity_t parent;
+        vec2f    offset = { 0.f, 0.f};
+        float    rotation = 0.0f;
+        entity_t parent = kult::none();
     } nested_t;
 
     
@@ -69,10 +69,10 @@ namespace wee {
     } timeout_t;
 
     typedef struct {
-        bool  hit;
-        vec2f point;
-        vec2f n; // normal
-        float d; // length of fraction
+        bool  hit       = false;
+        vec2f point     = { 0.f, 0.f };
+        vec2f n         = { 0.f, 0.f };// normal
+        float d         = -1.0f; // length of fraction
     } raycast_t;
 
 
