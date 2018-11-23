@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="16" height="8" tilewidth="21" tileheight="21" infinite="0" nextlayerid="3" nextobjectid="13">
+ <properties>
+  <property name="difficulty" value="3"/>
+ </properties>
+ <tileset firstgid="1" source="ts.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="16" height="8">
+  <data encoding="csv">
+0,0,0,0,0,3221225506,3221225477,3221225476,3221225476,3221225504,3221225503,0,0,0,0,0,
+0,0,0,0,0,0,3221225543,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,71,284,71,0,0,0,0,0,0,71,284,71,0,0,
+548,549,3,4,5,549,550,551,548,549,550,3,4,5,550,551
+</data>
+ </layer>
+ <objectgroup id="2" name="Object Layer 1">
+  <object id="1" x="105" y="0" width="105" height="21">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
+  </object>
+  <object id="2" x="0" y="157.5" width="336" height="10.5">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
+  </object>
+  <object id="4" x="126" y="26.25">
+   <properties>
+    <property name="class" value="norope"/>
+   </properties>
+   <polyline points="0,0 21,0"/>
+  </object>
+  <object id="5" x="63" y="136.5" width="21" height="10.5">
+   <properties>
+    <property name="class" value="bounce"/>
+   </properties>
+  </object>
+  <object id="6" x="252" y="136.5" width="21" height="10.5">
+   <properties>
+    <property name="class" value="bounce"/>
+   </properties>
+  </object>
+  <object id="7" x="73.5" y="31.5">
+   <properties>
+    <property name="class" value="spawn"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="8" x="194.25" y="89.25" width="10" height="10">
+   <properties>
+    <property name="class" value="pickup"/>
+    <property name="uri" value="@pickup10"/>
+    <property name="value" value="10"/>
+   </properties>
+   <ellipse/>
+  </object>
+  <object id="9" x="173.25" y="89.25" width="10" height="10">
+   <properties>
+    <property name="class" value="pickup"/>
+    <property name="uri" value="@pickup10"/>
+    <property name="value" value="10"/>
+   </properties>
+   <ellipse/>
+  </object>
+  <object id="10" x="152.25" y="89.25" width="10" height="10">
+   <properties>
+    <property name="class" value="pickup"/>
+    <property name="uri" value="@pickup10"/>
+    <property name="value" value="10"/>
+   </properties>
+   <ellipse/>
+  </object>
+  <object id="11" x="42" y="147" width="63" height="21">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
+  </object>
+  <object id="12" x="231" y="147" width="63" height="21">
+   <properties>
+    <property name="class" value="environment"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>
