@@ -146,6 +146,7 @@ void gameplay_screen::load_content() {
      *   - [ ] a `getCurrentBeat` function should be written for the player
      */
 
+    _cam.set_zoom(2.0f);
 }
 
 void gameplay_screen::handle_input() {

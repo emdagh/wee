@@ -31,6 +31,9 @@ namespace wee {
         void update(int dt);
         const mat4& get_transform();
         void screen_to_world(const vec3& src, vec3* dst);
+        void set_zoom(float a) { 
+            _zoom = a; 
+        }
     };
 }
 
