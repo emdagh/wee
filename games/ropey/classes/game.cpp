@@ -18,14 +18,25 @@ game::~game() {
 
 int game::load_content() {
     try {
-        std::ifstream is = wee::open_ifstream("assets/screens.json");
-        json j = json::parse(is);
-        for(const auto& it : j) {
-            gamescreen* s = gamescreen_factory::instance().create(it["class"]);
-            if(s != NULL) {
-                s->from_json(it);
-                _screens.push_back(s);
-                _screen_index[it["name"]] = _screens.size() - 1;
+        {
+            std::ifstream is = wee::open_ifstream("assets/textures.json");
+            json j = json::parse(is);
+            for(const auto& it : j) {
+                std::ifstream ims = wee::open_ifstream(it["path"]);
+                assets<SDL_Texture>::instance().load(it["name"], ims);
+                ims.close();
+            }
+        }
+        {
+            std::ifstream is = wee::open_ifstream("assets/screens.json");
+            json j = json::parse(is);
+            for(const auto& it : j) {
+                gamescreen* s = gamescreen_factory::instance().create(it["class"]);
+                if(s != NULL) {
+                    s->from_json(it);
+                    _screens.push_back(s);
+                    _screen_index[it["name"]] = _screens.size() - 1;
+                }
             }
         }
     } catch(...) {

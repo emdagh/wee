@@ -6,8 +6,8 @@
         "transition_on" : 500,
         "transition_off" : 500,
         "screens" : [
-            { "name" : "@splash_0", "uri" : "assets/img/fa-image.png" },
-            { "name" : "@splash_1", "uri" : "assets/img/fa-image.png" }
+            { "uri" : "@splash_0" },
+            { "uri" : "@splash_1" }
         ]
     },
     {

@@ -6,6 +6,9 @@
  <tileset firstgid="1" name="spritesheet_tiles" tilewidth="64" tileheight="64" tilecount="264" columns="22">
   <image source="../img/tilesheet_complete.png" width="1408" height="768"/>
  </tileset>
+ <tileset firstgid="265" name="pixel_redux" tilewidth="21" tileheight="21" spacing="2" margin="2" tilecount="1849" columns="30">
+  <image source="../img/spritesheet.png" width="692" height="692"/>
+ </tileset>
  <layer id="20" name="bg" width="32" height="8">
   <data encoding="csv">
 0,0,3221225512,3221225559,3221225559,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

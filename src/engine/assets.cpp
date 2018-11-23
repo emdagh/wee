@@ -102,7 +102,6 @@ namespace wee {
     std::ifstream open_ifstream(const std::string& pt, std::ios_base::openmode mode) {
         std::string base_name = wee::basename(pt);
         std::string abs_path = get_resource_path(dirname(pt)) + basename(pt);
-        DEBUG_LOG("loading: " + abs_path);
         std::ifstream res(abs_path, mode);
         if(!res.is_open()) {
             throw file_not_found(abs_path);

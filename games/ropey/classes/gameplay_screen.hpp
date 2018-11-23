@@ -20,12 +20,13 @@ class gameplay_screen : public wee::gamescreen {
     int _time_down = 0;
     SDL_Rect _camera;
     entity_type b0, p, b1;
-    entity_type _current_beat;
+    size_t _current_beat_idx;
     kult::type _rope;
     wee::b2DebugDrawImpl _debugdraw;
     wee::camera _cam;
     wee::b2ContactListenerImpl _contacts;
     bool _spawnedNextBeat = false;
+    std::vector<entity_type> _beats;
 protected:
     void _restart();
 

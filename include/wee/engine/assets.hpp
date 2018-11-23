@@ -73,7 +73,6 @@ namespace wee {
         }
 
         SDL_Texture* load(const std::string& name, std::istream& is) {
-            DEBUG_METHOD();
             DEBUG_VALUE_AND_TYPE_OF(name);
             if(resources.count(name) == 0) {
                 SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
@@ -86,18 +85,12 @@ namespace wee {
         }
         
         SDL_Texture* from_surface(const std::string& name, SDL_Surface* surface) {
-            DEBUG_METHOD();
-            DEBUG_VALUE_AND_TYPE_OF(name);
-            DEBUG_VALUE_AND_TYPE_OF(surface);
-
-
             if(!after) {
                 throw std::logic_error("no surface -> texture callback defined for asset manager, did you forget to create an application instance?");
             }
             resources[name] = after(surface);
             int w, h;
             SDL_QueryTexture(resources[name], NULL, NULL, &w, &h);
-            DEBUG_LOG("{}x{}", w, h);
             return resources[name];
         }
 

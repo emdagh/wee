@@ -34,7 +34,6 @@ void destroy_entity(const entity_type& self) {
     kult::purge(self);
 }
 entity_type create_player(b2World* world, const vec2f& at) {
-    DEBUG_METHOD();
     entity_type self = kult::entity();
     b2Body* body = nullptr;
     {
@@ -62,7 +61,7 @@ entity_type create_player(b2World* world, const vec2f& at) {
 
     SDL_Texture* texture = nullptr;
     {
-        auto is = open_ifstream("assets/img/playerRed_roll.png", std::ios::binary);
+        auto is = open_ifstream("assets/img/player.png", std::ios::binary);
         assert(is.is_open());
         texture = assets<SDL_Texture>::instance().load("@player",is);
 
@@ -89,7 +88,6 @@ entity_type create_player(b2World* world, const vec2f& at) {
 }
 
 entity_type create_block(b2World* world, const SDL_Rect& r) {
-    DEBUG_METHOD();
     entity_type self = kult::entity();
     b2Body* body = nullptr;
 
@@ -129,9 +127,10 @@ entity_type create_block(b2World* world, const SDL_Rect& r) {
 }
 
 entity_type create_tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Rect& src, const SDL_RendererFlip& flip, float radians) {
-    DEBUG_METHOD();
     entity_type self = kult::entity();
-    kult::add<visual>(self) = { texture, src, SDL_ColorPresetEXT::White, flip, true};
+    kult::add<visual>(self) = { 
+        texture, src, SDL_ColorPresetEXT::White, flip, true
+    };
     kult::add<transform>(self) = { vec2f{0.f, 0.f}, 0.f };//{ {(float)dst.x, (float)dst.y}, radians};
     kult::add<nested>(self).offset = {
         (float)(dst.x + (src.w >> 1)), 
@@ -142,7 +141,6 @@ entity_type create_tile(SDL_Texture* texture, const SDL_Point& dst, const SDL_Re
 }
 
 entity_type create_rope(b2World* world, entity_type a, entity_type b, const b2Vec2& bPosWS) {
-    DEBUG_METHOD();
 
 
     b2Body* body = kult::get<physics>(b).body;
@@ -166,7 +164,6 @@ entity_type create_rope(b2World* world, entity_type a, entity_type b, const b2Ve
     return e;
 }
 entity_type create_sensor(b2World* world, entity_type parent, const vec2f& offset, float radius, const collision_callback&) {
-    DEBUG_METHOD();
     entity_type self = kult::entity();
     b2Body* body = nullptr;
     {

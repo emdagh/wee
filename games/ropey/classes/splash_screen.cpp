@@ -64,11 +64,9 @@ void splash_screen::draw(SDL_Renderer* renderer) {
 }
 
 void splash_screen::from_json(const json& j) {
-    DEBUG_METHOD();
     for(const auto& kv : j["screens"]) {
-        DEBUG_VALUE_OF(kv);
         _screens.push_back(
-            assets<SDL_Texture>::instance().load(kv["name"], as_lvalue(wee::open_ifstream(kv["uri"])))
+            assets<SDL_Texture>::instance().get(kv["uri"])
         );
     }
     gamescreen::from_json(j);

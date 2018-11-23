@@ -64,7 +64,6 @@ void nested_to_transform() {
 }
 
 void disable_and_hide(const entity_type& self) {
-    DEBUG_VALUE_OF(self);
     for(const auto& child : kult::join<nested>()) {
         if(self == kult::get<nested>(child).parent) {
             disable_and_hide(child);
@@ -106,7 +105,6 @@ void enable_and_show(const entity_type& self) {
 void gameplay_screen::load_content() {
     //std::string pt = wee::get_resource_path("assets/levels") + "level.tmx";
     //
-    std::vector<entity_type> beats;
     std::ifstream ifs = wee::open_ifstream("assets/levels.json");
     json j = json::parse(ifs);
     for(const auto& i : j) {
@@ -118,16 +116,15 @@ void gameplay_screen::load_content() {
         auto id = builder.source(&tiled_map)
             .world(_world)
             .build();
-        beats.push_back(id);
+        _beats.push_back(id);
 
-        DEBUG_LOG("beat",id,"was created");
 
         disable_and_hide(id);
     }
-    _current_beat = beats[0];
-    enable_and_show(_current_beat);
+    _current_beat_idx = 0;
+    enable_and_show(_beats[_current_beat_idx]);
 
-    vec2f spawnPoint = kult::get<beat>(_current_beat).spawn;
+    vec2f spawnPoint = kult::get<beat>(_beats[_current_beat_idx]).spawn;
     p  = create_player(_world, spawnPoint);
 
     _restart();
@@ -164,7 +161,6 @@ void gameplay_screen::handle_input() {
         if(mouseWasDown) {
             mouseWasDown = 0;
             auto delta = SDL_GetTicks() - mouseDownTime;
-            DEBUG_VALUE_OF(delta);
             if((delta) < clickTimeout) {
                 on_click();
             }
@@ -173,6 +169,7 @@ void gameplay_screen::handle_input() {
 }
 
 void gameplay_screen::_restart() {
+    auto _current_beat = _beats[_current_beat_idx];
     const auto& beatTransform = kult::get<transform>(_current_beat);
     beat_t& b = kult::get<beat>(_current_beat);
     b.respawn++;
@@ -196,46 +193,58 @@ void gameplay_screen::update(int dt, bool a, bool b) {
     copy_transform_to_physics();
     _world->Step(1.0f / (float)60, 4, 3);
     copy_physics_to_transform();
+    
+    auto _current_beat = _beats[_current_beat_idx];
+     
+    b2Vec2 playerPos = WORLD_TO_SCREEN(kult::get<physics>(p).body->GetPosition());
 
-    for(auto& e : kult::join<raycast>()) {
-        raycast_t& r = kult::get<raycast>(e);
+    for(auto& e : kult::join<raycast, nested>()) {
+        auto& r = kult::get<raycast>(e);
+        auto& n = kult::get<nested>(e);
+
         if(r.hit) {
             r.hit = false;
             _rope = create_rope(_world, p, e, b2Vec2{r.point.x, r.point.y});
-            /**
-             * here, a check should be done if parent != _current_beat
-             */
+           
+            if(_current_beat != n.parent) {
+                _spawnedNextBeat = false;
+                DEBUG_LOG("new beat entered");
+            }
+
             break;
         }
     }
-    b2Vec2 pos = WORLD_TO_SCREEN(kult::get<physics>(p).body->GetPosition());
     /**
      * rules for spawning a new beat:
      *  + player should be across half of the current beat. (px >= beat.width / 2)
      *  + there isn't already a beat spawned after the current beat.
      */
-    auto& tx = kult::get<transform>(_current_beat);
-    const auto& bt = kult::get<beat>(_current_beat);
 
-    if(pos.x > (tx.position.x + bt.width * 0.5f)) {
+
+        
+    auto& current_tx = kult::get<transform>(_current_beat);
+    auto& current_bt = kult::get<beat>(_current_beat);
+
+    if(playerPos.x > (current_tx.position.x + current_bt.width * 0.5f)) {
         if(!_spawnedNextBeat) {
-            DEBUG_VALUE_OF(pos.x);
-            DEBUG_VALUE_OF(tx.position.x + bt.width * 0.5f);
             _spawnedNextBeat = true;
-            /**
-             * TODO: set spawnedNextBeat to false when a new beat is entered (due to the player touching it).
-             */
-            //get_next_beat();
-            tx.position.x += bt.width;
-            nested_to_transform();
-            copy_transform_to_physics();
+            auto next_beat_idx = (_current_beat_idx + 1) % _beats.size();//_get_next_beat(_current_beat);
+            enable_and_show(_beats[next_beat_idx]);
+            auto& next_tx = kult::get<transform>(_beats[next_beat_idx]);
+            next_tx.position.x = current_tx.position.x + current_bt.width;
+            _current_beat_idx = next_beat_idx;
+            //
+            // prevent flashing
+            //
+            //nested_to_transform();
+            //copy_transform_to_physics();
+            
             
         }
     }
-    _cam.set_position(pos.x, pos.y);
+    _cam.set_position(playerPos.x, playerPos.y);
     _cam.update(dt);
     _debugdraw.SetCameraTransform(_cam.get_transform());
-    //clean_physics(_world);
     synchronize_entities();
 
     gamescreen::update(dt, a, b);

@@ -18,7 +18,7 @@ using pickup = kult::component<1 << 10, pickup_t>;
  */
 struct beat_t {
     wee::vec2f spawn; 
-    wee::vec2f offset;
+    //wee::vec2f offset;
     int difficulty;
     int respawn = 0;
     float width;

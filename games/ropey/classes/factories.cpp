@@ -82,7 +82,6 @@ register_factories::register_factories() {
     });*/
 
     object_factory::instance().register_class("environment", [&] (b2World* world, const tmx::Object& obj, entity_type& self) -> entity_type* {
-            DEBUG_LOG("factory::environment");
             const auto& pos  = obj.getPosition();
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
@@ -129,63 +128,85 @@ register_factories::register_factories() {
             return &self;
     });
 
+    object_factory::instance().register_class("bounce", [] (b2World* world, const tmx::Object& obj, entity_type& self) {
+        const auto& pos = obj.getPosition();
+        const auto& aabb = obj.getAABB();
+        b2Vec2 halfWS = { 
+            aabb.width / 2,
+            aabb.height / 2
+        };
+        self = kult::entity();
+        {
+            kult::add<physics>(self);
+            kult::add<nested>(self);
+            kult::add<transform>(self);
+        }
+        float px = pos.x + halfWS.x;
+        float py = pos.y + halfWS.y;
+        {
+            kult::get<nested>(self).offset= vec2f{px, py};
+        }
+        b2Body* body = nullptr;
+        {
+            b2BodyDef bd;
+            bd.type = b2_staticBody;
+            bd.position.Set(SCREEN_TO_WORLD(px), SCREEN_TO_WORLD(py));
+            body = world->CreateBody(&bd);
+            kult::get<physics>(self).body = body;
+        }
+        {
+            b2FixtureDef fd;
+            auto shape = std::unique_ptr<b2Shape>(b2ShapeFactory::instance().create(obj.getShape(), obj));
+            fd.shape = shape.get();
+            //fd.isSensor            = true;
+            //fd.restitution         = 1.2f;
+            fd.filter.categoryBits = E_CATEGORY_ENVIRONMENT;
+            fd.filter.maskBits     = E_CATEGORY_PLAYER;
+            fd.userData            = reinterpret_cast<void*>(self);
+            body->CreateFixture(&fd);
+        }
+        kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
+            auto* body = kult::get<physics>(col.other).body;
+            b2Vec2 vel = body->GetLinearVelocity();
+            vel.y = -7;//-vel.y;//7.f;
+            body->SetLinearVelocity(vel);
+            DEBUG_VALUE_OF(vel.y);
+        };
+
+        return &self;
+    });
+
     object_factory::instance().register_class("pickup", [&] (b2World* world, const tmx::Object& obj, entity_type& self) {
-            DEBUG_LOG("factory::pickup");
             const auto& pos  = obj.getPosition();
             const auto& aabb = obj.getAABB();
             b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
 
             self = kult::entity();
-            DEBUG_VALUE_OF(self);
             {
-            kult::add<physics>(self);
-            kult::add<pickup>(self);
-            kult::add<visual>(self);
-            kult::add<nested>(self);
-            kult::add<transform>(self);
+                kult::add<physics>(self);
+                kult::add<pickup>(self);
+                kult::add<visual>(self);
+                kult::add<nested>(self);
+                kult::add<transform>(self);
             }
-            /** 
-             * determing visuals based on
-             * pickup value.
-             */
-            static sprite_sheet* s = nullptr;
-            if(!s) {
-                s = new sprite_sheet;
-                json j;
-                std::ifstream is = open_ifstream("assets/pickups.json", std::ios::binary);
-                if(is.is_open()) {
-                    is >> j; 
-                    from_json(j, *s);
-                    is.close();
-                }
-            }
-
-            visual_t& v = kult::get<visual>(self);
-            v.texture = s->_texture;
-            v.visible = true;
-
 
             std::map<std::string, std::string> props;
             for(const auto& p : obj.getProperties()) {
                 props.emplace(p.getName(), p.getStringValue());
             }
-            if(props.count("value")) {
-                pickup_t& p = kult::get<pickup>(self);
-                p.value = lexical_cast<int>(props.at("value"));
-                if(p.value == 10) {
-                    v.src = s->get("blueGem.png");
-                }
-                if(p.value == 100) {
-                    v.src = s->get("redGem.png");
-                }
-
-                /*auto& n = kult::get<nested>(self);
-                n.offset.x = -.5f * v.src.w;
-                n.offset.y = -.5f * v.src.h;*/
+            visual_t& v = kult::get<visual>(self);
+            if(props.find("uri") == props.end()) {
+                throw std::out_of_range("uri");
             }
+            {
+                kult::get<pickup>(self).value = lexical_cast<int>(props["value"]);
+            }
+            v.texture = assets<SDL_Texture>::instance().get(props["uri"]);
+            v.visible = true;
+            SDL_QueryTexture(v.texture, NULL, NULL, &v.src.w, &v.src.h);
+
             float px = pos.x + halfWS.x;
             float py = pos.y + halfWS.y;
-
             {
                 kult::get<nested>(self).offset= vec2f{px, py};
             }
@@ -216,9 +237,7 @@ register_factories::register_factories() {
 
             kult::get<physics>(self).on_trigger_enter = [&] (const collision& col) {
                 DEBUG_METHOD();
-
                 kult::get<synch>(col.self).cleanup = true;
-                
                 if(kult::has<player>(col.other)) {
                     kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
                     DEBUG_VALUE_OF(kult::get<player>(col.other).score);
