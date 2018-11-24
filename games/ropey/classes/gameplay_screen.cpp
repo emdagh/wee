@@ -63,51 +63,6 @@ void nested_to_transform() {
     }
 }
 
-void disable_and_hide(const entity_type& self) {
-    for(const auto& child : kult::join<nested>()) {
-        if(self == kult::get<nested>(child).parent) {
-            disable_and_hide(child);
-        }
-    }
-    /**
-     * disable
-     */
-    if(kult::has<physics>(self)) {
-        kult::get<physics>(self).body->SetActive(false);
-    }
-    /**
-     * and hide
-     */
-    if(kult::has<visual>(self)) {
-        kult::get<visual>(self).visible = false;
-    }
-    if(kult::has<pickup>(self)) {
-        kult::get<pickup>(self).active = false;
-    }
-}
-void enable_and_show(const entity_type& self) {
-    for(const auto& child : kult::join<nested>()) {
-        if(self == kult::get<nested>(child).parent) {
-            enable_and_show(child);
-        }
-    }
-    /**
-     * enable..
-     */
-    if(kult::has<physics>(self)) {
-        kult::get<physics>(self).body->SetActive(true);
-    }
-    /**
-     * and show
-     */
-    if(kult::has<visual>(self)) {
-        kult::get<visual>(self).visible = true;
-    }
-
-    if(kult::has<pickup>(self)) {
-        kult::get<pickup>(self).active = true;
-    }
-}
 
 void gameplay_screen::load_content() {
     std::ifstream ifs = wee::open_ifstream("assets/levels.json");
@@ -125,12 +80,13 @@ void gameplay_screen::load_content() {
         disable_and_hide(id);
     }
     _current_beat_idx = 0;
+    _lastBeatTouched = _beats[_current_beat_idx];
     enable_and_show(_beats[_current_beat_idx]);
     
     vec2f spawnPoint = kult::get<beat>(_beats[_current_beat_idx]).spawn;
     p  = create_player(_world, spawnPoint);
 
-    _cam.set_zoom(1.f);
+    _cam.set_zoom(1.5f);
 
     _restart();
 }
@@ -156,19 +112,27 @@ void gameplay_screen::handle_input() {
 }
 
 void gameplay_screen::_restart() {
-    auto _current_beat = _beats[_current_beat_idx];
+    auto _current_beat = _lastBeatTouched; //_beats[_current_beat_idx];
     const auto& beatTransform = kult::get<transform>(_current_beat);
     beat_t& b = kult::get<beat>(_current_beat);
     b.respawn++;
     kult::get<transform>(p).position = b.spawn + beatTransform.position;
     kult::get<physics>(p).body->SetLinearVelocity(b2Vec2(0, 0));
     kult::get<physics>(p).body->SetAngularVelocity(0);
+    kult::get<player>(p).hp = 3;
     
     copy_transform_to_physics();
 
     b2Vec2 pa = kult::get<physics>(p).body->GetPosition();
     b2Vec2 temp = { 0.0f, -1000.0f };
     b2Vec2 pb = pa + SCREEN_TO_WORLD(temp);
+    
+    joint_t& a = kult::get<joint>(_rope);
+    if(a.joint) {
+        DEBUG_LOG("destroy old joint");
+        _world->DestroyJoint(a.joint);
+        a.joint = NULL;
+    }
     
     b2RayCastClosest rc;
     rc.RayCast(_world, pa, pb);
@@ -187,11 +151,13 @@ void gameplay_screen::update(int dt, bool a, bool b) {
 
     for(auto& e : kult::join<raycast, nested>()) {
         auto& r = kult::get<raycast>(e);
-        //auto& n = kult::get<nested>(e);
+        auto& n = kult::get<nested>(e);
 
         if(r.hit) {
             r.hit = false;
             _rope = create_rope(_world, p, e, b2Vec2{r.point.x, r.point.y});
+
+            _lastBeatTouched = n.parent;
            
             //if(_current_beat != n.parent) {
             //    _spawnedNextBeat = false;
@@ -225,7 +191,19 @@ void gameplay_screen::update(int dt, bool a, bool b) {
     }
 
 
-    _cam.set_position(playerPos.x, playerPos.y);
+    if(kult::get<player>(p).hp > 0) {
+        _cam.set_position(playerPos.x, playerPos.y);
+    } else {
+        _restart();
+        /*static float fTimeOut = 3000.0f;
+        static float fTime = 0.0f;
+        fTime += (float)dt;
+        const auto& spawnPos = kult::get<beat>(_beats[_current_beat_idx]).spawn;
+        float xx = playerPos.x + (spawnPos.x - playerPos.x) * (fTime / fTimeout);
+        float xx = playerPos.y + (spawnPos.y - playerPos.y) * (fTime / fTimeout);*/
+    }
+        
+
     _cam.update(dt);
     _debugdraw.SetCameraTransform(_cam.get_transform());
     synchronize_entities();
@@ -268,29 +246,22 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
 
             
             SDL_Rect dst = {
-                (int)((positionCS.x + 0.5f) - (size.x * 0.5f)), 
-                (int)((positionCS.y + 0.5f) - (size.y * 0.5f)),
-                (int)size.x, 
-                (int)size.y
+                (int)((positionCS.x - size.x * 0.5f) + 0.5f), 
+                (int)((positionCS.y - size.y * 0.5f) + 0.5f),
+                (int)(size.x + 0.5f), 
+                (int)(size.y + 0.5f)
             };
             SDL_RenderCopyEx(renderer, 
-                    v.texture,
-                    &v.src,
-                    &dst,
-                    t.rotation,
-                    NULL,
-                    v.flip
-                    );
+                v.texture,
+                &v.src,
+                &dst,
+                t.rotation,
+                NULL,
+                v.flip
+            );
         }
 
-        /*std::sort(entities.begin(), entities.end(), [&] (const kult::type& a, const kult::type& b) {
-          int la = kult::get<visual>(a).layer;
-          int lb = kult::get<visual>(b).layer;
-          return la < lb;
-          });*/
     }
-    //b2DebugDrawEXT(_world, renderer, _camera);
-    //
     _world->DrawDebugData();
 
     SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
@@ -305,7 +276,6 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
         (float)input::instance().mouse_y 
     };
 
-
     SDL_RenderDrawLine(renderer, 
             (int)pa.x, 
             (int)pa.y, 
@@ -315,39 +285,29 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
 
     SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
     gamescreen::draw(renderer);
-
 }
 
 int gameplay_screen::on_click() {
-
     joint_t& a = kult::get<joint>(_rope);
     if(a.joint) {
         DEBUG_LOG("destroy old joint");
         _world->DestroyJoint(a.joint);
         a.joint = NULL;
     }
-
     for(auto& e : kult::join<raycast>()) {
         kult::get<raycast>(e).hit = false;
     }
-
     vec2 playerPosition = kult::get<transform>(p).position;
-
     vec3 mousePosition = {
         (float)input::instance().mouse_x,
         (float)input::instance().mouse_y,// - _camera.h / 2, 
         0.0f
     };
-
     mousePosition = vec3::transform(mousePosition, mat4::inverted(_cam.get_transform()));
-
     b2Vec2 pa = SCREEN_TO_WORLD(b2Vec2(playerPosition.x, playerPosition.y));
     b2Vec2 pb = SCREEN_TO_WORLD(b2Vec2(mousePosition.x, mousePosition.y));
-
-
     b2RayCastClosest rc;
     rc.RayCast(_world, pa, pb);
     _cam.shake(1000, false);
     return 0;
 }
-

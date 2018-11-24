@@ -123,8 +123,10 @@ register_factories::register_factories() {
                 fd.userData            = reinterpret_cast<void*>(self);
                 body->CreateFixture(&fd);
             }
-
-
+            kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
+                //auto* body = kult::get<physics>(col.other).body;
+                kult::get<player>(col.other).hp -= 3;               
+            };
             return &self;
     });
 
@@ -168,7 +170,7 @@ register_factories::register_factories() {
         kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
             auto* body = kult::get<physics>(col.other).body;
             b2Vec2 vel = body->GetLinearVelocity();
-            vel.y = -7;//-vel.y;//7.f;
+            vel.y = -6.f;//-vel.y;//7.f;
             body->SetLinearVelocity(vel);
             DEBUG_VALUE_OF(vel.y);
         };

@@ -4,6 +4,7 @@
 
 typedef struct {
     int score;
+    int hp;
     //bool shake_camera;
 } player_t;
 

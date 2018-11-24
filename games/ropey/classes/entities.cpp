@@ -71,14 +71,13 @@ entity_type create_player(b2World* world, const vec2f& at) {
         SDL_QueryTexture(texture, NULL, NULL, &v.src.w, &v.src.h);
         v.src.x = v.src.y = 0;
         v.visible = true;
-        
         /*n.offset.x = -v.src.w / 2;
         n.offset.y = -v.src.h / 2;*/
-
     }
     kult::add<transform>(self);
     kult::add<physics>(self).body = body;
     kult::add<player>(self).score = 0;
+    kult::add<player>(self).hp = 3;
 
     kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
         DEBUG_METHOD();

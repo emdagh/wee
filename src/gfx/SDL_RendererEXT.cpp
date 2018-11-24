@@ -1,3 +1,4 @@
+#include <wee/wee.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <SDL.h>
 #include <math.h>
@@ -30,4 +31,16 @@ void SDL_RenderDrawCircleEXT(SDL_Renderer* renderer, int x, int y, int r) {
             (int)(y1 + 0.5f)
         );
     }
+}
+
+/**
+ * https://en.wikipedia.org/wiki/Midpoint_circle_algorithm#C_example
+ */
+void SDL_RenderDrawCircleFilledEXT(SDL_Renderer* renderer, int xx , int yy, int r) {
+    int x, y;
+    for(y = -r; y <= r; y++) 
+        for(x = -r; x <= r; x++) 
+            if((x * x) + (y * y) <= (r * r))
+                SDL_RenderDrawPoint(renderer, xx + x, yy + y);
+
 }

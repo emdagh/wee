@@ -2,9 +2,12 @@
 
 #include <engine/ecs.hpp>
 #include <classes/components.hpp>
+#include <classes/common.hpp>
 
 void destroy_entity(const entity_type&);
 void hide_entity(const entity_type&);
+void disable_and_hide(const entity_type& );
+void enable_and_show(const entity_type& );
 
 namespace wee {
 

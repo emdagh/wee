@@ -21,6 +21,7 @@ class gameplay_screen : public wee::gamescreen {
     SDL_Rect _camera;
     entity_type b0, p, b1;
     size_t _current_beat_idx;
+    entity_type _lastBeatTouched;
     kult::type _rope;
     wee::b2DebugDrawImpl _debugdraw;
     wee::camera _cam;
