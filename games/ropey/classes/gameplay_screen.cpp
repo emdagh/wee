@@ -81,6 +81,9 @@ void disable_and_hide(const entity_type& self) {
     if(kult::has<visual>(self)) {
         kult::get<visual>(self).visible = false;
     }
+    if(kult::has<pickup>(self)) {
+        kult::get<pickup>(self).active = false;
+    }
 }
 void enable_and_show(const entity_type& self) {
     for(const auto& child : kult::join<nested>()) {
@@ -99,6 +102,10 @@ void enable_and_show(const entity_type& self) {
      */
     if(kult::has<visual>(self)) {
         kult::get<visual>(self).visible = true;
+    }
+
+    if(kult::has<pickup>(self)) {
+        kult::get<pickup>(self).active = true;
     }
 }
 
@@ -122,6 +129,8 @@ void gameplay_screen::load_content() {
     
     vec2f spawnPoint = kult::get<beat>(_beats[_current_beat_idx]).spawn;
     p  = create_player(_world, spawnPoint);
+
+    _cam.set_zoom(1.f);
 
     _restart();
 }
@@ -249,12 +258,20 @@ void gameplay_screen::draw(SDL_Renderer* renderer) {
 
             vec3 positionCS = vec3::transform(position, _cam.get_transform());
 
+            vec3 size = vec3{
+                (float)v.src.w, 
+                (float)v.src.h, 
+                0.0f
+            };
+            
+            size = size * _cam.get_zoom(); 
 
+            
             SDL_Rect dst = {
-                (int)(positionCS.x + 0.5f) - (v.src.w >> 1), 
-                (int)(positionCS.y + 0.5f) - (v.src.h >> 1),
-                v.src.w, 
-                v.src.h
+                (int)((positionCS.x + 0.5f) - (size.x * 0.5f)), 
+                (int)((positionCS.y + 0.5f) - (size.y * 0.5f)),
+                (int)size.x, 
+                (int)size.y
             };
             SDL_RenderCopyEx(renderer, 
                     v.texture,

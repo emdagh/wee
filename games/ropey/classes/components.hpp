@@ -12,6 +12,7 @@ using player = kult::component<1 << 11, player_t>;
 typedef struct {
     int value;
     int type;
+    bool active = true;
 } pickup_t;
 using pickup = kult::component<1 << 10, pickup_t>;
 /**

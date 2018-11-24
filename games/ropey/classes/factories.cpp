@@ -194,21 +194,30 @@ register_factories::register_factories() {
             for(const auto& p : obj.getProperties()) {
                 props.emplace(p.getName(), p.getStringValue());
             }
-            visual_t& v = kult::get<visual>(self);
+            {
+                auto& p =kult::get<pickup>(self);
+                p.value = lexical_cast<int>(props["value"]);
+                p.active = true;
+            }
             if(props.find("uri") == props.end()) {
                 throw std::out_of_range("uri");
             }
             {
-                kult::get<pickup>(self).value = lexical_cast<int>(props["value"]);
+                visual_t& v = kult::get<visual>(self);
+                v.texture   = assets<SDL_Texture>::instance().get(props["uri"]);
+                v.visible   = true;
+                //v.color     = SDL_ColorPresetEXT::White;
+                v.flip      = SDL_FLIP_NONE;
+                SDL_QueryTexture(v.texture, NULL, NULL, &v.src.w, &v.src.h);
+                v.src.x = 0;
+                v.src.y = 0;
             }
-            v.texture = assets<SDL_Texture>::instance().get(props["uri"]);
-            v.visible = true;
-            SDL_QueryTexture(v.texture, NULL, NULL, &v.src.w, &v.src.h);
 
             float px = pos.x + halfWS.x;
             float py = pos.y + halfWS.y;
             {
                 kult::get<nested>(self).offset= vec2f{px, py};
+                kult::get<nested>(self).rotation = 0.f;
             }
             /**
              * physics stuff
@@ -233,14 +242,18 @@ register_factories::register_factories() {
                 body->CreateFixture(&fd);
             }
 
-            kult::add<synch>(self).cleanup = false;
 
-            kult::get<physics>(self).on_trigger_enter = [&] (const collision& col) {
-                DEBUG_METHOD();
-                kult::get<synch>(col.self).cleanup = true;
-                if(kult::has<player>(col.other)) {
-                    kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
-                    DEBUG_VALUE_OF(kult::get<player>(col.other).score);
+            kult::get<physics>(self).on_trigger_enter = [] (const collision& col) {
+                
+                if(kult::get<pickup>(col.self).active) {
+
+                    kult::get<pickup>(col.self).active = false;
+                    kult::get<visual>(col.self).visible = false;
+
+                    if(kult::has<player>(col.other)) {
+                        kult::get<player>(col.other).score += kult::get<pickup>(col.self).value;
+                        DEBUG_VALUE_OF(kult::get<player>(col.other).score);
+                    }
                 }
             };
 

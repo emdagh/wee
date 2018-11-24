@@ -34,6 +34,7 @@ namespace wee {
         void set_zoom(float a) { 
             _zoom = a; 
         }
+        float get_zoom() const { return _zoom; }
     };
 }
 
