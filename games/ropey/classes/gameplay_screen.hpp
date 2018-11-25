@@ -8,6 +8,7 @@
 #include <engine/b2ContactListenerImpl.hpp>
 #include <engine/camera.hpp>
 #include <engine/gui/gamescreen.hpp>
+#include <engine/particles.hpp>
 #include <classes/common.hpp>
 
 namespace wee {
@@ -28,6 +29,8 @@ class gameplay_screen : public wee::gamescreen {
     wee::b2ContactListenerImpl _contacts;
     bool _spawnedNextBeat = false;
     std::vector<entity_type> _beats;
+    int _timeout_flash;
+    wee::particles_base* _particles;
 protected:
     void _restart();
 

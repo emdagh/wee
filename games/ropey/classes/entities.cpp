@@ -2,7 +2,7 @@
 #include <classes/components.hpp>
 #include <core/logstream.hpp>
 #include <engine/assets.hpp>
-
+#include <engine/ecs.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 using namespace wee;
 
@@ -76,8 +76,13 @@ entity_type create_player(b2World* world, const vec2f& at) {
     }
     kult::add<transform>(self);
     kult::add<physics>(self).body = body;
-    kult::add<player>(self).score = 0;
-    kult::add<player>(self).hp = 3;
+    {
+        auto& pp = kult::add<player>(self);
+        pp.score = 0;
+        pp.hp = 3;
+        pp.is_shake = false;
+        pp.is_flash = false;
+    }
 
     kult::get<physics>(self).on_collision_enter = [&] (const collision& col) {
         DEBUG_METHOD();
@@ -188,5 +193,19 @@ entity_type create_sensor(b2World* world, entity_type parent, const vec2f& offse
         n.offset = offset;
         
     }
+    return self;
+}
+
+entity_type create_timer(int to, float* ptr) {
+    entity_type self = kult::entity();
+    timeout_t& t = kult::add<timeout>(self);
+    t.time = 0;
+    t.timeout = to;
+
+    tween_t& w = kult::add<tween>(self);
+    w.dst = ptr;
+    w.easing_fn = &easing::ease_linear_in_out;
+    
+    //std::function<void(const entity_t&)> on_timeout = nullptr;
     return self;
 }

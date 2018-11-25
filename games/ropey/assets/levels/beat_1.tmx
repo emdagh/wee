@@ -88,14 +88,6 @@
     <property name="class" value="environment"/>
    </properties>
   </object>
-  <object id="14" x="68.25" y="126" width="10" height="10">
-   <properties>
-    <property name="class" value="pickup"/>
-    <property name="uri" value="@pickup100"/>
-    <property name="value" value="100"/>
-   </properties>
-   <ellipse/>
-  </object>
   <object id="15" x="257.25" y="126" width="10" height="10">
    <properties>
     <property name="class" value="pickup"/>

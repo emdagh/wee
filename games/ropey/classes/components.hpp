@@ -5,7 +5,8 @@
 typedef struct {
     int score;
     int hp;
-    //bool shake_camera;
+    bool is_shake;
+    bool is_flash;
 } player_t;
 
 using player = kult::component<1 << 11, player_t>;

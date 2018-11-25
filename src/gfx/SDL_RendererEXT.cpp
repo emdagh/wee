@@ -38,9 +38,11 @@ void SDL_RenderDrawCircleEXT(SDL_Renderer* renderer, int x, int y, int r) {
  */
 void SDL_RenderDrawCircleFilledEXT(SDL_Renderer* renderer, int xx , int yy, int r) {
     int x, y;
-    for(y = -r; y <= r; y++) 
-        for(x = -r; x <= r; x++) 
-            if((x * x) + (y * y) <= (r * r))
+    for(y = -r; y <= r; y++) { 
+        for(x = -r; x <= r; x++) {
+            if((x * x) + (y * y) <= (r * r)) {
                 SDL_RenderDrawPoint(renderer, xx + x, yy + y);
-
+            }
+        }
+    }
 }

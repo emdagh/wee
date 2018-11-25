@@ -16,6 +16,10 @@
 
 
 using namespace wee;
+struct timers : singleton<timers> {
+    int shakeTime, shakeTimeout = 1000;
+    int flashTime, flashTimeout = 500;
+};
 //typedef factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
 //typedef factory<b2Shape*,   tmx::Object::Shape, const tmx::Object&> b2ShapeFactory;
 
@@ -63,8 +67,16 @@ void nested_to_transform() {
     }
 }
 
+struct pstate {
+    static pstate _;
+    vec2 v;
+};
+
+pstate pstate::_ = { vec2{0, 0}};
 
 void gameplay_screen::load_content() {
+    _particles = new particles<pstate>(100, [] (particles<pstate>::particle& , int ) {
+    });
     std::ifstream ifs = wee::open_ifstream("assets/levels.json");
     json j = json::parse(ifs);
     for(const auto& i : j) {
@@ -194,6 +206,8 @@ void gameplay_screen::update(int dt, bool a, bool b) {
     if(kult::get<player>(p).hp > 0) {
         _cam.set_position(playerPos.x, playerPos.y);
     } else {
+        _cam.shake(1000, false);
+
         _restart();
         /*static float fTimeOut = 3000.0f;
         static float fTime = 0.0f;
@@ -202,7 +216,7 @@ void gameplay_screen::update(int dt, bool a, bool b) {
         float xx = playerPos.x + (spawnPos.x - playerPos.x) * (fTime / fTimeout);
         float xx = playerPos.y + (spawnPos.y - playerPos.y) * (fTime / fTimeout);*/
     }
-        
+     
 
     _cam.update(dt);
     _debugdraw.SetCameraTransform(_cam.get_transform());
@@ -308,6 +322,5 @@ int gameplay_screen::on_click() {
     b2Vec2 pb = SCREEN_TO_WORLD(b2Vec2(mousePosition.x, mousePosition.y));
     b2RayCastClosest rc;
     rc.RayCast(_world, pa, pb);
-    _cam.shake(1000, false);
     return 0;
 }
