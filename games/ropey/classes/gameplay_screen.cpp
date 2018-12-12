@@ -16,10 +16,6 @@
 
 
 using namespace wee;
-struct timers : singleton<timers> {
-    int shakeTime, shakeTimeout = 1000;
-    int flashTime, flashTimeout = 500;
-};
 //typedef factory<entity_type, std::string,        b2World*, const tmx::Object&> object_factory;
 //typedef factory<b2Shape*,   tmx::Object::Shape, const tmx::Object&> b2ShapeFactory;
 

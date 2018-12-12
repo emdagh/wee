@@ -15,11 +15,6 @@
 
 using namespace wee;
 
-
-
-
-
-
 SDL_Rect SDL_ScaleRect(const SDL_Rect& r, float scale) {
     return {
         (int)((r.x - (r.w >> 1) * scale) + 0.5f),
@@ -80,14 +75,14 @@ struct particle_helper {
             SDL_CreateColorRGB(255, 255, 255, &c),
             em->emit((particles<pstate>::particle) {
             
-                x + wee::random::instance().next_real(-spawnRadius, spawnRadius),
-                y + wee::random::instance().next_real(-spawnRadius, spawnRadius), 
+                x + randf(-spawnRadius, spawnRadius),
+                y + randf(-spawnRadius, spawnRadius), 
                 0, 
-                1000 + (int)random::instance().next_real(0.0f, 1000.0f),
+                1000 + (int)randf(0.0f, 1000.0f),
                 c,
                 { 
-                    wee::random::instance().next_real(-1.f, 1.f) * wee::random::instance().next_real(0.f, 2.f), 
-                    wee::random::instance().next_real(-1.f, 1.f) * wee::random::instance().next_real(0.f, 2.f) 
+                    randf(-1.f, 1.f) * randf(0.f, 2.f), 
+                    randf(-1.f, 1.f) * randf(0.f, 2.f) 
                 } 
                 });
         }

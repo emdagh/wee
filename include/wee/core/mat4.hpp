@@ -1,11 +1,12 @@
 #pragma once
 
+#include <wee.hpp>
 #include <core/mat4.h>
 #include <cmath>
 
 namespace wee {
     struct vec3;
-    struct mat4 {
+    __declare_aligned(struct, 16) mat4 {
         union {
             struct {
                 float m11, m12, m13, m14;

@@ -65,6 +65,7 @@ namespace wee {
     typedef struct {
         int time;
         int timeout;
+        std::function<void(const entity_t&)> on_tick = nullptr;
         std::function<void(const entity_t&)> on_timeout = nullptr;
     } timeout_t;
 

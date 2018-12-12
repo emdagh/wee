@@ -1,7 +1,16 @@
 #include <engine/camera.hpp>
 
-
 using namespace wee;
+
+/*auto randf = [] (float min, float max) -> float {
+    using wee::random;
+    static auto milliseconds_since_epoch =
+        std::chrono::system_clock::now().time_since_epoch() / 
+        std::chrono::milliseconds(1);
+
+    static random rnd(milliseconds_since_epoch);
+    return rnd.next(min, max);
+};*/
 
 void camera::_update_transform() {
     mat4 Mt, Mr, Ms, Mt2;
@@ -62,16 +71,15 @@ void camera::update(int dt) {
         return end_shake();
 
     int pos = 1;
-    if(random::instance().next_int(0,10) >= 5) {
+    if(randf(0.f,10.f) >= 5.f) {
         pos -= 1;
     }
 
     float px, py;
-    px = _position.x + random::instance().next_real(-MAX_SHAKE_X, MAX_SHAKE_X) * pos;
-    py = _position.y + random::instance().next_real(-MAX_SHAKE_Y, MAX_SHAKE_Y) * pos;
+    px = _position.x + randf(-MAX_SHAKE_X, MAX_SHAKE_X) * pos;
+    py = _position.y + randf(-MAX_SHAKE_Y, MAX_SHAKE_Y) * pos;
     set_position(px, py);
 }
-
 
 const mat4& camera::get_transform() {
     if(_changed) 

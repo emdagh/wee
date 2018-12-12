@@ -69,10 +69,10 @@ void level::_parse_tile_layer(const tmx::TileLayer* layer) {
             int spacing = current_tileset->spacing;
             int margin = current_tileset->margin;
 
-            int set_width = ts_w / (tset_tw + (spacing + margin) / 2); // 2 = (padding + margin) / 2 (2+2=4 / 2 = 2)
+            int set_width = ts_w / (tset_tw + (spacing + margin) / 2); 
 
-            int region_x = (cur_gid % set_width) * (tset_tw + 2) + 2;//tile_w;
-            int region_y = std::floor(cur_gid / set_width) * (tset_th + 2) + 2;//tile_h;
+            int region_x = (cur_gid % set_width) * (tset_tw + 2) + 2;
+            int region_y = std::floor(cur_gid / set_width) * (tset_th + 2) + 2;
 
             int x_pos = x * map_tw;
             int y_pos = y * map_th;

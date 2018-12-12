@@ -23,6 +23,17 @@ auto copy_transform_to_physics = [] () {
     }
 };
 
+auto timers = [] (int dt) {
+    for(auto& e : kult::join<timeout>()) {
+        auto& it = kult::get<timeout>(e);
+        it.time += dt;
+        it.on_tick(e);
+        if(it.time >= it.timeout) {
+            it.on_timeout(e);
+        }
+    }
+};
+
 auto copy_physics_to_transform = [] () {
     for(auto& e : kult::join<transform, physics>()) {
         const b2Transform b2t = kult::get<physics>(e).body->GetTransform();

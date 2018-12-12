@@ -2,41 +2,45 @@
 
 #include <core/singleton.hpp>
 #include <random>
+#include <type_traits>
+#include <chrono>
 
 namespace wee {
-    class random : public singleton<random> {
-        std::random_device _r;
-        std::mt19937 _gen;
-    public:
-        random() { 
-            //std::random_device rd;  //Will be used to obtain a seed for the random number engine
-                std::mt19937 gen(_r()); //Standard mersenne_twister_engine seeded with rd()
-            //_gen(_r());
+
+    struct random {
+        int32_t seed;
+        std::mt19937 eng;
+
+        random(int32_t seed) : seed(seed) {
+            eng = std::mt19937(seed);//{ seed };//std::random_device{}() };
         }
 
-        template <typename T>
-        T next_real(T a, T b) {
-            std::uniform_real_distribution<T> distr(a, b);
-            return distr(_gen);
+
+        template <typename Int>
+        Int next_int(Int min, Int max) {
+            static_assert(std::is_integral<Int>::value, "an integral value is required");
+            using param_type = typename std::uniform_int_distribution<Int>::param_type;
+            std::uniform_int_distribution<Int> dist;
+            return dist(eng, param_type{min, max});
         }
 
-        template <typename T>
-        T next_int(T a, T b) {
-            std::uniform_int_distribution<T> distr(a, b);
-            return distr(_gen);
-        }
+        template <typename Real>
+        Real next(Real min, Real max) {
+            static_assert(std::is_floating_point<Real>::value, "a floating point value is required");
 
-        template <typename T>
-        T next_normal(T u, T o) {
-            std::normal_distribution<T> d{u, o};
-            return d(_gen);
+            using param_type = typename std::uniform_real_distribution<Real>::param_type;
+            std::uniform_real_distribution<Real> dist;
+            return dist(eng, param_type{min, max});
         }
     };
 
-    template <typename T>
-    T randi(T a, T b) {
-        return random::instance().next_int(a, b);
-    }
+    auto randf = [] (float min = 0.0f, float max = 1.0f) -> float {
+        using wee::random;
+        static auto milliseconds_since_epoch =
+            std::chrono::system_clock::now().time_since_epoch() / 
+            std::chrono::milliseconds(1);
 
-    float randf(float a = 0.f, float b = 1.0f); 
+        static random rnd(milliseconds_since_epoch);
+        return rnd.next(min, max);
+    };
 }

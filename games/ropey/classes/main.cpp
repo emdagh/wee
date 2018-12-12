@@ -1,6 +1,9 @@
 #include <base/application.hpp>
 #include <classes/game.hpp>
 
+//extern "C" new_game();
+//extern "C" init_game(application*, applet*);
+
 using namespace wee;
 
 #undef main //SDL idiocy

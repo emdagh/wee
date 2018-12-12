@@ -3,6 +3,7 @@
 #include <core/logstream.hpp>
 #include <engine/assets.hpp>
 #include <engine/ecs.hpp>
+#include <engine/camera.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 using namespace wee;
 
@@ -193,6 +194,19 @@ entity_type create_sensor(b2World* world, entity_type parent, const vec2f& offse
         n.offset = offset;
         
     }
+    return self;
+}
+
+
+
+
+entity_type screen_flash(int, SDL_Renderer*) {
+    /**
+     * timer + visual
+     * visual.texture -> whitePixel
+     * timer.on_tick -> set alpha 
+     */
+    entity_type self = kult::entity();
     return self;
 }
 

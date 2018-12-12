@@ -55,9 +55,9 @@ struct particle_helper {
             res.x = pos.x;
             res.y = pos.y;
             res.t = 0;
-            res.ttl = random::instance().next_int(1000, 2000);//1000 + (int)randf(2000.0f);
+            res.ttl = randf(1000, 2000);//1000 + (int)randf(2000.0f);
             res.color = SDL_ColorPresetEXT::White;
-            float fs = random::instance().next_real(0.f, 1.f);;
+            float fs = randf();;
             res.state = { 
                 n.x * vlen_sq * fs, 
                 n.y * vlen_sq * fs, 
