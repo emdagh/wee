@@ -171,10 +171,12 @@ auto to_bitmask = [] (size_t index) {
 
 template <typename bitmask_t>
 [[maybe_unused]] auto to_index = [] (const bitmask_t& b) {
-    bitmask_t bm = b;
-    unsigned r = 0;
-    while(bm >>= 1) r++;
-    return r;
+    //DEBUG_VALUE_OF(__builtin_ctzl(1UL << 33));
+    return __builtin_ctzl(b);
+    //bitmask_t bm = b;
+    //unsigned r = 0;
+    //while(bm >>= 1) r++;
+    //return r;
 };
 
 template <typename It>
@@ -198,6 +200,15 @@ void wfc(const int* in_map, const int2& in_size, int* , const int2& out_size) {
         int freq; 
         size_t tidx;
     };
+    auto print = [] (bitmask_t* a, int w, int h) {
+        for(auto y: range(h)) {
+            for(auto x: range(w)) {
+                std::cout << a[x + y * w] << ", ";
+
+            }
+            std::cout << std::endl;
+        }
+    };
     
     /**
      * Step 1: read the map, and for each input tile; register it and count it's frequency.
@@ -208,24 +219,6 @@ void wfc(const int* in_map, const int2& in_size, int* , const int2& out_size) {
     tileset.erase(std::unique(tileset.begin(), tileset.end()), tileset.end());
 
     DEBUG_VALUE_OF(tileset);
-    
-    /*
-    std::array<int, 64> tile_lookup;
-    tile_lookup.fill(-1);
-    std::vector<tile> tiles;
-    for(int i=0; i < n; i++) {
-        int ti = in_map[i];
-        if(tile_lookup[ti] < 0) {
-            tile_lookup[ti] = static_cast<int>(tiles.size());
-            tiles.push_back(tile{});
-        }
-        tile& t = tiles[tile_lookup[ti]];
-        t.freq++;
-        t.tidx = ti;
-    }
-
-    DEBUG_VALUE_OF(tile_lookup);
-    */
     /**
      * Step 2: Construct the valid neigbor bitmasks
      */
@@ -237,25 +230,6 @@ void wfc(const int* in_map, const int2& in_size, int* , const int2& out_size) {
     };
 
 
-    //tensor<int, 2> tmap_in(std::valarray<int>(in_map, n), { (size_t)in_size.x, (size_t)in_size.y });
-    
-    /*for(int y=0; y < in_size.y; y++) {
-        for(int x=0; x < in_size.x; x++) {
-            int i = x + y * in_size.x;
-            tile& t = tiles[tile_lookup[in_map[i]]];
-            for(size_t j=0; j < kNumEdges; j++) {
-                const int2& n = neighbors[j];
-                int2 p;
-                p.x = (n.x + x + in_size.x) % in_size.x;
-                p.y = (n.y + y + in_size.y) % in_size.y;
-                int k = in_map[p.x + p.y * in_size.x];
-                assert(tile_lookup[k] >= 0);
-                t.sides[j] |= to_bitmask<bitmask_t>(tile_lookup[k]);
-            }
-        }
-    }
-    */
-
     std::unordered_map<int, int> lookup;
     for(size_t i=0; i < tileset.size(); i++) {
         lookup[tileset[i]] = i;
@@ -263,10 +237,14 @@ void wfc(const int* in_map, const int2& in_size, int* , const int2& out_size) {
 
     DEBUG_VALUE_OF(lookup);
 
-    std::vector<bitmask_t> adjacency(tileset.size()); 
+    /**
+     * adjacency stores bitmask of possible combinations for each edge / hyperplane
+     */
+    std::vector<bitmask_t> adjacency(tileset.size() * 4); 
     for(int y=0; y < in_size.y; y++) {
         for(int x=0; x < in_size.x; x++) {
-            int self = in_map[x + y * in_size.x];
+            int ix0 = x + y * in_size.x;
+            int self = in_map[ix0];
 
             for(int z=0; z < kNumEdges; z++) {
                 const int2& n = neighbors[z];
@@ -274,30 +252,82 @@ void wfc(const int* in_map, const int2& in_size, int* , const int2& out_size) {
                     (x + n.x + in_size.x) % in_size.x,
                     (y + n.y + in_size.y) % in_size.y
                 };
-                int nt = in_map[p.x + p.y * in_size.x];
-                adjacency[lookup[self]] |= to_bitmask<bitmask_t>(lookup[nt]);
+                int ix1 = p.x + p.y * in_size.y;
+                if(ix1 != ix0) { // happens for ND-1 cases.
+                    int nt = in_map[p.x + p.y * in_size.x];
+                    adjacency[lookup[self] * 4 + z] |= to_bitmask<bitmask_t>(lookup[nt]);
+                } else {
+                    adjacency[lookup[self] * 4 + z] = -1;//to_bitmask<bitmask_t>(-1);
+                }
             }
         }
     }
 
     DEBUG_VALUE_OF(adjacency);
 
+    /**
+     * construct an initial mask of possibilities by iterating over the tileset.
+     */
+    bitmask_t initial_mask = 0;
+    for(auto it : lookup) {
+        DEBUG_VALUE_OF(it.second);
+        initial_mask |= to_bitmask<bitmask_t>(it.second);
+    }
+
+    DEBUG_VALUE_OF(initial_mask);
+
     size_t out_n = out_size.x * out_size.y;
-    
+    //
+    // cells store the bitmask of the possible indices into the tileset.
+    //
     std::vector<bitmask_t> cells(out_n);
-    std::generate(std::begin(cells), std::end(cells), [] () { return -1; }); // everything is possible...
+    std::generate(std::begin(cells), std::end(cells), [&] () { return initial_mask; }); // everything is possible...
     
-    int cix = static_cast<int>(wee::randf(0, out_n) + 0.5f); // index of random cell on the N+1D grid.
-    [[maybe_unused]] bitmask_t& cell = cells[cix];
-    [[maybe_unused]] int rn = lookup[*random_from(tileset.begin(), tileset.end())];//[static_cast<int>(wee::randf(0, tileset.size() - 1))];
+    int cix = 1;//static_cast<int>(wee::randf(0, out_size.x - 1) + 0.5f); // index of random cell on the N+1D grid.
+    int ciy = 0;//static_cast<int>(wee::randf(0, out_size.y - 1) + 0.5f); // index of random cell on the N+1D grid.
     
+    DEBUG_VALUE_OF(cix);
+    DEBUG_VALUE_OF(ciy);
+
+    int ci = cix + ciy * out_size.x;
+
+    std::vector<int> open;
+
+    [[maybe_unused]] bitmask_t& cell = cells[ci];
+    [[maybe_unused]] int rn = 0;// lookup[*random_from(tileset.begin(), tileset.end())];
     cell = to_bitmask<bitmask_t>(rn); //pick a random value from the set of unique tiles.
-   
+    //print(&cells[0], 4, 4);
+
+    /**
+     * reduce the possibilities of the neightbors, based on the compatibility with the newly set
+     * cell.
+     */
+    for(int i=0; i < kNumEdges; i++) {
+        const int2& n = neighbors[i];
+        int2 p = {
+            (cix + n.x + out_size.x) % out_size.x,
+            (ciy + n.y + out_size.y) % out_size.y
+        };
+        
+        bitmask_t& neighbor = cells[p.x + p.y * out_size.x];
+        int cell_to_index = to_index<bitmask_t>(cell);
+
+        neighbor &= adjacency[cell_to_index * 4 + i]; // 111 & 010 = 010 vs. 111 & ~010(101) = 101
+        if(popcount(neighbor) > 1) {
+            open.push_back(p.x + p.y * out_size.x);
+        }
+    }
+    DEBUG_VALUE_OF(open);
+    std::vector<bitmask_t> entropies(out_n);
+    for(size_t i=0; i < out_n; i++) {
+        entropies[i] = popcount(cells[i]);
+    }
 
 
+    print(&entropies[0], out_size.x, out_size.y); 
+    
 
-    DEBUG_VALUE_OF(cells);
-    //tensor<int, 3> board(
+    //te//insor<int, 3> board(
 }
 
 
@@ -310,10 +340,7 @@ tensor<T, 1> arange(T t) {
 int main(int, char**) {
 
     int in_map[] = { 
-        820, 821, 820, 821,
-        820, 822, 822, 823,
-        822, 821, 820, 822,
-        822, 823, 822, 825
+        7, 8, 9
     };
 
     DEBUG_VALUE_OF(__builtin_ctzl(1UL << 33));
@@ -321,7 +348,7 @@ int main(int, char**) {
     constexpr size_t kOutputDimension = 4;
     int* out_map = new int[kOutputDimension * kOutputDimension];
 
-    wfc(in_map, { 4, 4 }, out_map, { kOutputDimension, kOutputDimension });
+    wfc(in_map, { 3, 1 }, out_map, { kOutputDimension, kOutputDimension });
 
     /*auto t = arange(3 * 3 * 3).reshape(3, 3, 3);
 
