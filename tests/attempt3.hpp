@@ -124,51 +124,56 @@ void wfc(const int* in_map, const int2& in_size, int* out_map, const int2& out_s
     std::map<int, int2> open = { { 0, {cix, ciy} } };
     int2 coord;// = open.back(); // 
 
+    bool done = false;
+
+
     do {
-        pop(open, &coord);
+        do {
+            pop(open, &coord);
 
-        DEBUG_VALUE_OF(coord);
+            DEBUG_VALUE_OF(coord);
 
-        if(__popcount(cells[coord.x + coord.y * out_size.x]) >= 1) {
-            std::vector<int> opts(__popcount(cells[coord.x + coord.y * out_size.x]));
-            auto tmp = cells[coord.x + coord.y * out_size.x];
+            if(__popcount(cells[coord.x + coord.y * out_size.x]) >= 1) {
+                std::vector<int> opts(__popcount(cells[coord.x + coord.y * out_size.x]));
+                auto tmp = cells[coord.x + coord.y * out_size.x];
 
-            for(auto i: range(opts.size())) {
-                opts[i] = to_index<bitmask_t>(tmp);
-                auto lb = tmp & -tmp;
-                tmp ^= lb;
-            }
+                for(auto i: range(opts.size())) {
+                    opts[i] = to_index<bitmask_t>(tmp);
+                    auto lb = tmp & -tmp;
+                    tmp ^= lb;
+                }
 
-            DEBUG_VALUE_OF(opts);
+                DEBUG_VALUE_OF(opts);
+                /**
+                 * select a random tile from the tileset that is *still available* for this cell.
+                 */
+                auto opt = *random_from(opts.begin(), opts.end());
+                DEBUG_VALUE_OF(opt);
+                cells[coord.x + coord.y * out_size.x] = to_bitmask<bitmask_t>(opt);
+            } 
+
             /**
-             * select a random tile from the tileset that is *still available* for this cell.
+             * popcount of cell at this point = 1
              */
-            auto opt = *random_from(opts.begin(), opts.end());
-            DEBUG_VALUE_OF(opt);
-            cells[coord.x + coord.y * out_size.x] = to_bitmask<bitmask_t>(opt);
-        } 
-
-        /**
-         * popcount of cell at this point = 1
-         */
-        auto current_cell_index = to_index<bitmask_t>(cells[coord.x + coord.y * out_size.x]);
-        /**
-         * next, we reduce the neighbors.
-         */
-        for(int i=0; i < kNumEdges; i++) {
-            int2 p { 
-                (coord.x + neighbors[i].x + out_size.x) % out_size.x, 
-                (coord.y + neighbors[i].y + out_size.y) % out_size.y
-            };
-            auto& neighbor = cells[p.x + p.y * out_size.x];
-            if(__popcount(neighbor) > 1) { // << should this be here? it feels a tad hacky...
-                neighbor &= adjacency[current_cell_index * 4 + i];
-                //if(p.x >= 0 && p.x < out_size.x && p.y >= 0 && p.y < out_size.y) {
-                    open.insert(std::make_pair(__popcount(neighbor), p));//push_back(p);
-                //}
+            auto current_cell_index = to_index<bitmask_t>(cells[coord.x + coord.y * out_size.x]);
+            /**
+             * next, we reduce the neighbors.
+             */
+            for(int i=0; i < kNumEdges; i++) {
+                int2 p { 
+                    (coord.x + neighbors[i].x + out_size.x) % out_size.x, 
+                    (coord.y + neighbors[i].y + out_size.y) % out_size.y
+                };
+                auto& neighbor = cells[p.x + p.y * out_size.x];
+                if(__popcount(neighbor) > 1) { // << should this be here? it feels a tad hacky...
+                    neighbor &= adjacency[current_cell_index * 4 + i];
+                    //if(p.x >= 0 && p.x < out_size.x && p.y >= 0 && p.y < out_size.y) {
+                        open.insert(std::make_pair(__popcount(neighbor), p));//push_back(p);
+                    //}
+                }
             }
-        }
-    } while(!open.empty());
+        } while(!open.empty());
+    } while(!done);
 
     std::vector<int> temp(out_size.x * out_size.y, -1);
 

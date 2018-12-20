@@ -13,6 +13,11 @@
 #include <core/logstream.hpp>
 #include <sstream>
 #include <bitset>
+#include <wee/wee.hpp>
+#include <wee/core/range.hpp>
+
+using wee::range;
+
 struct int2 {
     int x, y;
 };
@@ -22,10 +27,15 @@ std::ostream& operator << (std::ostream& os, const int2& i) {
 }
 
 class model {
+    static constexpr size_t kNumDimensions = 2;
+    static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;
 
     std::vector<bitmask_t>  _coefficients;  // bitmask of possible tile values
     std::vector<float>      _weights;       // maps tile index to weight.
+    std::vector<size_t>     _adjacency;
+    std::unordered_map<int, int> _tile_to_index;
+    std::unordered_map<int, int> _index_to_tile;
     int2 _size;
 
     size_t _index_of(const bitmask_t& m) {
@@ -36,11 +46,12 @@ class model {
         return 1ULL << i;
     }
 
-    std::vector<size_t> _avail(const int2& at) {
-        size_t index = at.x + at.y * _size.x;
-        auto tmp = _coefficients[index];
+    std::vector<size_t> _avail(const bitmask_t& val) { //const int2& at) {
+        //size_t index = at.x + at.y * _size.x;
+        //auto tmp = _coefficients[index];
+        auto tmp = val;
         
-        std::vector<int> opts(popcount(tmp));
+        std::vector<size_t> opts(__popcount(tmp));
 
         for(auto i: range(opts.size())) {
             opts[i] = _index_of(tmp);
@@ -53,7 +64,8 @@ class model {
     float _shannon_entropy(const int2& at) {
         float sum_of_weights = 0.0f;
         float sum_of_weight_log_weights = 0.0f;
-        for(auto i: _avail(at)) {
+        auto opts = _avail(_coefficients[at.x + at.y * _size.x]);
+        for(auto i: opts) {
             float w = _weights[i];
             sum_of_weights += w;
             sum_of_weight_log_weights += w * std::log(w);
@@ -62,12 +74,14 @@ class model {
     }
 
     void get_min_entropy(int2* d) {
-        float min_entropy = 0.0f;
+        float min_entropy = std::numeric_limits<float>::infinity();
         for(auto y: range(_size.y)) {
             for(auto x: range(_size.x)) {
-                if(popcount(_coefficients]) == 1) continue;
+                size_t i = x + y * _size.x;
 
-                float entropy = _shannon_entropy({x, y}) - randf() / 1000.0f;
+                if(__popcount(_coefficients[i]) == 1) continue;
+
+                float entropy = _shannon_entropy({x, y}) - wee::randf() / 1000.0f;
                 if(entropy < min_entropy) {
                     min_entropy = entropy;
                     d->x = x;
@@ -83,53 +97,71 @@ class model {
     }
 
     void collapse(const int2& at) {
-        auto i = at.x + at.y * out_size.x;
-        bitmask_t mask = coeff[i];
+        //_coefficients[at.x + at.y * _size.x] = 2;
+        auto i = at.x + at.y * _size.x;
         std::map<int, float> w; 
         float total_weight = 0.0f;
-        for(auto t: avail(at)) {
-            w.insert(t, weights[t]);
-            total_weight += weights[t];
+        for(auto t: _avail(_coefficients[at.x + at.y * _size.x])) {
+            w.insert(std::pair(t, _weights[t]));
+            total_weight += _weights[t];
         }
 
-        float random = randf(0, total_weight);
+        float random = wee::randf(0, total_weight);
+
         for(const auto& [key, val]: w) {
             random -= val;
             if(random < 0) {
-                coeff[i] = key;
+                _coefficients[i] = _bitmask_of(key);
+                break;
             }
         }
+        debug_matrix(_coefficients, _size);
     }
 
     void propagate(const int2& at) {
-        static constexpr size_t kNumEdges = 4;
-        static constexpr int2 neighbors[] = {
+        static constexpr int2 neighbors[kNumNeighbors] = {
             { 1, 0 },
             { 0, 1 },
             {-1, 0 },
             { 0,-1 }
         };
-        std::stack<int2> open = { at };
+        std::vector<int2> open = { at };
         while(!open.empty()) {
-            const int2& cur_coords = open.top();
-            size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
-            open.pop();
-            for(size_t i=0; i < kNumEdges; i++) { //const int2& n: neighbors) {
+            const int2& cur_coords = open.back();
+            //size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
+            auto current_opts = _avail(_coefficients[cur_coords.x + cur_coords.y * _size.x]);
+            open.pop_back();
+
+            for(size_t i=0; i < kNumNeighbors; i++) { //const int2& n: neighbors) {
                 const int2& d = neighbors[i];
                 int2 other_coords = {
                     (cur_coords.x + d.x + _size.x) % _size.x,
                     (cur_coords.y + d.y + _size.y) % _size.y
                 };
 
+
                 size_t other_i = other_coords.x + other_coords.y * _size.x;
-                bitmask_t other_tile = _coefficients[other_i];
+                //bitmask_t other_tile = _coefficients[other_i];
 
-                auto is_possible = _adjacency[cur_index * 4 + i] & other_tile;
 
-                if(!is_possible) {
-                    constrain(other_coords, other_tile);
-                    open.push(other_coords);
+                //if(__popcount(other_tile) == 1) continue;
+
+
+                for(auto opt: current_opts) {
+                    _coefficients[other_i] &= _adjacency[opt * 4 + i];//_bitmask_of(opt);
+                    /*auto is_possible = _adjacency[opt * 4 + i] & other_tile;
+
+                    if(!is_possible) {
+                        auto cur_mask = _bitmask_of(opt);
+                        _coefficients[other_i] &= cur_mask;
+                        if(_coefficients[other_i] == 0) {
+                            [[maybe_unused]] int k = 0;
+                        }
+                        open.push_back(other_coords);
+                    }*/
                 }
+                if(__popcount(_coefficients[other_i]) > 1)
+                    open.push_back(other_coords);
             }
         }
     }
@@ -138,17 +170,114 @@ class model {
    
     bool is_fully_collapsed() {
         for(auto i: _coefficients) {
-            if(popcount(i) > 1) return false;
+            if(__popcount(i) > 1) return false;
         }
         return true;
     }
 
+    void build_adjacency(const int* in_map, const int2& in_size, decltype(_adjacency)& res) {        
+        constexpr int2 neighbors[kNumNeighbors] = { 
+            { 0,  1}, // top    
+            { 1,  0}, // right
+            { 0, -1}, // bottom
+            {-1,  0}, // left
+        };
+        for(int y=0; y < in_size.y; y++) {
+            for(int x=0; x < in_size.x; x++) {
+                int ix0 = x + y * in_size.x;
+                
+                int self = in_map[ix0];
+                int i_self = _tile_to_index[self];
+
+                for(size_t z=0; z < kNumNeighbors; z++) {
+                    const int2& n = neighbors[z];
+                    int2 p = {
+                        (x + n.x + in_size.x) % in_size.x, // periodicity
+                        (y + n.y + in_size.y) % in_size.y 
+                    };
+
+                    //if( p.x > 0 && p.x < (in_size.x - 1) && 
+                    //    p.y > 0 && p.y < (in_size.y - 1)) {
+                        int nt = in_map[p.x + p.y * in_size.x];
+                        int i_other = _tile_to_index[nt];
+
+                        res[i_self * 4 + z] |= _bitmask_of(i_other);
+                    //}
+                }
+            }
+        }
+    }
+
+    void build_weights(const int* in_map, const int2& in_size, [[maybe_unused]] decltype(_weights)& weights) {
+        size_t n = in_size.x * in_size.y;
+        std::multiset<int> temp(in_map, in_map + n);
+        for(auto it = temp.begin(); it != temp.end(); it = temp.upper_bound(*it)) {
+            size_t tile_i = _tile_to_index[*it];
+            weights[tile_i] = temp.count(*it);//1.0f - 1.0f / temp.count(*it);
+        }
+
+
+
+
+        /*std::map<size_t, float> temp;
+        for(auto y: range(in_size.y)) {
+            for(auto x: range(in_size.x)) {
+                size_t self_i = _tile_to_index(in_map[x + y * in_size.x]);
+
+                if(temp.count(self_i)) {
+                    temp[self_i] = 0.0f;
+                }
+                temp[self_i] += 1.0f;
+            }
+        }*/
+    }
+
+    template <typename T>
+    void debug_matrix(const std::vector<T>& a, const int2& s) {
+        for(auto y: range(s.y)) {
+            auto begin = a.begin() + y * s.x;
+            auto end = begin + s.x;
+            auto row = std::vector<T>(begin, end);
+            DEBUG_VALUE_OF(row);
+        }
+        std::cout << std::endl;
+    }
+
 public:
 
-    model() {}
+    model(const int* in_map, const int2& in_size, int* , const int2& out_size) 
+        : _size(out_size) {
 
+            auto x = _avail(1);
+        int n = in_size.x * in_size.y;
+        std::vector<int> tileset(in_map, in_map + n);
+        std::sort(tileset.begin(), tileset.end());
+        tileset.erase(std::unique(tileset.begin(), tileset.end()), tileset.end());
+    
+        for(size_t i=0; i < tileset.size(); i++) {
+            _tile_to_index[tileset[i]] = i;
+            _index_to_tile[i] = tileset[i];
+        }
+
+        _adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
+        build_adjacency(in_map, in_size, _adjacency);
+        DEBUG_VALUE_OF(_adjacency);
+
+        _weights = decltype(_weights)(tileset.size());
+        build_weights(in_map, in_size, _weights);
+        DEBUG_VALUE_OF(_weights);
+
+        bitmask_t initial_mask = 0;
+        for(auto it : _tile_to_index) {
+            initial_mask |= _bitmask_of(it.second);
+        }
+
+        _coefficients = decltype(_coefficients)(out_size.x * out_size.y, initial_mask);
+        debug_matrix(_coefficients, out_size);
+    }
     
     void step() {
+        int2 coord;
         /**
          * step 1: find the coordinate of the coefficient with the lowest entropy
          */
@@ -163,13 +292,37 @@ public:
         propagate(coord);
     }
 
-    void run() {
-        while(!is_fully_collapsed) {
+    void run(int* out_map) {
+        while(!is_fully_collapsed()) {
             step();
         }
+        std::vector<int> temp(_size.x * _size.y, -1);
+
+        for(int y: range(_size.y)) {
+            for(int x: range(_size.x)) {
+                int i = x + y * _size.x;
+                bitmask_t cb = _coefficients[i];
+                int index = _index_of(cb);
+                temp[i] = _index_to_tile[index];
+
+            }
+        }
+        debug_matrix(temp, _size);
+        std::copy(std::begin(temp), std::end(temp), out_map);
     }
 
 };
+
+namespace wfc {
+    static void _run(const int* in_map, const int2& in_size, 
+        int* out_map, const int2& out_size) {
+
+#if 1
+        model* _ = new model(in_map, in_size, out_map, out_size);
+        return _->run(out_map);
+#endif
+    }
+}
 
 
 /*namespace _wfc {

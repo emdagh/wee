@@ -26,11 +26,12 @@ int main(int, char**) {
         201, 204, 666, 204,
         201, 202, 203, 202
     };
-    constexpr size_t kOutputDimension = 8;
+    constexpr size_t kOutputDimension = 4;
     constexpr size_t kOutputSize = kOutputDimension * kOutputDimension;
 
     int* out_map = new int[kOutputSize];
-    wfc(in_map, { 4, 4 }, out_map, { kOutputDimension, kOutputDimension });
+    
+    wfc::_run(in_map, { 4, 4 }, out_map, { kOutputDimension, kOutputDimension });
 
     std::vector<int> arr(kOutputSize, -1);;
     std::copy(out_map, out_map + kOutputSize, std::begin(arr));
