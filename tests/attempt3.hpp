@@ -1,5 +1,27 @@
+#pragma once
+#include <stack>
+#include <tuple>
+#include <cmath>
+#include <map>
+#include <unordered_map>
+#include <core/range.hpp>
+#include <core/random.hpp>
+#include <prettyprint.hpp>
+#include <type_traits>
+#include <chrono>
+#include <core/logstream.hpp>
+#include <sstream>
+#include <bitset>
+#include <wee/wee.hpp>
+#include <wee/core/range.hpp>
 
+struct int2 {
+    int x, y;
+};
 
+std::ostream& operator << (std::ostream& os, const int2& i) {
+    return os << "{ 'x' : " << i.x << ", 'y' : " << i.y << "}";
+}
 
 template <typename T>
 auto to_bitmask = [] (size_t index) {
@@ -124,11 +146,9 @@ void wfc(const int* in_map, const int2& in_size, int* out_map, const int2& out_s
     std::map<int, int2> open = { { 0, {cix, ciy} } };
     int2 coord;// = open.back(); // 
 
-    bool done = false;
 
 
     do {
-        do {
             pop(open, &coord);
 
             DEBUG_VALUE_OF(coord);
@@ -173,7 +193,6 @@ void wfc(const int* in_map, const int2& in_size, int* out_map, const int2& out_s
                 }
             }
         } while(!open.empty());
-    } while(!done);
 
     std::vector<int> temp(out_size.x * out_size.y, -1);
 
