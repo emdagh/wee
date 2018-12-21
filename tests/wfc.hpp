@@ -95,14 +95,8 @@ class model {
         for(auto y: range(_size.y)) {
             for(auto x: range(_size.x)) {
                 size_t i = x + y * _size.x;
-
-                if(__popcount(_coefficients[i]) == 0) {
-                    debug_matrix(_coefficients, _size);
-                    int2 pos = { x, y };
-                    DEBUG_VALUE_OF(pos);
-                    throw std::logic_error("a contradiction was found");
-                }
-                if(__popcount(_coefficients[i]) == 1) continue;
+                
+				if(__popcount(_coefficients[i]) == 1) continue;
 
                 float entropy = _shannon_entropy({x, y}) - wee::randf() / 1000.0f;
                 if(entropy < min_entropy) {
@@ -131,7 +125,7 @@ class model {
             total_weight += _weights[t];
         }
 
-        float random = wee::randf(0, total_weight);
+        float random = wee::randf() * total_weight;
 
         for(const auto& [key, val]: w) {
             random -= val;
@@ -153,12 +147,13 @@ class model {
         DEBUG_METHOD();
         std::vector<int2> open = { at };
         while(!open.empty()) {
+            debug_matrix(_coefficients, _size);
             int2 cur_coords = open.back();
             open.pop_back();
             size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
             bitmask_t cur_bitmask = _coefficients[cur_i];
             auto cur_avail = _avail(cur_bitmask);
-            assert(cur_avail.size() == 1);
+
             DEBUG_VALUE_OF(cur_coords);
 
             for(size_t i=0; i < kNumNeighbors; i++) { 
@@ -171,15 +166,15 @@ class model {
                 if(!is_valid(other_coords))
                     continue;
 
+                DEBUG_VALUE_OF(other_coords);
+
                 size_t other_i = other_coords.x + other_coords.y * _size.x;
+
+                auto other_avail = _avail(_coefficients[other_i]);
+
                 for(auto cur_tile: cur_avail) {
-                    bitmask_t bitmask = _adjacency[cur_tile * kNumNeighbors + i];
-                    assert(_coefficients[other_i] & bitmask);
-                    _coefficients[other_i] &= bitmask;
-                    //assert(_coefficients[other_i] > 0);
+                    _coefficients[other_i] &= _adjacency[cur_tile * kNumNeighbors + i];
                 }
-                //if(__popcount(_coefficients[other_i]) == 1) 
-                //    open.push_back(other_coords);
             }
         }
     }
@@ -258,7 +253,6 @@ public:
         }
         DEBUG_VALUE_OF(_index_to_tile);
         
-
         _adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
         build_adjacency(in_map, in_size, _adjacency);
         DEBUG_VALUE_OF(_adjacency);
@@ -266,14 +260,21 @@ public:
         _weights = decltype(_weights)(tileset.size());
         build_weights(in_map, in_size, _weights);
         DEBUG_VALUE_OF(_weights);
+        
+        _coefficients = decltype(_coefficients)(_size.x * _size.y, 0);
 
+        reset();
+    }
+
+    void reset() {
+        DEBUG_METHOD();
         bitmask_t initial_mask = 0;
         for(auto it : _tile_to_index) {
             initial_mask |= _bitmask_of(it.second);
         }
 
-        _coefficients = decltype(_coefficients)(out_size.x * out_size.y, initial_mask);
-        debug_matrix(_coefficients, out_size);
+        std::fill(_coefficients.begin(), _coefficients.end(), initial_mask);
+        debug_matrix(_coefficients, _size);
     }
     
     void step() {
