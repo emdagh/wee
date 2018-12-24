@@ -38,6 +38,14 @@ class model {
         {-1,  0}, // left
     };
 
+    enum class NeighborIndex : uint8_t  {
+        kTop = 0,
+        kRight,
+        kBottom,
+        kLeft
+
+    };
+
     size_t _index_of(const bitmask_t& m) {
         return __builtin_ctzll(m); // hard-coded for 64 bit at the moment
     }
@@ -137,8 +145,8 @@ class model {
         //debug_matrix(_coefficients, _size);
     }
 
-    bool is_valid(const int2& p) {
-        return p.x >= 0 && p.y >= 0 && p.x < _size.x && p.y < _size.y;
+    bool is_valid(const int2& p, const int2& size) {
+        return p.x >= 0 && p.y >= 0 && p.x < size.x && p.y < size.y;
     }
     /**
      * @at - the coordinate of a fully collapsed wave-function
@@ -163,18 +171,24 @@ class model {
                     (cur_coords.y + d.y)  // + _size.y) % _size.y
                 };
 
-                if(!is_valid(other_coords))
+                if(!is_valid(other_coords, _size))
                     continue;
 
                 DEBUG_VALUE_OF(other_coords);
 
                 size_t other_i = other_coords.x + other_coords.y * _size.x;
 
-                auto other_avail = _avail(_coefficients[other_i]);
+                //auto other_avail = _avail(_coefficients[other_i]);
+
 
                 for(auto cur_tile: cur_avail) {
+                    auto adj = _adjacency[cur_tile * kNumNeighbors + i];
+                    [[maybe_unused]] auto is_possible = _coefficients[other_i] & adj;
                     _coefficients[other_i] &= _adjacency[cur_tile * kNumNeighbors + i];
                 }
+                //if(!is_possible) {
+                    open.push_back(other_coords);
+                //}
             }
         }
     }
@@ -192,22 +206,20 @@ class model {
         std::fill(res.begin(), res.end(), 0);
         for(int y=0; y < in_size.y; y++) {
             for(int x=0; x < in_size.x; x++) {
+
                 int ix0 = x + y * in_size.x;
-                
                 int self = in_map[ix0];
                 int i_self = _tile_to_index[self];
-
+                
                 for(size_t z=0; z < kNumNeighbors; z++) {
                     const int2& n = _neighbors[z];
                     int2 p = {
                         (x + n.x), // + in_size.x) % in_size.x, // periodicity
                         (y + n.y)  // + in_size.y) % in_size.y 
                     };
-
-                    if(is_valid(p)) {
-                        int nt = in_map[p.x + p.y * in_size.x];
-                        int i_other = _tile_to_index[nt];
-
+                    if(is_valid(p, in_size)) {
+                        int other = in_map[p.x + p.y * in_size.x];
+                        int i_other = _tile_to_index[other];
                         res[i_self * 4 + z] |= _bitmask_of(i_other);
                     }
                 }
