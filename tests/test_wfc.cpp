@@ -9,11 +9,7 @@ typedef tensor<int32_t, 2> vec2i;
 
 int main(int, char**) {
 
-    std::valarray<size_t> shape = { 4, 4 };
-    size_t size = std::accumulate(std::begin(shape), std::end(shape), 1, std::multiplies<size_t>());
-    for(size_t i=0; i < size; i++) {
-        DEBUG_VALUE_OF(delinearize(i, shape));
-    }
+
 
     tmx::Map map;
     map.load(wee::get_resource_path("assets") + "wfc.tmx");

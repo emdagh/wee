@@ -26,6 +26,8 @@ template <typename T, size_t kNumDimensions = 2>
 class model {
 
     size_t _len;
+    wee::random _random; // TODO: make the randomness deterministic to facilitate debugging
+    // ie.: print the seed on contradictions for example
 
     typedef tensor<int, kNumDimensions> coord_type;
 
@@ -33,18 +35,31 @@ class model {
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;
 
-    std::vector<bitmask_t>      _coefficients;  // bitmask of possible tile values
-    std::vector<float>          _weights;       // maps tile index to weight.
+    std::vector<bitmask_t>     _coefficients;  // bitmask of possible tile values
+    std::vector<float>         _weights;       // maps tile index to weight.
     std::vector<bitmask_t>     _adjacency;
     std::unordered_map<T, int> _tile_to_index;
     std::unordered_map<int, T> _index_to_tile;
     int2 _size;
+    std::valarray<size_t> _output_shape;
     static constexpr int2 _neighbors[kNumNeighbors] = { 
         { 1,  0}, // right
-        {-1,  0}, // left
         { 0,  1}, // bottom
+        {-1,  0}, // left
         { 0, -1}, // top    
     };
+
+
+    std::valarray<int> build_neighbors() {
+        constexpr size_t cols = kNumDimensions;
+        constexpr size_t rows = kNumNeighbors;
+        std::valarray<int> n(rows * cols);
+        size_t x = rows * cols / 2;
+        n[std::gslice(0, { rows / 2, cols }, {cols + 1, 0})] =  1; // trace of top half
+        n[std::gslice(x, { rows / 2, cols }, {cols + 1, 0})] = -1; // trace of bottom hals
+
+        return n;
+    }
 
 
     size_t _index_of(const bitmask_t& m) {
@@ -100,61 +115,34 @@ class model {
     }
 
 
-    void get_min_entropy(int2* d) {
-        DEBUG_METHOD();
-
+    void get_min_entropy(size_t* k) { //std::valarray<size_t>* d) {
         float min_H = std::numeric_limits<float>::infinity();
-
-        std::valarray<size_t> shape = { 
-            (size_t)_size.y,
-            (size_t)_size.x
-        };
 
         for(size_t i=0; i < _len; i++) {
             if(__popcount(_coefficients[i]) == 1)
                 continue;
 
-            float H = _shannon_entropy(i) - wee::randf(0.0f, 1.0f, RANDOM_SEED) / 1000.0f;
+            float H = _shannon_entropy(i) - _random.next<float>(0.f, 1.f) / 1000.0f;
             if(H < min_H) {
                 min_H = H;
-                auto coord = delinearize(i, shape);
-                d->x = coord[1];
-                d->y = coord[0];
+                *k = i;
             }
 
         }
-#if 0 
-        for(auto y: range(_size.y)) {
-            for(auto x: range(_size.x)) {
-                size_t i = x + y * _size.x;
-                
-				if(__popcount(_coefficients[i]) == 1) continue;
-
-                float H = _shannon_entropy(i) - wee::randf(0.0f, 1.0f, RANDOM_SEED) / 1000.0f;
-                if(H < min_H) {
-                    min_H = H;
-                    d->x = x;
-                    d->y = y;
-                    DEBUG_VALUE_OF(x);
-                    DEBUG_VALUE_OF(y);
-                }
-            }
-        }
-#endif
     }
 
-    void collapse(const int2& at) {
-        auto i = at.x + at.y * _size.x;
+    void collapse(size_t i) { //const int2& at) {
+        //auto i = at.x + at.y * _size.x;
         
         std::map<int, float> w; 
         float total_weight = 0.0f;
-        auto avail_at = _avail(_coefficients[at.x + at.y * _size.x]);
+        auto avail_at = _avail(_coefficients[i]);
         for(auto t: avail_at) {
             w.insert(std::pair(t, _weights[t]));
             total_weight += _weights[t];
         }
 
-        float random = wee::randf(0.0f, 1.0f, RANDOM_SEED) * total_weight;
+        float random = _random.next<float>(0.f, 1.0f) * total_weight;
 
         for(const auto& [key, val]: w) {
             random -= val;
@@ -168,23 +156,24 @@ class model {
     bool is_valid(const int2& p, const int2& size) {
         return p.x >= 0 && p.y >= 0 && p.x < size.x && p.y < size.y;
     }
-    /**
-     * @at - the coordinate of a fully collapsed wave-function
-     */
-    void propagate(const int2& at) {
-        std::vector<int2> open = { at };
+    
+    void propagate(size_t at) { //const int2& at) {
+        std::vector<size_t> open = { at };
+
         while(!open.empty()) {
-            int2 cur_coords = open.back();
+            //int2 cur_coords = open.back();
+            size_t cur_i = open.back();
             open.pop_back();
-            size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
+            auto cur_coords = delinearize(cur_i, _output_shape);
+            //size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
             bitmask_t cur_bitmask = _coefficients[cur_i];
             auto cur_avail = _avail(cur_bitmask);
 
             for(size_t i=0; i < kNumNeighbors; i++) { 
                 const int2& d = _neighbors[i];
                 int2 other_coords = {
-                    (cur_coords.x + d.x), // + _size.x) % _size.x,
-                    (cur_coords.y + d.y)  // + _size.y) % _size.y
+                    ((int)cur_coords[1] + d.x),
+                    ((int)cur_coords[0] + d.y)
                 };
 
                 if(!is_valid(other_coords, _size))
@@ -202,7 +191,7 @@ class model {
                     return;
                 
                 if(_coefficients[other_i] != all_options) {
-                    open.push_back(other_coords);
+                    open.push_back(other_i);//coords);
                 }
                 _coefficients[other_i] = all_options;
             }
@@ -218,26 +207,47 @@ class model {
 
     void build_adjacency(const T* in_map, const int2& in_size, decltype(_adjacency)& res) {
         std::fill(res.begin(), res.end(), 0);
+        std::valarray<size_t> in_shape = {
+            (size_t)in_size.y,
+            (size_t)in_size.x
+        };
+
+#define _FOO
+#ifdef _FOO
         for(int y=0; y < in_size.y; y++) {
             for(int x=0; x < in_size.x; x++) {
-
                 int ix0 = x + y * in_size.x;
+#else
+                for(size_t ix0=0; ix0 < _len; ix0++) {
+#endif
+
                 int self = in_map[ix0];
                 int i_self = _tile_to_index[self];
                 
                 for(size_t z=0; z < kNumNeighbors; z++) {
                     const int2& n = _neighbors[z];
+#ifdef _FOO
                     int2 p = {
                         (x + n.x), 
                         (y + n.y) 
                     };
+#else
+                    auto coord = delinearize(ix0, in_shape);
+                    int2 p = {
+                        ((int)coord[1] + n.x), 
+                        ((int)coord[0] + n.y) 
+                    };
+
+#endif
                     if(is_valid(p, in_size)) {
                         int other = in_map[p.x + p.y * in_size.x];
                         int i_other = _tile_to_index[other];
-                        res[i_self * 4 + z] |= _bitmask_of(i_other);
+                        res[i_self * kNumNeighbors + z] |= _bitmask_of(i_other);
                     }
                 }
+#ifdef _FOO
             }
+#endif
         }
     }
 
@@ -258,6 +268,11 @@ public:
 
         _len = _size.x * _size.y;
 
+        _output_shape = {
+            (size_t)out_size.y,
+            (size_t)out_size.x
+        };
+
         size_t n = in_size.x * in_size.y;
         std::vector<T> tileset(in_map, in_map + n);
         std::sort(tileset.begin(), tileset.end());
@@ -267,6 +282,8 @@ public:
             _tile_to_index[tileset[i]] = i;
             _index_to_tile[i] = tileset[i];
         }
+
+        DEBUG_VALUE_OF(build_neighbors());
         
         _adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
         build_adjacency(in_map, in_size, _adjacency);
@@ -292,27 +309,20 @@ public:
     }
     
     void step() {
-        int2 coord = { 1, 1 } ;
-
-        static int skip_first = 0;
-        if(skip_first > 0) {
-            _coefficients[1 + 1 * _size.x] = 4;
-            propagate(coord);
-            skip_first--;
-        }
-
+        //int2 coord = { 1, 1 } ;
+        size_t index;
         /**
          * step 1: find the coordinate of the coefficient with the lowest entropy
          */
-        get_min_entropy(&coord);
+        get_min_entropy(&index);
         /**
          * step 2: collapse the wave function for the found coordinate
          */
-        collapse(coord);
+        collapse(index);
         /**
          * step 3: propagate the effects of the collapse
          */
-        propagate(coord);
+        propagate(index);
     }
 
     void run(T* out_map) {

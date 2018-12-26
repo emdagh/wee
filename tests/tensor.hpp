@@ -8,12 +8,15 @@ constexpr T array_product(T x) { return x; }
 template<typename T, typename... Ts>
 constexpr T array_product(T x, Ts... xs) { return x * array_product(xs...); }
 
+/**
+ * https://eli.thegreenplace.net/2015/memory-layout-of-multi-dimensional-arrays/
+ */
 template <typename Iterator>
-constexpr size_t linearize(Iterator first, Iterator last, Iterator first_dim) {
-    if(first == last) {
-        return *first;
+constexpr size_t linearize(Iterator a, Iterator b, Iterator dim) {
+    if(a == b) {
+        return *a;
     } else {
-        return (*first) + (*first_dim) * linearize(std::next(first), last, std::next(first_dim));
+        return (*a) + (*dim) * linearize(std::prev(a), b, std::prev(dim));
     }
 }
 /**
@@ -29,8 +32,9 @@ std::valarray<size_t> delinearize(const size_t k_, const std::valarray<size_t>& 
         std::multiplies<size_t>()
     );
 
-    std::valarray<size_t> res(shape.size());
-    for(auto i: wee::range(shape.size())) {
+    size_t n = shape.size();
+    std::valarray<size_t> res(n);
+    for(auto i: wee::range(n)) {
         c /= shape[i];
         auto j  = k / c;
         k -= j * c;
@@ -44,8 +48,8 @@ template <typename T, size_t Rank>
 class tensor {
 public:
     using array_type        = std::valarray<T>;
-    using index_type        = std::valarray<size_t>;//std::array<size_t, Rank>;
-    using value_type        = typename array_type::value_type;      // T
+    using index_type        = std::valarray<size_t>;
+    using value_type        = typename array_type::value_type;
     using reference         = T&;
     using const_reference   = const T&;
 
@@ -92,7 +96,7 @@ public:
 
     }
     constexpr const_reference operator [] (const index_type& ix) const {
-        return _data[linearize(std::begin(ix), std::end(ix) - 1, std::begin(_shape))];
+        return _data[linearize(std::end(ix) - 1, std::begin(ix), std::end(_shape)-1)];
     }
 
     array_type slice(size_t s, const index_type& d, const index_type& i) {
