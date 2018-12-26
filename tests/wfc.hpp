@@ -21,23 +21,23 @@
 
 using wee::range;
 
-template <typename T>
+template <typename T, size_t kNumDimensions = 2>
 class model {
-    static constexpr size_t kNumDimensions = 2;
+    //static constexpr size_t kNumDimensions = 2;
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;
 
-    std::vector<bitmask_t>  _coefficients;  // bitmask of possible tile values
-    std::vector<float>      _weights;       // maps tile index to weight.
+    std::vector<bitmask_t>      _coefficients;  // bitmask of possible tile values
+    std::vector<float>          _weights;       // maps tile index to weight.
     std::vector<bitmask_t>     _adjacency;
     std::unordered_map<T, int> _tile_to_index;
     std::unordered_map<int, T> _index_to_tile;
     int2 _size;
     static constexpr int2 _neighbors[kNumNeighbors] = { 
-        { 0, -1}, // top    
         { 1,  0}, // right
-        { 0,  1}, // bottom
         {-1,  0}, // left
+        { 0,  1}, // bottom
+        { 0, -1}, // top    
     };
 
     enum class NeighborIndex : uint8_t  {
@@ -71,7 +71,7 @@ class model {
 
     float _shannon_entropy(const int2& at) {
         auto at_i = at.x + at.y * _size.x;
-#if  0 
+#if 1 
         /**
          * is there any good reason why we would use 'real' entropy here?
          * the std::log seems costly for a runtime functionality...
