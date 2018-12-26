@@ -145,6 +145,7 @@ class model {
 
     void collapse(const int2& at) {
         auto i = at.x + at.y * _size.x;
+        
         std::map<int, float> w; 
         float total_weight = 0.0f;
         auto avail_at = _avail(_coefficients[at.x + at.y * _size.x]);
@@ -179,7 +180,6 @@ class model {
             bitmask_t cur_bitmask = _coefficients[cur_i];
             auto cur_avail = _avail(cur_bitmask);
 
-
             for(size_t i=0; i < kNumNeighbors; i++) { 
                 const int2& d = _neighbors[i];
                 int2 other_coords = {
@@ -191,7 +191,6 @@ class model {
                     continue;
 
                 size_t other_i = other_coords.x + other_coords.y * _size.x;
-
 
                 bitmask_t opts = 0;
                 for(auto ct: cur_avail) {
