@@ -71,7 +71,7 @@ class model {
 
     float _shannon_entropy(const int2& at) {
         auto at_i = at.x + at.y * _size.x;
-#if 1 
+#if  0 
         /**
          * is there any good reason why we would use 'real' entropy here?
          * the std::log seems costly for a runtime functionality...
@@ -177,9 +177,8 @@ class model {
                 for(auto ct: cur_avail) {
                     opts |= _adjacency[ct * kNumNeighbors + i];
                 }
-#if 1
+                
                 auto all_options = _coefficients[other_i] & opts;
-
                 if(!all_options)
                     return;
                 
@@ -187,34 +186,9 @@ class model {
                     open.push_back(other_coords);
                 }
                 _coefficients[other_i] = all_options;
-
-#else           
-                auto other_avail = _avail(_coefficients[other_i]);
-                for(auto ot: other_avail) {
-                    auto other_tile = _bitmask_of(ot);
-                    auto is_possible = std::any_of(cur_avail.begin(), cur_avail.end(), [&] (auto current_tile) {
-                        return other_tile & _adjacency[current_tile * kNumNeighbors + i];
-                    });
-                    
-                    DEBUG_VALUE_OF(is_possible);
-
-                    if(!is_possible) {
-                        auto res = _coefficients[other_i] & ~other_tile;
-                        if(!res) 
-                            return;
-                        _coefficients[other_i] = res;//~other_tile;
-                        open.push_back(other_coords);
-                        DEBUG_VALUE_OF(other_coords);
-                    }
-                }
-                //DEBUG_VALUE_OF(_avail(_coefficients[other_i]));
-                DEBUG_VALUE_OF(_coefficients[other_i]);
-#endif
             }
         }
     }
-
-    
    
     bool is_fully_collapsed() {
         for(auto i: _coefficients) {

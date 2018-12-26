@@ -22,21 +22,13 @@ int main(int, char**) {
 
     typedef int type;
 
-    type in_map[] = { // red maze example 
-#if 0
-        201, 201, 201, 201,
-        201, 202, 203, 202,
-        201, 204, 666, 204,
-        201, 202, 203, 202,
-        201, 201, 201, 201
-#else   
+    type in_map[] = { 
         111, 111, 111, 111,
         111, 111, 111, 111,
         111, 211, 211, 111,
         211, 311, 311, 211,
         311, 311, 311, 311,
         311, 311, 311, 311
-#endif  
     };
     constexpr int2 kOutputDimension = { 50, 16};
     constexpr size_t kOutputSize = kOutputDimension.x * kOutputDimension.y;
