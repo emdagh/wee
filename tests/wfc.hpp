@@ -17,6 +17,8 @@
 #include <wee/core/range.hpp>
 #include "attempt3.hpp"
 
+#define RANDOM_SEED     0
+
 using wee::range;
 
 template <typename T>
@@ -106,7 +108,7 @@ class model {
                 
 				if(__popcount(_coefficients[i]) == 1) continue;
 
-                float entropy = _shannon_entropy({x, y}) - wee::randf() / 1000.0f;
+                float entropy = _shannon_entropy({x, y}) - wee::randf(0.0f, 1.0f, RANDOM_SEED) / 1000.0f;
                 if(entropy < min_entropy) {
                     min_entropy = entropy;
                     d->x = x;
@@ -122,8 +124,6 @@ class model {
     }
 
     void collapse(const int2& at) {
-        DEBUG_METHOD();
-        //_coefficients[at.x + at.y * _size.x] = 2;
         auto i = at.x + at.y * _size.x;
         std::map<int, float> w; 
         float total_weight = 0.0f;
@@ -133,7 +133,7 @@ class model {
             total_weight += _weights[t];
         }
 
-        float random = wee::randf() * total_weight;
+        float random = wee::randf(0.0f, 1.0f, RANDOM_SEED) * total_weight;
 
         for(const auto& [key, val]: w) {
             random -= val;
@@ -142,7 +142,6 @@ class model {
                 break;
             }
         }
-        //debug_matrix(_coefficients, _size);
     }
 
     bool is_valid(const int2& p, const int2& size) {
@@ -152,17 +151,14 @@ class model {
      * @at - the coordinate of a fully collapsed wave-function
      */
     void propagate(const int2& at) {
-        DEBUG_METHOD();
         std::vector<int2> open = { at };
         while(!open.empty()) {
-            debug_matrix(_coefficients, _size);
             int2 cur_coords = open.back();
             open.pop_back();
             size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
             bitmask_t cur_bitmask = _coefficients[cur_i];
             auto cur_avail = _avail(cur_bitmask);
 
-            DEBUG_VALUE_OF(cur_coords);
 
             for(size_t i=0; i < kNumNeighbors; i++) { 
                 const int2& d = _neighbors[i];
@@ -174,21 +170,46 @@ class model {
                 if(!is_valid(other_coords, _size))
                     continue;
 
-                DEBUG_VALUE_OF(other_coords);
-
                 size_t other_i = other_coords.x + other_coords.y * _size.x;
 
-                //auto other_avail = _avail(_coefficients[other_i]);
 
-
-                for(auto cur_tile: cur_avail) {
-                    auto adj = _adjacency[cur_tile * kNumNeighbors + i];
-                    [[maybe_unused]] auto is_possible = _coefficients[other_i] & adj;
-                    _coefficients[other_i] &= _adjacency[cur_tile * kNumNeighbors + i];
+                bitmask_t opts = 0;
+                for(auto ct: cur_avail) {
+                    opts |= _adjacency[ct * kNumNeighbors + i];
                 }
-                //if(!is_possible) {
+#if 1
+                auto all_options = _coefficients[other_i] & opts;
+
+                if(!all_options)
+                    return;
+                
+                if(_coefficients[other_i] != all_options) {
                     open.push_back(other_coords);
-                //}
+                }
+                _coefficients[other_i] = all_options;
+
+#else           
+                auto other_avail = _avail(_coefficients[other_i]);
+                for(auto ot: other_avail) {
+                    auto other_tile = _bitmask_of(ot);
+                    auto is_possible = std::any_of(cur_avail.begin(), cur_avail.end(), [&] (auto current_tile) {
+                        return other_tile & _adjacency[current_tile * kNumNeighbors + i];
+                    });
+                    
+                    DEBUG_VALUE_OF(is_possible);
+
+                    if(!is_possible) {
+                        auto res = _coefficients[other_i] & ~other_tile;
+                        if(!res) 
+                            return;
+                        _coefficients[other_i] = res;//~other_tile;
+                        open.push_back(other_coords);
+                        DEBUG_VALUE_OF(other_coords);
+                    }
+                }
+                //DEBUG_VALUE_OF(_avail(_coefficients[other_i]));
+                DEBUG_VALUE_OF(_coefficients[other_i]);
+#endif
             }
         }
     }
@@ -236,17 +257,6 @@ class model {
         }
     }
 
-    template <typename F>
-    void debug_matrix(const std::vector<F>& a, const int2& s) {
-        for(auto y: range(s.y)) {
-            auto begin = a.begin() + y * s.x;
-            auto end = begin + s.x;
-            auto row = std::vector<T>(begin, end);
-
-            DEBUG_VALUE_OF(row);
-        }
-        std::cout << std::endl;
-    }
 
 public:
 
@@ -257,13 +267,11 @@ public:
         std::vector<T> tileset(in_map, in_map + n);
         std::sort(tileset.begin(), tileset.end());
         tileset.erase(std::unique(tileset.begin(), tileset.end()), tileset.end());
-        DEBUG_VALUE_OF(tileset);
     
         for(size_t i=0; i < tileset.size(); i++) {
             _tile_to_index[tileset[i]] = i;
             _index_to_tile[i] = tileset[i];
         }
-        DEBUG_VALUE_OF(_index_to_tile);
         
         _adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
         build_adjacency(in_map, in_size, _adjacency);
@@ -286,11 +294,18 @@ public:
         }
 
         std::fill(_coefficients.begin(), _coefficients.end(), initial_mask);
-        debug_matrix(_coefficients, _size);
     }
     
     void step() {
-        int2 coord;
+        int2 coord = { 1, 1 } ;
+
+        static int skip_first = 0;
+        if(skip_first > 0) {
+            _coefficients[1 + 1 * _size.x] = 4;
+            propagate(coord);
+            skip_first--;
+        }
+
         /**
          * step 1: find the coordinate of the coefficient with the lowest entropy
          */
@@ -309,7 +324,6 @@ public:
         while(!is_fully_collapsed()) {
             step();
         }
-        debug_matrix(_coefficients, _size);
         std::vector<T> temp(_size.x * _size.y, -1);
 
         for(int y: range(_size.y)) {
@@ -321,7 +335,6 @@ public:
 
             }
         }
-        debug_matrix(temp, _size);
         std::copy(std::begin(temp), std::end(temp), out_map);
     }
 

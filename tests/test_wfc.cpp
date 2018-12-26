@@ -27,29 +27,23 @@ int main(int, char**) {
         201, 201, 201, 201,
         201, 202, 203, 202,
         201, 204, 666, 204,
-        201, 202, 203, 202
+        201, 202, 203, 202,
+        201, 201, 201, 201
 #else   
-        
-        /*666,666,666,666,
-        666,666,666,666,
-        666,666,666,666,
-        666,202,202,666,
-        202,205,205,202,
-        205,205,205,205,
-        205,205,205,205,
-        205,205,205,205*/
-        111, 111, 111,
-        111, 211, 111,
-        211, 311, 211,
-        311, 311, 311
+        111, 111, 111, 111,
+        111, 111, 111, 111,
+        111, 211, 211, 111,
+        211, 311, 311, 211,
+        311, 311, 311, 311,
+        311, 311, 311, 311
 #endif  
     };
-    constexpr int2 kOutputDimension = {3, 3};
+    constexpr int2 kOutputDimension = { 50, 16};
     constexpr size_t kOutputSize = kOutputDimension.x * kOutputDimension.y;
 
     type* out_map = new type[kOutputSize];
     
-    _wfc::_run<type>(in_map, { 3, 4 }, out_map, kOutputDimension);
+    _wfc::_run<type>(in_map, { 4, 6 }, out_map, kOutputDimension);
 
     std::vector<type> arr(kOutputSize, -1);;
     std::copy(out_map, out_map + kOutputSize, std::begin(arr));
@@ -57,11 +51,13 @@ int main(int, char**) {
         for(auto x: range(kOutputDimension.x)) {
             switch(out_map[x + y * kOutputDimension.x]) {
                 case 201: std::cout << " "; break;
-                case 211: std::cout << YELLOW << "." << RESET; break;
+                case 202: std::cout << "+"; break;
                 case 203: std::cout << "-"; break;
                 case 204: std::cout << "|"; break;
+                case 666: std::cout << RED << "*" << RESET; break;
                 case 311: std::cout << BLUE  << "~" << RESET; break;
                 case 111: std::cout << GREEN << "#" << RESET; break;
+                case 211: std::cout << YELLOW << "." << RESET; break;
                 default: std::cout << RED << "?" << RESET; break;
             }
             //std::cout << std::dec <<  out_map[x + y * kOutputDimension] << ",";

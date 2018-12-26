@@ -34,13 +34,14 @@ namespace wee {
         }
     };
 
-    auto randf = [] (float min = 0.0f, float max = 1.0f) -> float {
+    auto randf = [] (float min = 0.0f, float max = 1.0f, int32_t s = 0) -> float {
         using wee::random;
         static auto milliseconds_since_epoch =
             std::chrono::system_clock::now().time_since_epoch() / 
             std::chrono::milliseconds(1);
 
-        static random rnd(milliseconds_since_epoch);
+        int32_t seed = s ? s : milliseconds_since_epoch;
+        static random rnd(seed);
         return rnd.next(min, max);
     };
 }
