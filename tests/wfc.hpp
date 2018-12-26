@@ -25,6 +25,8 @@ using wee::range;
 template <typename T, size_t kNumDimensions = 2>
 class model {
 
+    size_t _len;
+
     typedef tensor<int, kNumDimensions> coord_type;
 
     //static constexpr size_t kNumDimensions = 2;
@@ -66,8 +68,8 @@ class model {
         return opts;
     }
 
-    float _shannon_entropy(const int2& at) {
-        auto at_i = at.x + at.y * _size.x;
+    float _shannon_entropy(size_t at_i) { //const int2& at) {
+        //auto at_i = at.x + at.y * _size.x;
 #if 1 
         /**
          * is there any good reason why we would use 'real' entropy here?
@@ -97,22 +99,48 @@ class model {
 #endif
     }
 
+
     void get_min_entropy(int2* d) {
-        float min_entropy = std::numeric_limits<float>::infinity();
+        DEBUG_METHOD();
+
+        float min_H = std::numeric_limits<float>::infinity();
+
+        std::valarray<size_t> shape = { 
+            (size_t)_size.y,
+            (size_t)_size.x
+        };
+
+        for(size_t i=0; i < _len; i++) {
+            if(__popcount(_coefficients[i]) == 1)
+                continue;
+
+            float H = _shannon_entropy(i) - wee::randf(0.0f, 1.0f, RANDOM_SEED) / 1000.0f;
+            if(H < min_H) {
+                min_H = H;
+                auto coord = delinearize(i, shape);
+                d->x = coord[1];
+                d->y = coord[0];
+            }
+
+        }
+#if 0 
         for(auto y: range(_size.y)) {
             for(auto x: range(_size.x)) {
                 size_t i = x + y * _size.x;
                 
 				if(__popcount(_coefficients[i]) == 1) continue;
 
-                float entropy = _shannon_entropy({x, y}) - wee::randf(0.0f, 1.0f, RANDOM_SEED) / 1000.0f;
-                if(entropy < min_entropy) {
-                    min_entropy = entropy;
+                float H = _shannon_entropy(i) - wee::randf(0.0f, 1.0f, RANDOM_SEED) / 1000.0f;
+                if(H < min_H) {
+                    min_H = H;
                     d->x = x;
                     d->y = y;
+                    DEBUG_VALUE_OF(x);
+                    DEBUG_VALUE_OF(y);
                 }
             }
         }
+#endif
     }
 
     void collapse(const int2& at) {
@@ -228,6 +256,8 @@ public:
 
     model(const T* in_map, const int2& in_size, T* , const int2& out_size) 
         : _size(out_size) {
+
+        _len = _size.x * _size.y;
 
         size_t n = in_size.x * in_size.y;
         std::vector<T> tileset(in_map, in_map + n);

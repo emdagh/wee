@@ -16,6 +16,28 @@ constexpr size_t linearize(Iterator first, Iterator last, Iterator first_dim) {
         return (*first) + (*first_dim) * linearize(std::next(first), last, std::next(first_dim));
     }
 }
+/**
+ * implementation based on:
+ * https://math.stackexchange.com/questions/2008367/how-to-convert-an-index-into-n-coordinates
+ */
+std::valarray<size_t> delinearize(const size_t k_, const std::valarray<size_t>& shape) {
+
+    size_t k = k_;
+    size_t c = std::accumulate(std::begin(shape), 
+        std::end(shape), 
+        1, 
+        std::multiplies<size_t>()
+    );
+
+    std::valarray<size_t> res(shape.size());
+    for(auto i: wee::range(shape.size())) {
+        c /= shape[i];
+        auto j  = k / c;
+        k -= j * c;
+        res[i] = j;
+    }
+    return res;
+}
 
 
 template <typename T, size_t Rank>
@@ -62,12 +84,10 @@ public:
     template <typename... Ts>
     constexpr reference at(Ts... ts) const {
         std::array<size_t, sizeof...(Ts)> ix = { static_cast<size_t>(ts)... };
-        //return _data[linearize(std::begin(ix), std::end(ix) - 1, std::begin(_shape))];
         return this->operator[] (ix);
     }
 
     constexpr reference operator [] (const index_type& ix) {
-        //return _data[linearize(std::begin(ix), std::end(ix) - 1, std::begin(_shape))];
         return const_cast<T&>(static_cast<const tensor*>(this)->operator [] (ix));
 
     }
