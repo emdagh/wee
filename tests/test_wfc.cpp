@@ -6,6 +6,10 @@ using wee::range;
 
 typedef tensor<int32_t, 2> vec2i;
 
+/**
+ * implementation based on:
+ * https://math.stackexchange.com/questions/2008367/how-to-convert-an-index-into-n-coordinates
+ */
 std::valarray<size_t> delinearize(size_t k, const std::valarray<size_t>& shape) {
     size_t c = std::accumulate(std::begin(shape), 
         std::end(shape), 
