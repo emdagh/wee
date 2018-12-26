@@ -16,6 +16,7 @@
 #include <wee/wee.hpp>
 #include <wee/core/range.hpp>
 #include "attempt3.hpp"
+#include "tensor.hpp"
 
 #define RANDOM_SEED     0
 
@@ -23,6 +24,9 @@ using wee::range;
 
 template <typename T, size_t kNumDimensions = 2>
 class model {
+
+    typedef tensor<int, kNumDimensions> coord_type;
+
     //static constexpr size_t kNumDimensions = 2;
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;
@@ -40,13 +44,6 @@ class model {
         { 0, -1}, // top    
     };
 
-    enum class NeighborIndex : uint8_t  {
-        kTop = 0,
-        kRight,
-        kBottom,
-        kLeft
-
-    };
 
     size_t _index_of(const bitmask_t& m) {
         return __builtin_ctzll(m); // hard-coded for 64 bit at the moment
@@ -116,11 +113,6 @@ class model {
                 }
             }
         }
-    }
-
-    void constrain(const int2& at, size_t forbidden) {
-        size_t i = at.x + at.y * _size.x;
-        _coefficients[i] &= ~_bitmask_of(forbidden);
     }
 
     void collapse(const int2& at) {
@@ -209,8 +201,8 @@ class model {
                 for(size_t z=0; z < kNumNeighbors; z++) {
                     const int2& n = _neighbors[z];
                     int2 p = {
-                        (x + n.x), // + in_size.x) % in_size.x, // periodicity
-                        (y + n.y)  // + in_size.y) % in_size.y 
+                        (x + n.x), 
+                        (y + n.y) 
                     };
                     if(is_valid(p, in_size)) {
                         int other = in_map[p.x + p.y * in_size.x];

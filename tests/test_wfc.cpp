@@ -4,18 +4,32 @@
 
 using wee::range;
 
-struct tilelayer {
-};
+typedef tensor<int32_t, 2> vec2i;
 
-// represents a tmx file in memory
-struct tilemap {
-};
+std::valarray<size_t> delinearize(size_t k, const std::valarray<size_t>& shape) {
+    size_t c = std::accumulate(std::begin(shape), 
+        std::end(shape), 
+        1, 
+        std::multiplies<size_t>()
+    );
 
-// represents a tsx file in memory
-struct tileset { 
-};
+    std::valarray<size_t> res(shape.size());
+    for(auto i: wee::range(shape.size())) {
+        c /= shape[i];
+        auto j  = k / c;
+        k -= j * c;
+        res[i] = j;
+    }
+    return res;
+}
 
 int main(int, char**) {
+
+    std::valarray<size_t> shape = { 4, 4 };
+    size_t size = std::accumulate(std::begin(shape), std::end(shape), 1, std::multiplies<size_t>());
+    for(size_t i=0; i < size; i++) {
+        DEBUG_VALUE_OF(delinearize(i, shape));
+    }
 
     tmx::Map map;
     map.load(wee::get_resource_path("assets") + "wfc.tmx");
