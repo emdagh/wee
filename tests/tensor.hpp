@@ -11,19 +11,30 @@ constexpr T array_product(T x, Ts... xs) { return x * array_product(xs...); }
 /**
  * https://eli.thegreenplace.net/2015/memory-layout-of-multi-dimensional-arrays/
  */
-template <typename Iterator>
-constexpr size_t linearize(Iterator a, Iterator b, Iterator dim) {
+template <typename Iterator_, typename Iterator>
+constexpr size_t linearize(Iterator_ a, Iterator_ b, Iterator dim) {
     if(a == b) {
         return *a;
     } else {
         return (*a) + (*dim) * linearize(std::prev(a), b, std::prev(dim));
     }
 }
+
+size_t linearize(const std::valarray<int>& coord, const std::valarray<size_t>& dim) {
+    return linearize(std::end(coord) - 1, std::begin(coord), std::end(dim) - 1);
+}
+
+template <typename T>
+constexpr std::valarray<T> to_cartesian(const std::valarray<T>& in) {
+    std::valarray<T> copy(in);
+    return std::reverse(std::begin(copy), std::end(copy));
+}
 /**
  * implementation based on:
  * https://math.stackexchange.com/questions/2008367/how-to-convert-an-index-into-n-coordinates
  */
-std::valarray<size_t> delinearize(const size_t k_, const std::valarray<size_t>& shape) {
+template <typename T>
+std::valarray<T> delinearize(const size_t k_, const std::valarray<size_t>& shape) {
 
     size_t k = k_;
     size_t c = std::accumulate(std::begin(shape), 
@@ -33,12 +44,12 @@ std::valarray<size_t> delinearize(const size_t k_, const std::valarray<size_t>& 
     );
 
     size_t n = shape.size();
-    std::valarray<size_t> res(n);
+    std::valarray<T> res(n);
     for(auto i: wee::range(n)) {
         c /= shape[i];
         auto j  = k / c;
         k -= j * c;
-        res[i] = j;
+        res[i] = static_cast<T>(j);
     }
     return res;
 }

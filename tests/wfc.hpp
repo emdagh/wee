@@ -26,7 +26,7 @@ template <typename T, size_t kNumDimensions = 2>
 class model {
 
     size_t _len;
-    wee::random _random; // TODO: make the randomness deterministic to facilitate debugging
+    wee::random _random { -279628382}; // TODO: make the randomness deterministic to facilitate debugging
     // ie.: print the seed on contradictions for example
 
     typedef tensor<int, kNumDimensions> coord_type;
@@ -40,14 +40,16 @@ class model {
     std::vector<bitmask_t>     _adjacency;
     std::unordered_map<T, int> _tile_to_index;
     std::unordered_map<int, T> _index_to_tile;
-    int2 _size;
+    //int2 _size;
     std::valarray<size_t> _output_shape;
-    static constexpr int2 _neighbors[kNumNeighbors] = { 
-        { 1,  0}, // right
+    /*static constexpr int2 _neighbors[kNumNeighbors] = { 
         { 0,  1}, // bottom
-        {-1,  0}, // left
+        { 1,  0}, // right
         { 0, -1}, // top    
-    };
+        {-1,  0}, // left
+    };*/
+
+    std::valarray<int> _nd_neighbors;
 
 
     std::valarray<int> build_neighbors() {
@@ -127,7 +129,6 @@ class model {
                 min_H = H;
                 *k = i;
             }
-
         }
     }
 
@@ -156,6 +157,17 @@ class model {
     bool is_valid(const int2& p, const int2& size) {
         return p.x >= 0 && p.y >= 0 && p.x < size.x && p.y < size.y;
     }
+
+
+    bool is_valid(const std::valarray<int>& coord, const std::valarray<size_t>& shape) {
+        size_t n = shape.size();
+        assert(n == coord.size());
+        for(auto i: wee::range(n)) {
+            if(coord[i] < 0 || shape[i] <= static_cast<size_t>(coord[i]))
+                return false;
+        }
+        return true;
+    }
     
     void propagate(size_t at) { //const int2& at) {
         std::vector<size_t> open = { at };
@@ -164,22 +176,37 @@ class model {
             //int2 cur_coords = open.back();
             size_t cur_i = open.back();
             open.pop_back();
-            auto cur_coords = delinearize(cur_i, _output_shape);
+            auto cur_coords = delinearize<int>(cur_i, _output_shape);
             //size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
             bitmask_t cur_bitmask = _coefficients[cur_i];
             auto cur_avail = _avail(cur_bitmask);
 
             for(size_t i=0; i < kNumNeighbors; i++) { 
+#if 0
                 const int2& d = _neighbors[i];
                 int2 other_coords = {
                     ((int)cur_coords[1] + d.x),
                     ((int)cur_coords[0] + d.y)
                 };
+#endif
+                size_t start = i * kNumDimensions;
+                std::valarray<int> d = _nd_neighbors[std::slice(start, kNumDimensions, 1)];
 
-                if(!is_valid(other_coords, _size))
+                auto other_coords = cur_coords + d;
+#if 0
+                int2 temp = {
+                    other_coords[1],
+                    other_coords[0]
+                };
+
+                if(!is_valid(temp, _size))
+                    continue;
+#endif
+
+                if(!is_valid(other_coords, _output_shape)) 
                     continue;
 
-                size_t other_i = other_coords.x + other_coords.y * _size.x;
+                size_t other_i = linearize(other_coords, _output_shape);
 
                 bitmask_t opts = 0;
                 for(auto ct: cur_avail) {
@@ -207,52 +234,43 @@ class model {
 
     void build_adjacency(const T* in_map, const int2& in_size, decltype(_adjacency)& res) {
         std::fill(res.begin(), res.end(), 0);
+
+
         std::valarray<size_t> in_shape = {
             (size_t)in_size.y,
             (size_t)in_size.x
         };
 
-#define _FOO
-#ifdef _FOO
-        for(int y=0; y < in_size.y; y++) {
-            for(int x=0; x < in_size.x; x++) {
-                int ix0 = x + y * in_size.x;
-#else
-                for(size_t ix0=0; ix0 < _len; ix0++) {
-#endif
+        size_t in_len = std::accumulate(
+            std::begin(in_shape), 
+            std::end(in_shape), 
+            1, 
+            std::multiplies<size_t>()
+        );
 
-                int self = in_map[ix0];
-                int i_self = _tile_to_index[self];
+
+        for(size_t ix0=0; ix0 < in_len; ix0++) {
+
+            int self = in_map[ix0];
+            int i_self = _tile_to_index[self];
+            
+            auto coord = delinearize<int>(ix0, in_shape);
+            
+            for(size_t z=0; z < kNumNeighbors; z++) {
+                size_t start = z * kNumDimensions;
+                std::valarray<int> n = _nd_neighbors[std::slice(start, kNumDimensions, 1)];
+                std::valarray<int> p = coord + n;
                 
-                for(size_t z=0; z < kNumNeighbors; z++) {
-                    const int2& n = _neighbors[z];
-#ifdef _FOO
-                    int2 p = {
-                        (x + n.x), 
-                        (y + n.y) 
-                    };
-#else
-                    auto coord = delinearize(ix0, in_shape);
-                    int2 p = {
-                        ((int)coord[1] + n.x), 
-                        ((int)coord[0] + n.y) 
-                    };
-
-#endif
-                    if(is_valid(p, in_size)) {
-                        int other = in_map[p.x + p.y * in_size.x];
-                        int i_other = _tile_to_index[other];
-                        res[i_self * kNumNeighbors + z] |= _bitmask_of(i_other);
-                    }
+                if(is_valid(p, in_shape)) {
+                    int other = in_map[linearize(p, in_shape)];
+                    int i_other = _tile_to_index[other];
+                    res[i_self * kNumNeighbors + z] |= _bitmask_of(i_other);
                 }
-#ifdef _FOO
             }
-#endif
         }
     }
 
-    void build_weights(const T* in_map, const int2& in_size, [[maybe_unused]] decltype(_weights)& weights) {
-        size_t n = in_size.x * in_size.y;
+    void build_weights(const T* in_map, size_t n, decltype(_weights)& weights) {
         std::multiset<T> temp(in_map, in_map + n);
         for(auto it = temp.begin(); it != temp.end(); it = temp.upper_bound(*it)) {
             size_t tile_i = _tile_to_index[*it];
@@ -264,9 +282,10 @@ class model {
 public:
 
     model(const T* in_map, const int2& in_size, T* , const int2& out_size) 
-        : _size(out_size) {
+        //: _size(out_size) 
+    {
 
-        _len = _size.x * _size.y;
+        _len = out_size.x * out_size.y;
 
         _output_shape = {
             (size_t)out_size.y,
@@ -283,17 +302,18 @@ public:
             _index_to_tile[i] = tileset[i];
         }
 
-        DEBUG_VALUE_OF(build_neighbors());
+        _nd_neighbors = build_neighbors();
+        DEBUG_VALUE_OF(_nd_neighbors);
         
         _adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
         build_adjacency(in_map, in_size, _adjacency);
         DEBUG_VALUE_OF(_adjacency);
 
         _weights = decltype(_weights)(tileset.size());
-        build_weights(in_map, in_size, _weights);
+        build_weights(in_map, n, _weights);
         DEBUG_VALUE_OF(_weights);
         
-        _coefficients = decltype(_coefficients)(_size.x * _size.y, 0);
+        _coefficients = decltype(_coefficients)(_len, 0);
 
         reset();
     }
@@ -329,18 +349,21 @@ public:
         while(!is_fully_collapsed()) {
             step();
         }
-        std::vector<T> temp(_size.x * _size.y, -1);
+        std::vector<T> temp(_len, -1);
 
-        for(int y: range(_size.y)) {
-            for(int x: range(_size.x)) {
-                int i = x + y * _size.x;
+        //for(int y: range(_size.y)) {
+        //    for(int x: range(_size.x)) {
+        for(size_t i=0; i < _len; i++) {
+                //int i = x + y * _size.x;
                 bitmask_t cb = _coefficients[i];
                 int index = _index_of(cb);
                 temp[i] = _index_to_tile[index];
-
-            }
         }
+
+        //    }
+        //}
         std::copy(std::begin(temp), std::end(temp), out_map);
+        DEBUG_VALUE_OF(_random.seed());
     }
 
 };
