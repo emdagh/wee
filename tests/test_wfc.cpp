@@ -39,9 +39,15 @@ void load_tile_layer(const tmx::Map& mp, const tmx::TileLayer* layer) {
 
         gid -= tileset->getFirstGID();
 
+        DEBUG_VALUE_OF(gid);
         DEBUG_VALUE_OF(tile->ID);
 
         for(const auto& object: tile->objectGroup.getObjects()) {
+            const tmx::Object::Shape& shape = object.getShape();
+            const tmx::FloatRect& aabb = object.getAABB();
+            DEBUG_VALUE_OF((int)shape);
+            DEBUG_VALUE_OF(aabb.width);
+            DEBUG_VALUE_OF(aabb.height);
 
             for(const auto& property: object.getProperties()) {
                 DEBUG_VALUE_OF(property.getStringValue());

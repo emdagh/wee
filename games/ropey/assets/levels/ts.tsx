@@ -16,6 +16,9 @@
  <tile id="78">
   <objectgroup draworder="index">
    <object id="2" x="5.25" y="5.25" width="10.5" height="10.5">
+    <properties>
+     <property name="class" value="pickup"/>
+    </properties>
     <ellipse/>
    </object>
   </objectgroup>
