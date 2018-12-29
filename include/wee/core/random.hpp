@@ -8,10 +8,10 @@
 namespace wee {
 
     struct random {
-        int32_t _seed;
+        uint32_t _seed;
         std::mt19937 eng;
 
-        random(int32_t s=0) {
+        random(uint32_t s=0) {
             static auto milliseconds_since_epoch =
             std::chrono::system_clock::now().time_since_epoch() / 
             std::chrono::milliseconds(1);
@@ -20,7 +20,7 @@ namespace wee {
             eng = std::mt19937(_seed);//{ seed };//std::random_device{}() };
         }
 
-        int32_t seed() const { return _seed; }
+        uint32_t seed() const { return _seed; }
 
         template <typename Int>
         Int next_int(Int min, Int max) {
@@ -46,7 +46,7 @@ namespace wee {
             std::chrono::system_clock::now().time_since_epoch() / 
             std::chrono::milliseconds(1);
 
-        int32_t seed = s ? s : milliseconds_since_epoch;
+        uint32_t seed = s ? s : milliseconds_since_epoch;
         static random rnd(seed);
         return rnd.next(min, max);
     };

@@ -17,39 +17,42 @@
 #include <wee/core/range.hpp>
 #include "attempt3.hpp"
 #include "tensor.hpp"
+#include <nmmintrin.h>
 
 #define RANDOM_SEED     0
 
 using wee::range;
 
+#define __POPCOUNT(x)   __builtin_popcountll(x)
+
 template <typename T, size_t kNumDimensions = 2>
-class model {
+class alignas(128) model {
 
     size_t _len;
-    wee::random _random { -279628382}; // TODO: make the randomness deterministic to facilitate debugging
-    // ie.: print the seed on contradictions for example
+    wee::random _random;// { 4025143874 };// { -279628382}; 
 
-    typedef tensor<int, kNumDimensions> coord_type;
-
-    //static constexpr size_t kNumDimensions = 2;
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
-    typedef uint64_t bitmask_t;
+    typedef uint64_t bitmask_t;//uint64_t bitmask_t;
 
-    std::vector<bitmask_t>     _coefficients;  // bitmask of possible tile values
-    std::vector<float>         _weights;       // maps tile index to weight.
-    std::vector<bitmask_t>     _adjacency;
+    union {
+        std::vector<float>         _weights;       // maps tile index to weight.
+        __m128* _mm_weights;
+    };
+
+    union {
+        std::vector<bitmask_t>     _coefficients;  // bitmask of possible tile values
+        __m128i* _mm_coefficients;
+    };
+
+    union {
+        std::vector<bitmask_t>     _adjacency;
+        __m128i* _mm_adjacency;
+    };
+
     std::unordered_map<T, int> _tile_to_index;
     std::unordered_map<int, T> _index_to_tile;
-    //int2 _size;
-    std::valarray<size_t> _output_shape;
-    /*static constexpr int2 _neighbors[kNumNeighbors] = { 
-        { 0,  1}, // bottom
-        { 1,  0}, // right
-        { 0, -1}, // top    
-        {-1,  0}, // left
-    };*/
-
-    std::valarray<int> _nd_neighbors;
+    std::valarray<size_t>      _output_shape;
+    std::valarray<int>         _neighbors;
 
 
     std::valarray<int> build_neighbors() {
@@ -72,10 +75,10 @@ class model {
         return 1ULL << i;
     }
 
-    std::vector<size_t> _avail(const bitmask_t& val) { //const int2& at) {
+    std::vector<size_t> _avail(const bitmask_t& val) { 
         auto tmp = val;
         
-        std::vector<size_t> opts(__popcount(tmp));
+        std::vector<size_t> opts(__POPCOUNT(tmp));
 
         for(auto i: range(opts.size())) {
             opts[i] = _index_of(tmp);
@@ -85,9 +88,9 @@ class model {
         return opts;
     }
 
-    float _shannon_entropy(size_t at_i) { //const int2& at) {
+    float _shannon_entropy(size_t at_i) { 
         //auto at_i = at.x + at.y * _size.x;
-#if 1 
+#if 0 
         /**
          * is there any good reason why we would use 'real' entropy here?
          * the std::log seems costly for a runtime functionality...
@@ -111,8 +114,8 @@ class model {
             sum_of_weight_log_weights += w * std::log(w);
         }
         return std::log(sum_of_weights) - (sum_of_weight_log_weights / sum_of_weights);
-#else
-        return 1.0f - 1.0f / static_cast<float>(__popcount(_coefficients[at_i]));
+#else // this version is ~ 3x faster
+        return 1.0f - 1.0f / static_cast<float>(__POPCOUNT(_coefficients[at_i]));
 #endif
     }
 
@@ -121,7 +124,7 @@ class model {
         float min_H = std::numeric_limits<float>::infinity();
 
         for(size_t i=0; i < _len; i++) {
-            if(__popcount(_coefficients[i]) == 1)
+            if(__POPCOUNT(_coefficients[i]) == 1)
                 continue;
 
             float H = _shannon_entropy(i) - _random.next<float>(0.f, 1.f) / 1000.0f;
@@ -132,7 +135,7 @@ class model {
         }
     }
 
-    void collapse(size_t i) { //const int2& at) {
+    void collapse(size_t i) { 
         //auto i = at.x + at.y * _size.x;
         
         std::map<int, float> w; 
@@ -154,9 +157,6 @@ class model {
         }
     }
 
-    bool is_valid(const int2& p, const int2& size) {
-        return p.x >= 0 && p.y >= 0 && p.x < size.x && p.y < size.y;
-    }
 
 
     bool is_valid(const std::valarray<int>& coord, const std::valarray<size_t>& shape) {
@@ -169,39 +169,21 @@ class model {
         return true;
     }
     
-    void propagate(size_t at) { //const int2& at) {
+    void propagate(size_t at) { 
         std::vector<size_t> open = { at };
 
         while(!open.empty()) {
-            //int2 cur_coords = open.back();
             size_t cur_i = open.back();
             open.pop_back();
             auto cur_coords = delinearize<int>(cur_i, _output_shape);
-            //size_t cur_i = cur_coords.x + cur_coords.y * _size.x;
             bitmask_t cur_bitmask = _coefficients[cur_i];
             auto cur_avail = _avail(cur_bitmask);
 
             for(size_t i=0; i < kNumNeighbors; i++) { 
-#if 0
-                const int2& d = _neighbors[i];
-                int2 other_coords = {
-                    ((int)cur_coords[1] + d.x),
-                    ((int)cur_coords[0] + d.y)
-                };
-#endif
                 size_t start = i * kNumDimensions;
-                std::valarray<int> d = _nd_neighbors[std::slice(start, kNumDimensions, 1)];
+                std::valarray<int> d = _neighbors[std::slice(start, kNumDimensions, 1)];
 
                 auto other_coords = cur_coords + d;
-#if 0
-                int2 temp = {
-                    other_coords[1],
-                    other_coords[0]
-                };
-
-                if(!is_valid(temp, _size))
-                    continue;
-#endif
 
                 if(!is_valid(other_coords, _output_shape)) 
                     continue;
@@ -212,7 +194,7 @@ class model {
                 for(auto ct: cur_avail) {
                     opts |= _adjacency[ct * kNumNeighbors + i];
                 }
-                
+                // _mm_and_si128(_mm_coefficients[...], _mm_opts)
                 auto all_options = _coefficients[other_i] & opts;
                 if(!all_options)
                     return;
@@ -227,27 +209,15 @@ class model {
    
     bool is_fully_collapsed() {
         for(auto i: _coefficients) {
-            if(__popcount(i) > 1) return false;
+            if(__POPCOUNT(i) > 1) return false;
         }
         return true;
     }
 
-    void build_adjacency(const T* in_map, const int2& in_size, decltype(_adjacency)& res) {
+    void build_adjacency(const T* in_map, const std::valarray<size_t>& in_shape, decltype(_adjacency)& res) {
         std::fill(res.begin(), res.end(), 0);
 
-
-        std::valarray<size_t> in_shape = {
-            (size_t)in_size.y,
-            (size_t)in_size.x
-        };
-
-        size_t in_len = std::accumulate(
-            std::begin(in_shape), 
-            std::end(in_shape), 
-            1, 
-            std::multiplies<size_t>()
-        );
-
+        size_t in_len = array_product(in_shape);
 
         for(size_t ix0=0; ix0 < in_len; ix0++) {
 
@@ -258,7 +228,7 @@ class model {
             
             for(size_t z=0; z < kNumNeighbors; z++) {
                 size_t start = z * kNumDimensions;
-                std::valarray<int> n = _nd_neighbors[std::slice(start, kNumDimensions, 1)];
+                std::valarray<int> n = _neighbors[std::slice(start, kNumDimensions, 1)];
                 std::valarray<int> p = coord + n;
                 
                 if(is_valid(p, in_shape)) {
@@ -278,21 +248,21 @@ class model {
         }
     }
 
-
+    template <typename S>
+    size_t array_product(const std::valarray<S>& a) {
+        return std::accumulate(std::begin(a), std::end(a), 1, std::multiplies<T>());
+    }
 public:
 
-    model(const T* in_map, const int2& in_size, T* , const int2& out_size) 
-        //: _size(out_size) 
+    model(const T* in_map, const std::valarray<size_t>& in_size, T* , const std::valarray<size_t>& out_size) 
     {
+        assert(in_size.size() == out_size.size());
+        _len = array_product(out_size);
 
-        _len = out_size.x * out_size.y;
+        _output_shape = out_size;
 
-        _output_shape = {
-            (size_t)out_size.y,
-            (size_t)out_size.x
-        };
 
-        size_t n = in_size.x * in_size.y;
+        size_t n = array_product(in_size);
         std::vector<T> tileset(in_map, in_map + n);
         std::sort(tileset.begin(), tileset.end());
         tileset.erase(std::unique(tileset.begin(), tileset.end()), tileset.end());
@@ -302,8 +272,8 @@ public:
             _index_to_tile[i] = tileset[i];
         }
 
-        _nd_neighbors = build_neighbors();
-        DEBUG_VALUE_OF(_nd_neighbors);
+        _neighbors = build_neighbors();
+        DEBUG_VALUE_OF(_neighbors);
         
         _adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
         build_adjacency(in_map, in_size, _adjacency);
@@ -329,7 +299,6 @@ public:
     }
     
     void step() {
-        //int2 coord = { 1, 1 } ;
         size_t index;
         /**
          * step 1: find the coordinate of the coefficient with the lowest entropy
@@ -373,7 +342,17 @@ namespace _wfc {
     static void _run(const T* in_map, const int2& in_size, T* out_map, const int2& out_size) {
 
 #if 1
-        model<T>* _ = new model<T>(in_map, in_size, out_map, out_size);
+        std::valarray<size_t> in_shape = {
+            (size_t)in_size.y,
+            (size_t)in_size.x
+        };
+
+        std::valarray<size_t> out_shape = {
+            (size_t)out_size.y,
+            (size_t)out_size.x
+        };
+        
+        model<T>* _ = new model<T>(in_map, in_shape, out_map, out_shape);
         return _->run(out_map);
 #else
         return wfc(in_map, in_size, out_map, out_size);

@@ -4,4 +4,47 @@
   <property name="uri" value="@ts"/>
  </properties>
  <image source="../img/spritesheet.png" width="692" height="692"/>
+ <tile id="11">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="10.5" width="21" height="10.5">
+    <properties>
+     <property name="class" value="death"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="78">
+  <objectgroup draworder="index">
+   <object id="2" x="5.25" y="5.25" width="10.5" height="10.5">
+    <ellipse/>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="122">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="21">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="123">
+  <objectgroup draworder="index">
+   <object id="2" x="0" y="0" width="21" height="21">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="124">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="21">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
 </tileset>

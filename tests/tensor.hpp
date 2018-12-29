@@ -29,6 +29,7 @@ constexpr std::valarray<T> to_cartesian(const std::valarray<T>& in) {
     std::valarray<T> copy(in);
     return std::reverse(std::begin(copy), std::end(copy));
 }
+
 /**
  * implementation based on:
  * https://math.stackexchange.com/questions/2008367/how-to-convert-an-index-into-n-coordinates
