@@ -3,35 +3,38 @@
 #include <tmxlite/Layer.hpp>
 #include <tmxlite/TileLayer.hpp>
 #include <engine/assets.hpp>
+#include <engine/ecs.hpp>
 
-using wee::range;
+using namespace wee;
+
+using entity_type = kult::type;
 
 typedef tensor<int32_t, 2> vec2i;
 // level > beat > tile > collider  
-entity_type create_collider_object() {
+entity_type create_collider_object(entity_type) {
     entity_type self = kult::entity();
     {
-        auto& n = kult::get<nested>(self);
-        auto& t = kult::get<transform>(self);
-        auto& t = kult::get<physics>(self);
+        [[maybe_unused]] auto& n = kult::get<nested>(self);
+        [[maybe_unused]] auto& t = kult::get<transform>(self);
+        [[maybe_unused]] auto& p = kult::get<physics>(self);
     }
     return self;
 }
 
-entity_type create_tile() {
+entity_type create_tile(entity_type, SDL_Texture*, SDL_Rect*) {
     entity_type self = kult::entity();
     {
-        auto& n = kult::get<nested>(self);
-        auto& t = kult::get<transform>(self);
-        auto& v = kult::get<visual>(self);
+        [[maybe_unused]] auto& n = kult::get<nested>(self);
+        [[maybe_unused]] auto& t = kult::get<transform>(self);
+        [[maybe_unused]] auto& v = kult::get<visual>(self);
     }
     return self;
 }
 entity_type create_beat() {
     entity_type self = kult::entity();
     {
-        auto& n = kult::get<nested>(self);
-        auto& t = kult::get<transform>(self);
+        [[maybe_unused]] auto& n = kult::get<nested>(self);
+        [[maybe_unused]] auto& t = kult::get<transform>(self);
     }
     return self;
 }
@@ -39,7 +42,7 @@ entity_type create_level() {
     entity_type self = kult::entity();
     {
         //auto& n = kult::get<nested>(self);
-        auto& t = kult::get<transform>(self);
+        [[maybe_unused]] auto& t = kult::get<transform>(self);
     }
     return self;
 }
