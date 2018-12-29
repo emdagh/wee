@@ -7,6 +7,42 @@
 using wee::range;
 
 typedef tensor<int32_t, 2> vec2i;
+// level > beat > tile > collider  
+entity_type create_collider_object() {
+    entity_type self = kult::entity();
+    {
+        auto& n = kult::get<nested>(self);
+        auto& t = kult::get<transform>(self);
+        auto& t = kult::get<physics>(self);
+    }
+    return self;
+}
+
+entity_type create_tile() {
+    entity_type self = kult::entity();
+    {
+        auto& n = kult::get<nested>(self);
+        auto& t = kult::get<transform>(self);
+        auto& v = kult::get<visual>(self);
+    }
+    return self;
+}
+entity_type create_beat() {
+    entity_type self = kult::entity();
+    {
+        auto& n = kult::get<nested>(self);
+        auto& t = kult::get<transform>(self);
+    }
+    return self;
+}
+entity_type create_level() {
+    entity_type self = kult::entity();
+    {
+        //auto& n = kult::get<nested>(self);
+        auto& t = kult::get<transform>(self);
+    }
+    return self;
+}
 
 void load_tile_layer(const tmx::Map& mp, const tmx::TileLayer* layer) {
     auto tileset_for_gid = [] (const tmx::Map& m, unsigned int gid) 
@@ -55,8 +91,6 @@ void load_tile_layer(const tmx::Map& mp, const tmx::TileLayer* layer) {
                 DEBUG_VALUE_OF(property.getStringValue());
             }
         }
-        
-        [[maybe_unused]] int k = 0;
     }
 }
 
