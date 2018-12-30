@@ -11,17 +11,34 @@ using entity_type = kult::type;
 
 typedef tensor<int32_t, 2> vec2i;
 // level > beat > tile > collider  
-entity_type create_collider_object(entity_type) {
+entity_type create_object(entity_type parent, const tmx::Object& object) {
+    const auto& pos  = object.getPosition(); // offset
+    const auto& aabb = object.getAABB();
+    b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
+    
+    float px = pos.x + halfWS.x;
+    float py = pos.y + halfWS.y;
+
     entity_type self = kult::entity();
     {
-        [[maybe_unused]] auto& n = kult::get<nested>(self);
-        [[maybe_unused]] auto& t = kult::get<transform>(self);
-        [[maybe_unused]] auto& p = kult::get<physics>(self);
+        kult::add<nested>(self) = {
+            { px, py }, // offset
+            0.0f, // rotation
+            parent
+        };
+
+        kult::add<transform>(self);
+
+        kult::add<physics>(self);
+        b2BodyDef bd;
+        bd.type = b2_staticBody;
+        //bd.position.Set(SCREEN_TO_WORLD(px), SCREEN_TO_WORLD(py));
+
     }
     return self;
 }
 
-entity_type create_tile(entity_type, SDL_Texture*, SDL_Rect*) {
+entity_type create_tile(entity_type, const tmx::Tileset::Tile* tile) { 
     entity_type self = kult::entity();
     {
         [[maybe_unused]] auto& n = kult::get<nested>(self);
@@ -76,6 +93,8 @@ void load_tile_layer(const tmx::Map& mp, const tmx::TileLayer* layer) {
         const tmx::Tileset* tileset = tileset_for_gid(mp, gid);;
         const auto* tile = tileset->getTile(gid);
 
+        entity_type tile_entity = create_tile(kult::empty(), tile);
+
         gid -= tileset->getFirstGID();
 
         DEBUG_VALUE_OF(gid);
@@ -89,6 +108,8 @@ void load_tile_layer(const tmx::Map& mp, const tmx::TileLayer* layer) {
             DEBUG_VALUE_OF(aabb.top);
             DEBUG_VALUE_OF(aabb.width);
             DEBUG_VALUE_OF(aabb.height);
+
+            entity_type object_entity = create_object(tile_entity, object);
 
             for(const auto& property: object.getProperties()) {
                 DEBUG_VALUE_OF(property.getStringValue());
