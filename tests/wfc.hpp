@@ -29,7 +29,7 @@ template <typename T, size_t kNumDimensions = 2>
 class alignas(128) model {
 
     size_t _len;
-    wee::random _random;// { 25298873 };// { 4025143874 };// { -279628382}; 
+    wee::random _random;// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
 
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;//uint64_t bitmask_t;
@@ -75,18 +75,6 @@ class alignas(128) model {
         return 1ULL << i;
     }
 
-    std::vector<size_t> _avail(const bitmask_t& val) { 
-        auto tmp = val;
-        
-        std::vector<size_t> opts(__POPCOUNT(tmp));
-
-        for(auto i: range(opts.size())) {
-            opts[i] = _index_of(tmp);
-            auto lb = tmp & -tmp;
-            tmp ^= lb;
-        }
-        return opts;
-    }
 
     float _shannon_entropy(size_t at_i) { 
         //auto at_i = at.x + at.y * _size.x;
@@ -107,7 +95,7 @@ class alignas(128) model {
          */
         float sum_of_weights = 0.0f;
         float sum_of_weight_log_weights = 0.0f;
-        auto opts = _avail(_coefficients[at_i]);
+        auto opts = avail(_coefficients[at_i]);
         for(auto i: opts) {
             float w = _weights[i];
             sum_of_weights += w;
@@ -140,7 +128,7 @@ class alignas(128) model {
         
         std::map<int, float> w; 
         float total_weight = 0.0f;
-        auto avail_at = _avail(_coefficients[i]);
+        auto avail_at = avail(_coefficients[i]);
         for(auto t: avail_at) {
             w.insert(std::pair(t, _weights[t]));
             total_weight += _weights[t];
@@ -177,7 +165,7 @@ class alignas(128) model {
             open.pop_back();
             auto cur_coords = delinearize<int>(cur_i, _output_shape);
             bitmask_t cur_bitmask = _coefficients[cur_i];
-            auto cur_avail = _avail(cur_bitmask);
+            auto cur_avail = avail(cur_bitmask);
 
             for(size_t i=0; i < kNumNeighbors; i++) { 
                 size_t start = i * kNumDimensions;
@@ -195,9 +183,17 @@ class alignas(128) model {
                     opts |= _adjacency[ct * kNumNeighbors + i];
                 }
                 // _mm_and_si128(_mm_coefficients[...], _mm_opts)
+                
+                /**
+                 * this next line is important! This prevents the selection of tiles that have 0 neighbors 
+                 */
+                if(!opts) 
+                    continue;
+                
                 auto all_options = _coefficients[other_i] & opts;
-                if(!all_options)
+                if(!all_options) {
                     return;
+                }
                 
                 if(_coefficients[other_i] != all_options) {
                     open.push_back(other_i);//coords);
@@ -315,25 +311,46 @@ public:
         propagate(index);
     }
 
-    void run(T* out_map) {
-        while(!is_fully_collapsed()) {
-            step();
-        }
-        std::vector<T> temp(_len, -1);
+    
 
-        //for(int y: range(_size.y)) {
-        //    for(int x: range(_size.x)) {
+    void coeff(T* out_map) {
+        std::copy(std::begin(_coefficients), std::end(_coefficients), out_map);
+    }
+
+    void gather(T* out_map) {
+        std::vector<T> temp(_len, -1);
         for(size_t i=0; i < _len; i++) {
                 //int i = x + y * _size.x;
                 bitmask_t cb = _coefficients[i];
                 int index = _index_of(cb);
                 temp[i] = _index_to_tile[index];
         }
-
-        //    }
-        //}
         std::copy(std::begin(temp), std::end(temp), out_map);
+    }
+
+    void run(T* out_map) {
+        while(!is_fully_collapsed()) {
+            step();
+        }
+        gather();
         DEBUG_VALUE_OF(_random.seed());
+    }
+    std::vector<size_t> avail(const bitmask_t& val) { 
+        auto tmp = val;
+        
+        std::vector<size_t> opts(__POPCOUNT(tmp));
+
+        for(auto i: range(opts.size())) {
+            opts[i] = _index_of(tmp);
+            auto lb = tmp & -tmp;
+            tmp ^= lb;
+        }
+        return opts;
+    }
+
+    T tile(const size_t& index) {
+        //assert(__POPCOUNT(bm) == 1);
+        return _index_to_tile[index];
     }
 
 };

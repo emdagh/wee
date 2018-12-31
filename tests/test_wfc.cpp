@@ -10,7 +10,7 @@
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 
-#define EMPTY_TILE  0x1337
+#define EMPTY_TILE  0 //0x1337
 
 using namespace wee;
 
@@ -217,7 +217,7 @@ void load_tmx(std::vector<std::vector<unsigned int> >* res, uint32_t* w, uint32_
                 res->push_back(temp);
                 break;
             default:
-                throw not_implemented();
+                break;//throw not_implemented();
             }
         }
     }
@@ -237,33 +237,35 @@ struct game : public wee::applet {
     std::vector<int> _example;
     uint32_t _example_width;
     uint32_t _example_height;
+
+    model<unsigned int>* _model;
         
     std::vector<std::vector<unsigned int> > maps;
     //type* out_map = new type[kOutputSize];
     std::vector<unsigned int> _out_map;
+    std::vector<unsigned int> _in_map;
 
     int load_content() {
-        typedef unsigned int type;
         load_tmx(&maps, &_example_width, &_example_height);
 
-        /*type in_map[] = { 
-            111, 111, 111, 111,
-            111, 111, 111, 111,
-            111, 211, 211, 111,
-            211, 311, 311, 211,
-            311, 311, 311, 311,
-            311, 311, 311, 311
-        };*/
         _out_map.resize(kOutputSize);
 
-        std::vector<unsigned int> in_map = maps[0];
-        DEBUG_VALUE_OF(in_map);
+        _in_map = maps[0];
+        //DEBUG_VALUE_OF(_in_map);
         auto t_start = std::chrono::high_resolution_clock::now();
-        _wfc::_run<type>(&in_map[0], 
+
+        _model = new model<unsigned int>(&_in_map[0], 
+            { _example_height, _example_width },
+            &_out_map[0],
+            { kOutputDimension.y, kOutputDimension.x }
+        );
+                
+
+        /*_wfc::_run<type>(&in_map[0], 
             { (int)_example_width, (int)_example_height }, 
             &_out_map[0], 
             kOutputDimension
-        );
+        );*/
         auto t_end = std::chrono::high_resolution_clock::now();
 
         auto time_passed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
@@ -274,6 +276,10 @@ struct game : public wee::applet {
 
     int update(int) {
         nested_to_transform();
+
+        _model->step();
+        _model->coeff(&_out_map[0]);
+
         return 0;
     }
 
@@ -286,40 +292,50 @@ struct game : public wee::applet {
                 for(auto x: wee::range(kOutputDimension.x)) {
                     size_t i = x + y * kOutputDimension.x;
                     auto m = _out_map[i];
-                    if(m == EMPTY_TILE)
-                        continue;
 
 
-                    entity_type self = lookup[m];
+                    auto avail = _model->avail(m);
 
-                    //DEBUG_VALUE_OF(m);
-                    //DEBUG_VALUE_OF(self);
-                    const auto& vis = kult::get<visual>(self);
+                    if(avail.size() == 0) continue;
 
-                    if(!vis.visible)
-                        continue;
-                    
-                    //const auto& tx  = kult::get<transform>(self);
+                    auto j = avail[wee::randgen<size_t>(0, avail.size() - 1)];
 
-                    int xx = x * 21;//(int)(tx.position.x + 0.5f);
-                    int yy = y * 21;//(int)(tx.position.y + 0.5f);
-                    int w = vis.src.w;
-                    int h = vis.src.h;
+                    //for(auto j: avail) { 
+                        auto z = _model->tile(j);
+                        if(z == EMPTY_TILE)
+                            continue;
 
-                    SDL_Rect dst = {
-                        xx, yy, w, h
-                    };
+                        
 
-                    SDL_RenderCopyEx(renderer, 
-                        vis.texture,
-                        &vis.src,
-                        &dst,
-                        0.0f,
-                        NULL,
-                        SDL_FLIP_NONE
-                    );
+                        entity_type self = lookup[z];
+
+                        const auto& vis = kult::get<visual>(self);
+
+                        if(!vis.visible)
+                            continue;
+                        
+                        //const auto& tx  = kult::get<transform>(self);
+
+                        int xx = x * 21;//(int)(tx.position.x + 0.5f);
+                        int yy = y * 21;//(int)(tx.position.y + 0.5f);
+                        int w = vis.src.w;
+                        int h = vis.src.h;
+
+                        SDL_Rect dst = {
+                            xx, yy, w, h
+                        };
+
+                        SDL_RenderCopyEx(renderer, 
+                            vis.texture,
+                            &vis.src,
+                            &dst,
+                            0.0f,
+                            NULL,
+                            SDL_FLIP_NONE
+                        );
+                    }
                 }
-            }
+            //}
         return SDL_RenderPresent(renderer), 0;
     }
 
@@ -332,28 +348,5 @@ int main(int, char**) {
     applet* let = new game();
     application app(let);
     static_cast<game*>(let)->set_callbacks(&app);
-
-
-#if 0 
-    std::vector<type> arr(kOutputSize, -1);;
-    std::copy(out_map, out_map + kOutputSize, std::begin(arr));
-    for(auto y: range(kOutputDimension.y)) {
-        for(auto x: range(kOutputDimension.x)) {
-            switch(out_map[x + y * kOutputDimension.x]) {
-                case 201: std::cout << " "; break;
-                case 202: std::cout << "+"; break;
-                case 203: std::cout << "-"; break;
-                case 204: std::cout << "|"; break;
-                case 666: std::cout << RED << "*" << RESET; break;
-                case 311: std::cout << BLUE  << "~" << RESET; break;
-                case 111: std::cout << GREEN << "#" << RESET; break;
-                case 211: std::cout << YELLOW << "." << RESET; break;
-                default: std::cout << RED << "?" << RESET; break;
-            }
-            //std::cout << std::dec <<  out_map[x + y * kOutputDimension] << ",";
-        }
-        std::cout << std::endl;
-    }
-#endif
     return app.start();
 }

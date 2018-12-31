@@ -50,4 +50,18 @@ namespace wee {
         static random rnd(seed);
         return rnd.next(min, max);
     };
+
+    template <typename T, typename std::enable_if<std::is_integral<T>::value, T>::type* = nullptr>
+    T randgen(T min, T max) 
+    {
+        static random rnd;
+        return rnd.next_int<T>(min, max);
+    }
+
+    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, T>::type* = nullptr>
+    T randgen(T min, T max) 
+    {
+        static random rnd;
+        return rnd.next<T>(min, max);
+    };
 }
