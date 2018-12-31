@@ -29,25 +29,25 @@ template <typename T, size_t kNumDimensions = 2>
 class alignas(128) model {
 
     size_t _len;
-    wee::random _random;// { 4025143874 };// { -279628382}; 
+    wee::random _random;// { 25298873 };// { 4025143874 };// { -279628382}; 
 
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;//uint64_t bitmask_t;
 
-    union {
+    //union {
         std::vector<float>         _weights;       // maps tile index to weight.
-        __m128* _mm_weights;
-    };
+    //    __m128* _mm_weights;
+    //};
 
-    union {
+    //union {
         std::vector<bitmask_t>     _coefficients;  // bitmask of possible tile values
-        __m128i* _mm_coefficients;
-    };
+    //    __m128i* _mm_coefficients;
+    //};
 
-    union {
+    //union {
         std::vector<bitmask_t>     _adjacency;
-        __m128i* _mm_adjacency;
-    };
+    //    __m128i* _mm_adjacency;
+    //};
 
     std::unordered_map<T, int> _tile_to_index;
     std::unordered_map<int, T> _index_to_tile;
@@ -266,6 +266,7 @@ public:
         std::vector<T> tileset(in_map, in_map + n);
         std::sort(tileset.begin(), tileset.end());
         tileset.erase(std::unique(tileset.begin(), tileset.end()), tileset.end());
+        DEBUG_VALUE_OF(tileset);
     
         for(size_t i=0; i < tileset.size(); i++) {
             _tile_to_index[tileset[i]] = i;
