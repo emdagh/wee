@@ -13,6 +13,15 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="70">
+  <objectgroup draworder="index">
+   <object id="2" x="0" y="10.5" width="21" height="10.5">
+    <properties>
+     <property name="class" value="death"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
  <tile id="78">
   <objectgroup draworder="index">
    <object id="2" x="5.25" y="5.25" width="10.5" height="10.5">
@@ -46,6 +55,15 @@
    <object id="1" x="0" y="0" width="21" height="21">
     <properties>
      <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="283">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="10.5" width="21" height="10.5">
+    <properties>
+     <property name="class" value="bounce"/>
     </properties>
    </object>
   </objectgroup>

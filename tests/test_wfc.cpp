@@ -250,6 +250,11 @@ struct game : public wee::applet {
 
         _out_map.resize(kOutputSize);
 
+        for(auto x: wee::range(kOutputDimension.x)) {
+            _out_map[x + (kOutputDimension.y - 1) * kOutputDimension.x] = 11;
+        }
+        DEBUG_VALUE_OF(_out_map);
+
         _in_map = maps[0];
         //DEBUG_VALUE_OF(_in_map);
         auto t_start = std::chrono::high_resolution_clock::now();

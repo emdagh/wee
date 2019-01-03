@@ -53,6 +53,7 @@ class alignas(128) model {
     std::unordered_map<int, T> _index_to_tile;
     std::valarray<size_t>      _output_shape;
     std::valarray<int>         _neighbors;
+    std::vector<T>             _initial;
 
 
     std::valarray<int> build_neighbors() {
@@ -250,7 +251,7 @@ class alignas(128) model {
     }
 public:
 
-    model(const T* in_map, const std::valarray<size_t>& in_size, T* , const std::valarray<size_t>& out_size) 
+    model(const T* in_map, const std::valarray<size_t>& in_size, T* out_map, const std::valarray<size_t>& out_size) 
     {
         assert(in_size.size() == out_size.size());
         _len = array_product(out_size);
@@ -282,17 +283,33 @@ public:
         
         _coefficients = decltype(_coefficients)(_len, 0);
 
-        reset();
+        reset(out_map, _len);
     }
 
-    void reset() {
+    template <typename S, typename InputIt, typename OutputIt, typename UnaryPredicate>
+    OutputIt copy_ternary(InputIt first, InputIt last, OutputIt d_first, UnaryPredicate p, S fallback) {
+        while(first != last) {
+            *d_first++ = p(*first) ? *first : fallback;
+            first++;
+        }
+        return d_first;
+    }
+
+    void reset(const T* initial_tilemap, size_t n) {
         DEBUG_METHOD();
         bitmask_t initial_mask = 0;
         for(auto it : _tile_to_index) {
             initial_mask |= _bitmask_of(it.second);
         }
 
-        std::fill(_coefficients.begin(), _coefficients.end(), initial_mask);
+        std::vector<T> to_propagate;
+        for(auto i: wee::range(n)) {
+            _coefficients[i] = initial_tilemap[i] ? _bitmask_of(_tile_to_index[initial_tilemap[i]]) : initial_mask;
+            if(initial_tilemap[i]) to_propagate.push_back(i);
+        }
+        for(const auto& coord: to_propagate) {
+            propagate(coord);
+        }
     }
     
     void step() {
@@ -320,7 +337,6 @@ public:
     void gather(T* out_map) {
         std::vector<T> temp(_len, -1);
         for(size_t i=0; i < _len; i++) {
-                //int i = x + y * _size.x;
                 bitmask_t cb = _coefficients[i];
                 int index = _index_of(cb);
                 temp[i] = _index_to_tile[index];
