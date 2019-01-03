@@ -17,6 +17,11 @@ namespace wee {
             std::chrono::milliseconds(1);
 
             _seed = s ? s : milliseconds_since_epoch;
+            //eng = std::mt19937(_seed);//{ seed };//std::random_device{}() };
+            reset();
+        }
+
+        void reset() {
             eng = std::mt19937(_seed);//{ seed };//std::random_device{}() };
         }
 

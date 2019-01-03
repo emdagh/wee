@@ -250,6 +250,9 @@ struct game : public wee::applet {
 
         _out_map.resize(kOutputSize);
 
+        _out_map[0] = 361;
+        _out_map[1] = 364;
+
         for(auto x: wee::range(kOutputDimension.x)) {
             _out_map[x + (kOutputDimension.y - 1) * kOutputDimension.x] = 11;
         }

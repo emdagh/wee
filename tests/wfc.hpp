@@ -29,7 +29,7 @@ template <typename T, size_t kNumDimensions = 2>
 class alignas(128) model {
 
     size_t _len;
-    wee::random _random;// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
+    wee::random _random = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
 
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;//uint64_t bitmask_t;
@@ -191,15 +191,16 @@ class alignas(128) model {
                 if(!opts) 
                     continue;
                 
-                auto all_options = _coefficients[other_i] & opts;
-                if(!all_options) {
+                auto any_possible = _coefficients[other_i] & opts;
+                if(!any_possible) {
+                    reset(&_initial[0], _len);
                     return;
                 }
                 
-                if(_coefficients[other_i] != all_options) {
+                if(_coefficients[other_i] != any_possible) {
                     open.push_back(other_i);//coords);
                 }
-                _coefficients[other_i] = all_options;
+                _coefficients[other_i] = any_possible;
             }
         }
     }
@@ -283,6 +284,10 @@ public:
         
         _coefficients = decltype(_coefficients)(_len, 0);
 
+        _initial.resize(_len);
+        std::copy(out_map, out_map + n, _initial.begin());
+        //memcpy(&_initial[0], &out_map[0], _len);
+
         reset(out_map, _len);
     }
 
@@ -297,6 +302,10 @@ public:
 
     void reset(const T* initial_tilemap, size_t n) {
         DEBUG_METHOD();
+        DEBUG_VALUE_OF(_random.seed());
+
+        _random.reset();
+
         bitmask_t initial_mask = 0;
         for(auto it : _tile_to_index) {
             initial_mask |= _bitmask_of(it.second);
