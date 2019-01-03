@@ -29,7 +29,7 @@ template <typename T, size_t kNumDimensions = 2>
 class alignas(128) model {
 
     size_t _len;
-    wee::random _random = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
+    wee::random _random;// = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
 
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;//uint64_t bitmask_t;
