@@ -16,12 +16,12 @@ namespace wee {
             std::chrono::system_clock::now().time_since_epoch() / 
             std::chrono::milliseconds(1);
 
-            _seed = s ? s : milliseconds_since_epoch;
             //eng = std::mt19937(_seed);//{ seed };//std::random_device{}() };
-            reset();
+            reset(s ? s : milliseconds_since_epoch);
         }
 
-        void reset() {
+        void reset(uint32_t seed) {
+            _seed = seed; 
             eng = std::mt19937(_seed);//{ seed };//std::random_device{}() };
         }
 

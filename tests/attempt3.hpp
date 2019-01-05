@@ -15,9 +15,6 @@
 #include <wee/wee.hpp>
 #include <wee/core/range.hpp>
 
-struct int2 {
-    int x, y;
-};
 
 std::ostream& operator << (std::ostream& os, const int2& i) {
     return os << "{ 'x' : " << i.x << ", 'y' : " << i.y << "}";

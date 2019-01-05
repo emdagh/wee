@@ -68,4 +68,40 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="361">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="10.5">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="362">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="10.5">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="363">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="10.5">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="364">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="10.5">
+    <properties>
+     <property name="class" value="env"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
 </tileset>
