@@ -18,7 +18,7 @@ endif()
 MESSAGE(STATUS "Build type is '${CMAKE_BUILD_TYPE}'.")
 
 IF(UNIX)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Wextra -Werror -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Werror -std=c++17") #-Wextra
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic")
 
     IF(ANDROID)
