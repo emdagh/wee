@@ -31,7 +31,7 @@ template <typename T, size_t kNumDimensions = 2>
 class alignas(16) model {
 
     size_t _len;
-    wee::random _random;// = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
+    wee::random _random;// = { 77408982 };// = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
 
     static constexpr size_t kNumNeighbors = kNumDimensions * 2;
     typedef uint64_t bitmask_t;//uint64_t bitmask_t;
@@ -56,6 +56,7 @@ class alignas(16) model {
     std::valarray<size_t>      _output_shape;
     std::valarray<int>         _neighbors;
     std::vector<T>             _initial;
+    bitmask_t                  _banned;
 
 
     std::valarray<int> build_neighbors() {
@@ -159,6 +160,7 @@ class alignas(16) model {
         }
         return true;
     }
+
     
     void propagate(size_t at) { 
         std::vector<size_t> open = { at };
@@ -292,6 +294,8 @@ public:
         _initial.resize(_len);
         std::copy(out_map, out_map + n, _initial.begin());
         //memcpy(&_initial[0], &out_map[0], _len);
+        //
+        _banned = 0;
 
         reset();//out_map, _len);
     }
@@ -312,8 +316,10 @@ public:
             initial_mask |= _bitmask_of(it.second);
         }
 
+        initial_mask &= ~_banned; // pop all banned tiles
+
         std::vector<T> to_propagate;
-        for(auto i: wee::range(_len)) { //n)) {
+        for(auto i: wee::range(_len)) { 
             _coefficients[i] = _initial[i] ? _bitmask_of(_tile_to_index[_initial[i]]) : initial_mask;
             if(_initial[i]) 
                 to_propagate.push_back(i);
@@ -321,8 +327,13 @@ public:
         for(const auto& coord: to_propagate) {
             propagate(coord);
         }
+        DEBUG_VALUE_OF(_random.seed());
     }
     
+    void ban(size_t tileid) {
+        _banned |= _bitmask_of(_tile_to_index.at(tileid));
+        reset();
+    }
     void step() {
         size_t index;
         /**

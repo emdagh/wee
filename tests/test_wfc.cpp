@@ -9,6 +9,7 @@
 #include <base/applet.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
+#include <engine/b2DebugDrawImpl.hpp>
 struct int2 {
     int x, y;
 };
@@ -110,7 +111,8 @@ public:
     }
 } _gRegisterFactories;
 // level > beat > tile > collider  
-entity_type create_object(b2World* world, entity_type parent, const tmx::Object& object) {
+entity_type create_object([[maybe_unused]]b2World* world, entity_type parent, const tmx::Object& object) {
+    DEBUG_METHOD();
     const auto& pos  = object.getPosition(); // offset
     const auto& aabb = object.getAABB();
     b2Vec2 halfWS = { aabb.width / 2, aabb.height / 2 };
@@ -133,6 +135,7 @@ entity_type create_object(b2World* world, entity_type parent, const tmx::Object&
 
             b2BodyDef bd;
             bd.type  = b2_staticBody;
+            bd.position.Set(SCREEN_TO_WORLD(0.f), SCREEN_TO_WORLD(0.f));
             b2Body* body = world->CreateBody(&bd);
 
             b2FixtureDef fd;
@@ -192,7 +195,7 @@ entity_type create_level() {
 
 static std::map<unsigned int, entity_type> lookup;
 
-void load_tile_layer(b2World* world, const tmx::Map& mp, 
+void load_tile_layer([[maybe_unused]]b2World* world, const tmx::Map& mp, 
     const tmx::TileLayer* layer, 
     std::vector<unsigned int>* res) 
 {
@@ -262,7 +265,6 @@ void load_tile_layer(b2World* world, const tmx::Map& mp,
 
 
             lookup[gid] = tile;
-
 
             for(const auto& object: tileset->getTile(gid)->objectGroup.getObjects()) {
                 const tmx::Object::Shape& shape = object.getShape();
@@ -334,9 +336,20 @@ struct game : public wee::applet {
     std::vector<unsigned int> _in_map;
 
     b2World* _world;
+    wee::b2DebugDrawImpl _debugdraw;
 
     game() {
+        _debugdraw.SetFlags(
+            b2Draw::e_shapeBit          | //= 0x0001, 
+            b2Draw::e_jointBit          | //= 0x0002, 
+            b2Draw::e_aabbBit           | //= 0x0004, 
+            //b2Draw::e_pairBit           | //= 0x0008, 
+            b2Draw::e_centerOfMassBit   | //= 0x0010, 
+            //e_particleBit// = 0x0020 
+            0
+            ) ;
         _world = new b2World({0.0f, 9.8f});
+        _world->SetDebugDraw(&_debugdraw);
     }
 
     int load_content() {
@@ -344,8 +357,12 @@ struct game : public wee::applet {
 
         _out_map.resize(kOutputSize);
 
+        static constexpr int kSpawnPointTile = 434;
+
         _out_map[0] = 361;
         _out_map[1] = 364;
+        _out_map[kOutputDimension.x] = kSpawnPointTile;//748;//434;
+
 
         for(auto x: wee::range(kOutputDimension.x)) {
             _out_map[x + (kOutputDimension.y - 1) * kOutputDimension.x] = 11;
@@ -359,7 +376,10 @@ struct game : public wee::applet {
             &_out_map[0],
             { kOutputDimension.y, kOutputDimension.x }
         );
-#ifdef  TIMING
+
+        _model->ban(kSpawnPointTile);
+
+#if  0 //TIMING
         _model->run(&_out_map[0]);
         for([[maybe_unused]]auto k: wee::range(1,11)) {
             size_t NRUNS = 1000 * k;
@@ -383,34 +403,47 @@ struct game : public wee::applet {
         return 0;
     }
 
-    int update(int) {
-        nested_to_transform();
+#undef ANIMATE_COLLAPSE
 
+    int update(int ) {
+        nested_to_transform();
+        //copy_transform_to_physics();
+        _world->Step(1.0f / (float)60, 4, 3);
+        //copy_physics_to_transform();
+#ifdef ANIMATE_COLLAPSE
         _model->step();
         _model->coeff(&_out_map[0]);
+#else
+        _model->run(&_out_map[0]);
+#endif
+        
 
         return 0;
     }
 
     int draw(SDL_Renderer* renderer) {
+        _debugdraw.SetRenderer(renderer);
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
+        _world->DrawDebugData();
             //DEBUG_VALUE_OF(self);
             //
             for(auto y: wee::range(kOutputDimension.y)) {
                 for(auto x: wee::range(kOutputDimension.x)) {
                     size_t i = x + y * kOutputDimension.x;
-                    auto m = _out_map[i];
+                    auto m = _out_map[i]; // out_map is *not* the same as coefficients, it is being treated like that now for visual effect
 
-
+#ifdef ANIMATE_COLLAPSE
                     auto avail = _model->avail(m);
-
-                    if(avail.size() == 0) continue;
+                    if(avail.size() == 0) 
+                        continue;
 
                     auto j = avail[wee::randgen<size_t>(0, avail.size() - 1)];
 
-                    //for(auto j: avail) { 
                         auto z = _model->tile(j);
+#else
+                        auto z = m;
+#endif
                         if(z == EMPTY_TILE)
                             continue;
 

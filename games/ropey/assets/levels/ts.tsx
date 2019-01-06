@@ -104,4 +104,24 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="434">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="21">
+    <properties>
+     <property name="class" value="spawnPoint"/>
+    </properties>
+    <ellipse/>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="748">
+  <objectgroup draworder="index">
+   <object id="1" x="0" y="0" width="21" height="21">
+    <properties>
+     <property name="class" value="spawnPoint"/>
+    </properties>
+    <ellipse/>
+   </object>
+  </objectgroup>
+ </tile>
 </tileset>
