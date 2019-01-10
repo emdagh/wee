@@ -19,6 +19,7 @@ namespace wee {
 
         static const mat4 identity;
 
+
         static mat4 create_scale(float sx, float sy, float sz) {
             mat4 res = identity;
             res.m11 = sx;

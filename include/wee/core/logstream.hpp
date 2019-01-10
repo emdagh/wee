@@ -80,4 +80,47 @@ namespace wee {
 #define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, true))
 #define TRACE(...)                  wee::log(std::cout, __FILE__##":"##__LINE__).write(__VA_ARGS__)
 
+namespace wee {
+    enum class loglevel : uint8_t {
+        quiet = 0,
+        error,
+        warn,
+        info,
+        all,
+        none
+    };
+    class logstream : public std::ostringstream {
+        std::ostream& _os;
+        loglevel _current_loglevel = loglevel::none;
+        loglevel _loglevel = loglevel::all;
+    public:
+        logstream(std::ostream& os) : _os(os) {}
 
+        template <typename T>
+        logstream operator << (const T& t) {
+            return ((std::ostringstream&)*this) << t, *this;
+        }
+
+        logstream& operator << (const loglevel& logl) {
+            return _current_loglevel = logl, *this;
+        }
+
+        typedef logstream&(*logstream_iomanip)(logstream&);
+        logstream& operator << (const logstream_iomanip p) {
+            return p(*this);
+        }
+        
+        void flush() {
+            if(_current_loglevel <= _loglevel) 
+                _os << str();
+            str("");
+            _current_loglevel = loglevel::none;
+        }
+        
+        static logstream& endl(logstream& ls) {
+            ls.put('\n');
+            ls.flush();
+            return ls;
+        }
+    };
+}

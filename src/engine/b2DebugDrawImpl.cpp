@@ -19,9 +19,6 @@ void b2DebugDrawImpl::SetCameraTransform(const mat4& tx) {
 
 void b2DebugDrawImpl::SetRenderer(SDL_Renderer* renderer) {
     _renderer = renderer;
-    //int w, h;
-    //SDL_RenderGetLogicalSize(renderer, &w, &h);
-    
 }
 
 void b2DebugDrawImpl::DrawParticles(const b2Vec2 *, float32 , const b2ParticleColor *, int32 ) {
@@ -30,10 +27,11 @@ void b2DebugDrawImpl::DrawParticles(const b2Vec2 *, float32 , const b2ParticleCo
 void b2DebugDrawImpl::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) {
     assert(_renderer);
 
-    //int cx = -_rect.x + (_rect.w >> 1);
-    //int cy = -_rect.y + (_rect.h >> 1);
+    uint8_t r = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t g = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t b = static_cast<uint8_t>(color.r * 255.f);
 
-    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+    SDL_SetRenderDrawColor(_renderer, r, g, b, 255);
     
     for(int32 i=0; i < vertexCount; i++) {
         const b2Vec2& a_WS = vertices[i];
@@ -57,8 +55,11 @@ void b2DebugDrawImpl::DrawSolidPolygon(const b2Vec2* positions, int32 vertexCoun
 }
 
 void b2DebugDrawImpl::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color) {
+    uint8_t r = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t g = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t b = static_cast<uint8_t>(color.r * 255.f);
 
-    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+    SDL_SetRenderDrawColor(_renderer, r, g, b, 255);
     int iradius = WORLD_TO_SCREEN(radius * _transform.m11);
     b2Vec2 PositionSS = transform_mat4(WORLD_TO_SCREEN(center), _transform);
     int x = static_cast<int>(PositionSS.x + 0.5f);
@@ -77,7 +78,10 @@ void b2DebugDrawImpl::DrawSolidCircle(const b2Vec2& center, float32 radius, cons
     int x = static_cast<int>(PositionSS.x + 0.5f);
     int y = static_cast<int>(PositionSS.y + 0.5f);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 55);
+    uint8_t r = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t g = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t b = static_cast<uint8_t>(color.r * 255.f);
+    SDL_SetRenderDrawColor(_renderer, r, g, b, 255);
     SDL_RenderDrawCircleFilledEXT(_renderer, x, y, iradius);
 }
 
@@ -91,7 +95,10 @@ void b2DebugDrawImpl::DrawSegment(const b2Vec2& _p1, const b2Vec2& _p2, const b2
     int x1 = static_cast<int>(p2.x + 0.5f);
     int y1 = static_cast<int>(p2.y + 0.5f);
 
-    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+    uint8_t r = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t g = static_cast<uint8_t>(color.r * 255.f);
+    uint8_t b = static_cast<uint8_t>(color.r * 255.f);
+    SDL_SetRenderDrawColor(_renderer, r, g, b, 255);
     SDL_RenderDrawLine(_renderer, x0, y0, x1, y1); 
 }
 

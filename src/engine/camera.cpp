@@ -39,9 +39,10 @@ void camera::set_viewport(int w, int h) {
     _changed = true;
 }
 
-void camera::set_position(float x, float y) {
+void camera::set_position(float x, float y, float z) {
     _position.x = x;
     _position.y = y;
+    _position.z = z;
     _changed = true;
 
 }
@@ -60,7 +61,7 @@ void camera::end_shake() {
     _shaketime = 0;
     _shaking = false;
     if(_restore_after) 
-        set_position(_stored_position.x, _stored_position.y);
+        set_position(_stored_position.x, _stored_position.y, _stored_position.z);
 }
 
 void camera::update(int dt) {
@@ -75,10 +76,11 @@ void camera::update(int dt) {
         pos -= 1;
     }
 
-    float px, py;
+    float px, py, pz;
     px = _position.x + randf(-MAX_SHAKE_X, MAX_SHAKE_X) * pos;
     py = _position.y + randf(-MAX_SHAKE_Y, MAX_SHAKE_Y) * pos;
-    set_position(px, py);
+    pz = _position.z + randf(-MAX_SHAKE_Z, MAX_SHAKE_Z) * pos;
+    set_position(px, py, pz);
 }
 
 const mat4& camera::get_transform() {

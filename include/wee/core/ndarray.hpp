@@ -17,7 +17,8 @@ constexpr size_t linearize(Iterator_ a, Iterator_ b, Iterator dim) {
     }
 }
 
-size_t linearize(const std::valarray<int>& coord, const std::valarray<size_t>& dim) {
+template <typename T>
+size_t linearize(const std::valarray<int>& coord, const std::valarray<T>& dim) {
     return linearize(std::end(coord) - 1, std::begin(coord), std::end(dim) - 1);
 }
 /**
@@ -25,7 +26,7 @@ size_t linearize(const std::valarray<int>& coord, const std::valarray<size_t>& d
  * https://math.stackexchange.com/questions/2008367/how-to-convert-an-index-into-n-coordinates
  */
 template <typename T>
-std::valarray<T> delinearize(const size_t k_, const std::valarray<size_t>& shape) {
+std::valarray<T> delinearize(const size_t k_, const std::valarray<T>& shape) {
 
     size_t k = k_;
     size_t c = std::accumulate(std::begin(shape), 

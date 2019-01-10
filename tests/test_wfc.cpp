@@ -1,3 +1,11 @@
+/**
+ * 2019-01-07
+ * TODO:
+ *  - add the player entity
+ *  - merge gamescreens + manager
+ *  - implement A* to estimate difficulty (basic AI agent)
+ */
+
 #include <engine/wfc.hpp>
 #include <tmxlite/Map.hpp>
 #include <tmxlite/Layer.hpp>
@@ -193,17 +201,17 @@ entity_type create_level() {
     return self;
 }
 
-static std::map<unsigned int, entity_type> lookup;
+static std::map<int, entity_type> lookup;
 
 void load_tile_layer([[maybe_unused]]b2World* world, const tmx::Map& mp, 
     const tmx::TileLayer* layer, 
-    std::vector<unsigned int>* res) 
+    std::vector<int>* res) 
 {
-    auto tileset_for_gid = [] (const tmx::Map& m, unsigned int gid) 
+    auto tileset_for_gid = [] (const tmx::Map& m, int gid) 
         -> const tmx::Tileset*
     { 
         for(const auto& ts: m.getTilesets()) { 
-            if(ts.getFirstGID() <= gid) {
+            if((int)ts.getFirstGID() <= gid) {
                 return &ts;
             }
         }
@@ -285,7 +293,7 @@ void load_tile_layer([[maybe_unused]]b2World* world, const tmx::Map& mp,
     }
 }
 
-void load_tmx(b2World* world, std::vector<std::vector<unsigned int> >* res, uint32_t* w, uint32_t* h) {
+void load_tmx(b2World* world, std::vector<std::vector<int> >* res, int32_t* w, int32_t* h) {
     tmx::Map map;
     if(map.load(wee::get_resource_path("assets/levels") + "example.tmx")) {
         auto mapdim = map.getTileCount();
@@ -300,7 +308,7 @@ void load_tmx(b2World* world, std::vector<std::vector<unsigned int> >* res, uint
         }
         for(const auto& layer: map.getLayers()) {
             DEBUG_VALUE_OF(layer->getName());
-            std::vector<unsigned int> temp;
+            std::vector<int> temp;
             switch(layer->getType()) {
             case tmx::Layer::Type::Tile:
                 load_tile_layer(world, map, reinterpret_cast<tmx::TileLayer*>(layer.get()), &temp);
@@ -318,6 +326,8 @@ void load_tmx(b2World* world, std::vector<std::vector<unsigned int> >* res, uint
  * tile gid to entity;
  */
 
+#define TILESIZE    42
+
 struct game : public wee::applet {
     static constexpr int2 kOutputDimension = { 8, 10 };
     static constexpr size_t kOutputSize = kOutputDimension.x * kOutputDimension.y;
@@ -325,15 +335,15 @@ struct game : public wee::applet {
     wee::camera _camera;
 
     std::vector<int> _example;
-    uint32_t _example_width;
-    uint32_t _example_height;
+    int32_t _example_width;
+    int32_t _example_height;
 
-    model<unsigned int>* _model;
+    model<int>* _model;
         
-    std::vector<std::vector<unsigned int> > maps;
+    std::vector<std::vector<int> > maps;
     //type* out_map = new type[kOutputSize];
-    std::vector<unsigned int> _out_map;
-    std::vector<unsigned int> _in_map;
+    std::vector<int> _out_map;
+    std::vector<int> _in_map;
 
     b2World* _world;
     wee::b2DebugDrawImpl _debugdraw;
@@ -356,31 +366,34 @@ struct game : public wee::applet {
         load_tmx(_world, &maps, &_example_width, &_example_height);
 
         _out_map.resize(kOutputSize);
+        std::fill(_out_map.begin(), _out_map.end(), -1);
 
-        static constexpr int kSpawnPointTile = 434;
+        [[maybe_unused]] static constexpr int kSpawnPointTile = 434;
+        [[maybe_unused]] static constexpr int kWaterTile = 11;
 
         _out_map[0] = 361;
         _out_map[1] = 364;
-        _out_map[kOutputDimension.x] = kSpawnPointTile;//748;//434;
+        _out_map[kOutputDimension.x] = kSpawnPointTile;
 
 
         for(auto x: wee::range(kOutputDimension.x)) {
-            _out_map[x + (kOutputDimension.y - 1) * kOutputDimension.x] = 11;
+            _out_map[x + (kOutputDimension.y - 1) * kOutputDimension.x] = kWaterTile;
         }
         DEBUG_VALUE_OF(_out_map);
 
         _in_map = maps[0];
         //DEBUG_VALUE_OF(_in_map);
-        _model = new model<unsigned int>(&_in_map[0], 
+        _model = new model<int>(&_in_map[0], 
             { _example_height, _example_width },
             &_out_map[0],
             { kOutputDimension.y, kOutputDimension.x }
         );
 
         _model->ban(kSpawnPointTile);
+        //_model->ban(kWaterTile);
+        _model->run(&_out_map[0]);
 
 #if  0 //TIMING
-        _model->run(&_out_map[0]);
         for([[maybe_unused]]auto k: wee::range(1,11)) {
             size_t NRUNS = 1000 * k;
             std::valarray<float> timings(0.0f, NRUNS);
@@ -406,28 +419,56 @@ struct game : public wee::applet {
 #undef ANIMATE_COLLAPSE
 
     int update(int ) {
-        nested_to_transform();
-        //copy_transform_to_physics();
-        _world->Step(1.0f / (float)60, 4, 3);
-        //copy_physics_to_transform();
+        static float camera_x = 0.f;
+        camera_x += 1;
+        if(camera_x >= TILESIZE) {
+            /**
+             * move all columns to the left
+             */
+            for(int y=0; y < kOutputDimension.y; y++) {
+                for(int x=0; x < kOutputDimension.x - 1; x++) {
+                    std::swap(_out_map[x + y * kOutputDimension.x], _out_map[(x+1) + y * kOutputDimension.x]);
+                }
+            }
+            /**
+             * Insert max entropy column.
+             */
+
+            for(int i=0; i < kOutputDimension.y; i++) {
+                int index = (kOutputDimension.x - 1) + i * kOutputDimension.x;
+                _out_map[index] = -1;
+                //_model->reset_coeff(index);
+
+            }
+            _model->reset(&_out_map[0], _out_map.size());
+            _model->run(&_out_map[0]);
+            camera_x = 0;
+        }
+
+        //nested_to_transform();
 #ifdef ANIMATE_COLLAPSE
         _model->step();
         _model->coeff(&_out_map[0]);
 #else
-        _model->run(&_out_map[0]);
+        //copy_transform_to_physics();
+        //_world->Step(1.0f / (float)60, 4, 3);
+        //copy_physics_to_transform();
+        //_model->run(&_out_map[0]);
 #endif
-        
-
+        _camera.set_position(200.0f + camera_x, 240.f, 0.0f);
         return 0;
     }
 
     int draw(SDL_Renderer* renderer) {
+        int w, h;
+        SDL_GetRendererOutputSize(renderer, &w, &h);
+
+        _camera.set_viewport(w, h);
         _debugdraw.SetRenderer(renderer);
+        _debugdraw.SetCameraTransform(_camera.get_transform());
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
         _world->DrawDebugData();
-            //DEBUG_VALUE_OF(self);
-            //
             for(auto y: wee::range(kOutputDimension.y)) {
                 for(auto x: wee::range(kOutputDimension.x)) {
                     size_t i = x + y * kOutputDimension.x;
@@ -457,11 +498,14 @@ struct game : public wee::applet {
                             continue;
                         
                         //const auto& tx  = kult::get<transform>(self);
+                        //
+                        vec3 pos = { (float)TILESIZE * x, (float)TILESIZE * y, 0.0f };
+                        pos = vec3::transform(pos, _camera.get_transform());
 
-                        int xx = x * 21;//(int)(tx.position.x + 0.5f);
-                        int yy = y * 21;//(int)(tx.position.y + 0.5f);
-                        int w = vis.src.w;
-                        int h = vis.src.h;
+                        int xx = (int)pos.x;//x * 42;//(int)(tx.position.x + 0.5f); // x * 21
+                        int yy = (int)pos.y;//y * 42;//(int)(tx.position.y + 0.5f); // y * 21
+                        int w = vis.src.w * 2;
+                        int h = vis.src.h * 2;
 
                         SDL_Rect dst = {
                             xx, yy, w, h
@@ -483,7 +527,8 @@ struct game : public wee::applet {
 
     void set_callbacks(application* app) {
         app->on_mousedown += [this] (char) {
-            this->_model->reset();//&_out_map[0], _out_map.size());
+            std::fill(_out_map.begin(), _out_map.end(), 0);
+            this->_model->reset(&_out_map[0], _out_map.size());
             return 0;
         };
     }

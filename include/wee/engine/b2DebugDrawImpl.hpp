@@ -7,7 +7,7 @@
 namespace wee {
     class b2DebugDrawImpl : public b2Draw {
         SDL_Renderer* _renderer;
-        mat4 _transform;
+        mat4 _transform = mat4::identity;
     public:
         void SetCameraTransform(const mat4& tx);
         void SetRenderer(SDL_Renderer* renderer); 

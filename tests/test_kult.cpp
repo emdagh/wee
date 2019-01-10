@@ -430,7 +430,7 @@ struct game : applet {
         const transform_t& tx = kult::get<transform>(_player);
         /*viewport_.x = tx.p.x;
         viewport_.y = tx.p.y;*/
-        _cam.set_position(tx.position.x, tx.position.y);
+        _cam.set_position(tx.position.x, tx.position.y, 0.0f);
         _cam.update(dt);
         _debugdraw.SetCameraTransform(_cam.get_transform());
 

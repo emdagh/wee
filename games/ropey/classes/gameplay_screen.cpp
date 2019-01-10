@@ -200,7 +200,7 @@ void gameplay_screen::update(int dt, bool a, bool b) {
 
 
     if(kult::get<player>(p).hp > 0) {
-        _cam.set_position(playerPos.x, playerPos.y);
+        _cam.set_position(playerPos.x, playerPos.y, 0.0f);
     } else {
         _cam.shake(1000, false);
 
