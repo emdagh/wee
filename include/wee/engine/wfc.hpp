@@ -325,10 +325,12 @@ public:
         _coefficients[i] = domain();
     }
 
-    void reset(const T* initial_tilemap, size_t n) {
+    void reset(const T* initial_tilemap, size_t n, bool reset_rng = true) {
         std::copy(initial_tilemap, initial_tilemap + n, _initial.begin());
 
-        _random.reset(wee::randgen((uint32_t){}, (uint32_t)78612512));
+        if(reset_rng)
+            _random.reset(wee::randgen((uint32_t){}, (uint32_t)78612512));
+
         bitmask_t initial_mask = 0;
         for(auto it : _tile_to_index) {
             initial_mask |= _bitmask_of(it.second);
@@ -345,7 +347,6 @@ public:
         for(const auto& coord: to_propagate) {
             propagate(coord);
         }
-        DEBUG_VALUE_OF(_random.seed());
     }
     
     void ban(size_t tileid) {

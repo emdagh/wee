@@ -440,7 +440,7 @@ struct game : public wee::applet {
                 //_model->reset_coeff(index);
 
             }
-            _model->reset(&_out_map[0], _out_map.size());
+            _model->reset(&_out_map[0], _out_map.size(), false);
             _model->run(&_out_map[0]);
             camera_x = 0;
         }
