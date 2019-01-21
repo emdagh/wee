@@ -200,7 +200,7 @@ class alignas(16) model {
                 
                 auto any_possible = _coefficients[other_i] & opts;
                 if(!any_possible) {
-                    reset(&_initial[0], _initial.size());
+                    //reset(&_initial[0], _initial.size());
                     return;
                 }
                 
@@ -326,10 +326,13 @@ public:
     }
 
     void reset(const T* initial_tilemap, size_t n, bool reset_rng = true) {
+        
         std::copy(initial_tilemap, initial_tilemap + n, _initial.begin());
 
-        if(reset_rng)
+        if(reset_rng) {
             _random.reset(wee::randgen((uint32_t){}, (uint32_t)78612512));
+            DEBUG_VALUE_OF(_random.seed());
+        }
 
         bitmask_t initial_mask = 0;
         for(auto it : _tile_to_index) {

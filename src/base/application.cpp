@@ -23,6 +23,23 @@ application::application(applet* a)
     SDL_GetWindowSize(SDL_GetApplicationWindow(_handle), &w, &h);
     SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
 
+    /**
+     * note that event.keysym.sym will return symbolic key values so: on azerty, pressing 'a' will result in 'a', whereas event.keysym.scancode would return 'q'
+     * On AZERTY, pressing 'A' will emit 'Q' scancode and 'a' keysym
+     */
+    SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_KEY, [] (const SDL_Application* app, const void* userdata) {
+        application* a = static_cast<application*>(SDL_GetApplicationUserData(app));
+        const SDL_KeyboardEvent* event = static_cast<const SDL_KeyboardEvent*>(userdata);
+        if(event->type == SDL_KEYUP) {
+            a->on_keyrelease(event->keysym.sym);
+        } else if(event->type == SDL_KEYDOWN) {
+            a->on_keypress(event->keysym.sym);
+        } else {
+            return -1;
+        }
+        return 0;
+    });
+
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_STARTED, [] (const SDL_Application* app, const void* ) {
         application* a = static_cast<application*>(SDL_GetApplicationUserData(app));
         return a->_applet->load_content();

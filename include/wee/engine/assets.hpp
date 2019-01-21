@@ -73,9 +73,8 @@ namespace wee {
         }
 
         SDL_Texture* load(const std::string& name, std::istream& is) {
-            DEBUG_VALUE_AND_TYPE_OF(name);
             if(resources.count(name) == 0) {
-                DEBUG_LOG("resource not in cache, loading from disk...");
+                DEBUG_VALUE_AND_TYPE_OF(name);
                 SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
                 if(!surface) {
                     throw std::runtime_error(IMG_GetError());

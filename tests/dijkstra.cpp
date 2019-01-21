@@ -73,6 +73,9 @@ int main() {
         return 0;
     };
 
+    std::vector<int*> foo;
+    int* bar = new int[4];
+    foo.assign(&bar, &bar + 4);
 
 	int ans = astar(adj, 0, 1, dijkstra);
 

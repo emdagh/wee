@@ -40,8 +40,7 @@ namespace {
 struct game : wee::applet {
     wee::sprite_font* _font;
     int load_content() {
-        std::string pt = wee::get_resource_path("assets") + "ttf/BlackCastleMF.ttf";//Boxy-Bold.ttf";
-		//std::ifstream is(pt);
+        std::string pt = wee::get_resource_path("assets") + "fonts/Boxy-Bold.ttf";
         _font = new wee::sprite_font("@foofont",
 	        wee::assets<TTF_Font>::instance().load("@foofont", 32, ::as_lvalue(std::ifstream(pt)))
 		);

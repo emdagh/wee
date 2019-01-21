@@ -71,9 +71,9 @@ void b2DebugDrawImpl::DrawCircle(const b2Vec2& center, float32 radius, const b2C
 }
 
 void b2DebugDrawImpl::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2&, const b2Color& color) {
-    //SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
-    //DrawCircle(center, radius, color);
-    int iradius = WORLD_TO_SCREEN(radius * _transform.m11);
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, 255);
+    DrawCircle(center, radius, color);
+    /*int iradius = WORLD_TO_SCREEN(radius * _transform.m11);
     b2Vec2 PositionSS = transform_mat4(WORLD_TO_SCREEN(center), _transform);
     int x = static_cast<int>(PositionSS.x + 0.5f);
     int y = static_cast<int>(PositionSS.y + 0.5f);
@@ -83,6 +83,7 @@ void b2DebugDrawImpl::DrawSolidCircle(const b2Vec2& center, float32 radius, cons
     uint8_t b = static_cast<uint8_t>(color.r * 255.f);
     SDL_SetRenderDrawColor(_renderer, r, g, b, 255);
     SDL_RenderDrawCircleFilledEXT(_renderer, x, y, iradius);
+    */
 }
 
 void b2DebugDrawImpl::DrawSegment(const b2Vec2& _p1, const b2Vec2& _p2, const b2Color& color) {

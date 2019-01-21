@@ -1,5 +1,9 @@
 #pragma once
 
+#include <iostream>
+#include <queue>
+#include <unordered_map>
+
 namespace wee {
 
     template <typename T>
@@ -35,8 +39,8 @@ namespace wee {
 
     template <typename T, typename W> 
     struct basic_weighted_graph : public basic_graph<T> {
-
-        std::unordered_map<T, std::unordered_map<T, W> > _weights;
+        typedef std::unordered_map<T, W> edge_type;
+        std::unordered_map<T, edge_type > _weights;
 
         /**
          * @returns - std::optional containing weight or nullopt_t
