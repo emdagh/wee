@@ -62,7 +62,6 @@ entity_type create_rope(b2World* world, entity_type a, entity_type b, const b2Ve
     def.localAnchorB = body->GetLocalPoint(bPosWS);
     def.maxLength = (def.bodyA->GetPosition() - bPosWS).Length();//SCREEN_TO_WORLD(0.0f);
 #else
-
     b2DistanceJointDef def;
     def.userData = reinterpret_cast<void*>(e);
     def.bodyA = kult::get<physics>(a).body; 
@@ -666,9 +665,12 @@ struct game : public wee::applet {
             //e_particleBit// = 0x0020 
             0
             ) ;
-        _world = new b2World({0.0f, 4.8f});
+        _world = new b2World({0.0f, 9.8f});
         _world->SetDebugDraw(&_debugdraw);
         _world->SetContactListener(&_contacts);
+    }
+
+    void reset() {
     }
 
     int load_content() {
@@ -727,7 +729,7 @@ struct game : public wee::applet {
         _player = create_player(_world, vec2f{kOutputDimension.x * TILESIZE / 2, kOutputDimension.y * TILESIZE / 2});
         copy_physics_to_transform();
 
-#if 0
+#if 1 
     b2Vec2 pa = kult::get<physics>(_player).body->GetPosition();
     b2Vec2 temp = { 0.0f, -1000.0f };
     b2Vec2 pb = pa + SCREEN_TO_WORLD(temp);
@@ -761,7 +763,7 @@ struct game : public wee::applet {
             }
         }
 
-        if(camera_x >= TILESIZE) {
+        if(((int)camera_x % TILESIZE) == 0) {
             /**
              * free the column on the left-most edge.
              */
@@ -890,7 +892,7 @@ struct game : public wee::applet {
                     //b2RopeJoint* j = static_cast<b2RopeJoint*>(a.joint);
                     //j->SetMaxLength(j->GetMaxLength() - 0.0251f);
                     b2DistanceJoint* j = static_cast<b2DistanceJoint*>(a.joint);
-                    j->SetLength(std::max(SCREEN_TO_WORLD(64.f), j->GetLength() - 0.0125f));
+                    j->SetLength(std::max(SCREEN_TO_WORLD(16.f), j->GetLength() - 0.0125f));
                 }
             //}
         //}
