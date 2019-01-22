@@ -70,8 +70,9 @@ entity_type create_rope(b2World* world, entity_type a, entity_type b, const b2Ve
     def.localAnchorA = b2Vec2 {0.0f, 0.0f};
     def.localAnchorB = body->GetLocalPoint(bPosWS);
     def.length = (def.bodyA->GetPosition() - bPosWS).Length();
-    def.frequencyHz = 1;
-    def.dampingRatio = 0.9f;
+    def.frequencyHz = 5;
+    def.dampingRatio = 0.75f;
+    def.collideConnected = true;
 #endif
 
     kult::add<joint>(e).joint = world->CreateJoint(&def);
@@ -979,6 +980,7 @@ struct game : public wee::applet {
             int y0 = (int)(pa_ws.y);
             int y1 = (int)(pb_ws.y);
 
+            SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::Black);
             SDL_RenderDrawLine(renderer, x0, y0, x1, y1); 
         }
 
