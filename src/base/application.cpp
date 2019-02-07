@@ -3,8 +3,25 @@
 #include <engine/assets.hpp>
 #include <base/SDL_Application.h>
 #include <core/logstream.hpp>
+#include <weegl.h>
 
 using namespace wee;
+void GLAPIENTRY
+glDebugCallback( GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar* message,
+        const void* userParam )
+{
+    //fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+    //        ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
+    //        type, severity, message );
+    DEBUG_LOG("OpenGL: ", message);
+}
+
+// During init, enable debug output
 
 application::application(applet* a) 
     : _handle(SDL_CreateApplication())
@@ -13,7 +30,14 @@ application::application(applet* a)
 {
     if(!_handle) {
         DEBUG_LOG(SDL_GetError());
+        SDL_Quit();
     }
+    DEBUG_LOG(glGetString(GL_VENDOR));
+    DEBUG_LOG(glGetString(GL_RENDERER));
+    DEBUG_LOG(glGetString(GL_VERSION));
+    DEBUG_LOG(glGetString(GL_SHADING_LANGUAGE_VERSION));
+    glEnable              ( GL_DEBUG_OUTPUT );
+    glDebugMessageCallback( glDebugCallback, 0 );
     assets<SDL_Texture>::instance().after= [&] (SDL_Surface* surface) {
         return SDL_CreateTextureFromSurface(SDL_GetApplicationRenderer(_handle), surface);
     };

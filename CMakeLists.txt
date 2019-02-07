@@ -92,7 +92,9 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/vendor/kult
     ${CMAKE_SOURCE_DIR}/vendor/cxx-prettyprint
     ${CMAKE_SOURCE_DIR}/vendor/tmxlite/tmxlite/include
-    )
+    ${CMAKE_SOURCE_DIR}/vendor/assimp/include
+    ${CMAKE_BINARY_DIR}/vendor/assimp/include
+)
 LINK_DIRECTORIES(
     ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
     )

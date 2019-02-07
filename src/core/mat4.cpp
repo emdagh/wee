@@ -1,5 +1,6 @@
 #include <core/mat4.hpp>
 #include <core/vec3.hpp>
+#include <core/quaternion.hpp>
 #include <numeric>
 #include <limits>
 using namespace wee;
@@ -10,6 +11,44 @@ const mat4 mat4::identity = {
     0, 0, 1, 0,
     0, 0, 0, 1
 };
+
+mat4 mat4::create_scale(const vec3& a) {
+    return mat4::create_scale(a.x, a.y, a.z);
+}
+
+mat4 mat4::create_translation(const vec3& a) {
+    return mat4::create_translation(a.x, a.y, a.z);
+}
+
+mat4 mat4::create_from_quaternion(const quaternion& q) {
+    mat4 m;
+    float num9 = q.x * q.x;
+    float num8 = q.y * q.y;
+    float num7 = q.z * q.z;
+    float num6 = q.x * q.y;
+    float num5 = q.z * q.w;
+    float num4 = q.z * q.x;
+    float num3 = q.y * q.w;
+    float num2 = q.y * q.z;
+    float num = q.x * q.w;
+    m.m11 = 1.f - (2.f * (num8 + num7));
+    m.m12 = 2.f * (num6 + num5);
+    m.m13 = 2.f * (num4 - num3);
+    m.m14 = 0.f;
+    m.m21 = 2.f * (num6 - num5);
+    m.m22 = 1.f - (2.f * (num7 + num9));
+    m.m23 = 2.f * (num2 + num);
+    m.m24 = 0.f;
+    m.m31 = 2.f * (num4 + num3);
+    m.m32 = 2.f * (num2 - num);
+    m.m33 = 1.f - (2.f * (num8 + num9));
+    m.m34 = 0.f;
+    m.m41 = 0.f;
+    m.m42 = 0.f;
+    m.m43 = 0.f;
+    m.m44 = 1.f;
+    return m;
+}
 
 mat4 mat4::inverted(const mat4& in) 
 {
@@ -82,4 +121,28 @@ mat4 mat4::create_lookat(const vec3& eye, const vec3& at, const vec3& up) {
 
     res.m44 = (float)1.;
     return res;
+}
+
+#include <nlohmann/json.hpp>
+
+namespace wee {
+    using nlohmann::json;
+
+    void to_json(json& j, const mat4& m) {
+        j = {
+            { m.m11, m.m12, m.m13, m.m14 },
+            { m.m21, m.m22, m.m23, m.m24 },
+            { m.m31, m.m32, m.m33, m.m34 },
+            { m.m41, m.m42, m.m43, m.m44 }
+        };
+    }
+
+    void from_json(const json& j, mat4& m) {
+    }
+
+    std::ostream& operator << (std::ostream& os, const mat4& m) {
+        json j;
+        to_json(j, m);
+        return os << j;
+    }
 }

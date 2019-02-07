@@ -35,6 +35,7 @@ foreach( testsourcefile ${APP_SOURCES} )
         SDL2_image
         SDL2
         ${PLATFORM_LIBS}
+        assimp
 
     )
 endforeach( testsourcefile ${APP_SOURCES} )

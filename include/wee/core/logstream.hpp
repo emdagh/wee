@@ -94,6 +94,12 @@ namespace wee {
         loglevel _current_loglevel = loglevel::none;
         loglevel _loglevel = loglevel::all;
     public:
+
+        static logstream& instance(std::ostream& os) {
+            static logstream* self = new logstream(os);
+            return *self;
+        }
+
         logstream(std::ostream& os) : _os(os) {}
 
         template <typename T>

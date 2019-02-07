@@ -25,6 +25,7 @@ TARGET_LINK_LIBRARIES(
         SDL_ttf
         SDL2_image
         SDL2
+        assimp
         ${PLATFORM_LIBS}
 
     )

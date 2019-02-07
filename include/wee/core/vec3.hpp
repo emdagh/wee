@@ -13,7 +13,18 @@ namespace wee {
         static const vec3 _right;
         static const vec3 _forward;
 
+        typedef const vec3& const_ref;
+
         float x, y, z;
+
+        static vec3 lerp(const_ref a, const_ref b, float c) {
+            vec3 res = {
+                a.x + (b.x - a.x) * c,
+                a.y + (b.y - a.y) * c,
+                a.z + (b.z - a.z) * c
+            };
+            return res;
+        }
 
         static vec3 transform(const vec3&, const mat4&);
 
@@ -121,6 +132,8 @@ namespace wee {
         }
 
     };
+
+    typedef vec3 vec3f;
 
     std::ostream& operator << (std::ostream&, const vec3&);
 }

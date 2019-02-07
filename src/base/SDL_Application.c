@@ -1,7 +1,7 @@
 #include <base/SDL_Application.h>
 #include <SDL.h>
 #include <string.h>
-
+#include <weegl.h>
 
 typedef int(*SDL_ConditionalEvent)(const SDL_Event*);
 typedef void(*SDL_UnconditionalEvent)(const void*);
@@ -112,12 +112,24 @@ int SDL_ApplicationHandleTextInputEvent(struct SDL_Application* ptr, const SDL_T
 
 
 struct SDL_Application* SDL_CreateApplication() { 
+    if(SDL_Init(SDL_INIT_VIDEO)) {
+        return NULL;
+    }
     struct SDL_Application* res = (struct SDL_Application*)malloc(sizeof(SDL_Application));
     memset(res, 0, sizeof(SDL_Application));
     /**
      * create the window
      */
     {
+        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        // SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
         SDL_DisplayMode dm;
         SDL_GetDesktopDisplayMode(0, &dm);
         SDL_Window* _win = SDL_CreateWindow(NULL, 
@@ -150,10 +162,14 @@ struct SDL_Application* SDL_CreateApplication() {
             SDL_DestroyWindow(res->window);
             //SDL_Quit();
         }
+
+
+
         res->renderer = _ren;
     }
     if(!res->renderer) 
         return NULL;
+
 
     if(res->callback[SDL_APPLICATION_CALLBACK_CREATED]) 
         res->callback[SDL_APPLICATION_CALLBACK_CREATED](res, NULL);
@@ -238,7 +254,7 @@ int SDL_StartApplication(struct SDL_Application* ptr) {
 
         ptr->callback[SDL_APPLICATION_CALLBACK_RENDER](ptr, NULL);
         timeLastMs = timeCurrentMs;
-
+        SDL_GL_SwapWindow(ptr->window);
     }
 }
 

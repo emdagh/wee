@@ -3,8 +3,10 @@
 #include <wee.hpp>
 #include <core/mat4.h>
 #include <cmath>
+#include <iostream>
 
 namespace wee {
+    struct quaternion;
     struct vec3;
     __declare_aligned(struct, 16) mat4 {
         union {
@@ -17,9 +19,12 @@ namespace wee {
             float cell[16];
         };
 
+        typedef mat4& ref;
+        typedef const mat4& const_ref;
+
         static const mat4 identity;
 
-
+        static mat4 create_scale(const vec3&);
         static mat4 create_scale(float sx, float sy, float sz) {
             mat4 res = identity;
             res.m11 = sx;
@@ -60,6 +65,8 @@ namespace wee {
             return res;
         }
 
+        static mat4 create_from_quaternion(const quaternion&) ;
+
         static mat4 create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
             mat4 res = identity;
             res.m11 = 2.0f / (right - left);
@@ -71,6 +78,7 @@ namespace wee {
             return res;
         }
 
+        static mat4 create_translation(const vec3&);
         static mat4 create_translation(float x, float y, float z) {
             mat4 res = identity;
             res.m41 = x;
@@ -114,6 +122,17 @@ namespace wee {
             return res;
         }
 
+        mat4 operator * (const_ref m) const {
+            mat4 copy(*this);
+            copy *= m;
+            return copy;
+        }
+
+        ref operator *= (const_ref m) {
+            *this = mat4::mul(*this, m);
+            return *this;
+        }
+
 
 #ifdef HAVE_SSE
         static inline __m128 lincomb_sse(const __m128 &a, const mat4 &B)
@@ -141,5 +160,9 @@ namespace wee {
         }
 #endif
     };
+
+    typedef mat4 mat4f;
+
+    std::ostream& operator << (std::ostream& os, const mat4& m); 
 }
 
