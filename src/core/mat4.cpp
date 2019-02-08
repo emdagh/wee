@@ -11,6 +11,16 @@ const mat4 mat4::identity = {
     0, 0, 1, 0,
     0, 0, 0, 1
 };
+mat4 mat4::create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
+    mat4 res = identity;
+    res.m11 = 2.0f / (right - left);
+    res.m22 = 2.0f / (top - bottom);
+    res.m33 = -2.0f / (far - near);
+    res.m41 = -(right + left) / (right - left);
+    res.m42 = -(top + bottom) / (top - bottom);
+    res.m43 = -(far + near) / (far - near);
+    return res;
+}
 
 mat4 mat4::create_scale(const vec3& a) {
     return mat4::create_scale(a.x, a.y, a.z);

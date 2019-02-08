@@ -67,16 +67,7 @@ namespace wee {
 
         static mat4 create_from_quaternion(const quaternion&) ;
 
-        static mat4 create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
-            mat4 res = identity;
-            res.m11 = 2.0f / (right - left);
-            res.m22 = 2.0f / (top - bottom);
-            res.m33 = 2.0f / (far - near);
-            res.m41 = (left + right) / (left - right);
-            res.m42 = (bottom + top) / (bottom - top);
-            res.m43 = near / (near - far);
-            return res;
-        }
+        static mat4 create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far);
 
         static mat4 create_translation(const vec3&);
         static mat4 create_translation(float x, float y, float z) {
