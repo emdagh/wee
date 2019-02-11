@@ -1,5 +1,16 @@
 #pragma once
 
+#define DECLARE_VERTEXATTRIBPTR_IMPL_INT(...) \
+    template <> \
+    void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean, GLsizei stride, const GLvoid* ptr) { \
+        glVertexAttribIPointer(index, size, type, stride, ptr); \
+    }
+
+#define DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(...) \
+    template <> \
+    void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean is_normalized, GLsizei stride, const GLvoid* ptr) { \
+        glVertexAttribPointer(index, size, type, is_normalized, stride, ptr); \
+    }
 
 namespace wee {
     enum class kVertexStreamIndex : uint8_t {
@@ -62,21 +73,6 @@ namespace wee {
     template <GLenum T>
     void glVertexAttribTPointer(GLuint,GLint,GLenum,GLboolean,GLsizei,const GLvoid *) {
         throw not_implemented();
-    }
-    /*template <>
-    void glVertexAttribTPointer<GL_FLOAT>(GLuint index, GLint size, GLenum type, GLboolean is_normalized, GLsizei stride, const GLvoid* ptr) {
-        glVertexAttribPointer(index, size, type, is_normalized, stride, ptr);
-    }*/
-#define DECLARE_VERTEXATTRIBPTR_IMPL_INT(...) \
-    template <> \
-    void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean, GLsizei stride, const GLvoid* ptr) { \
-        glVertexAttribIPointer(index, size, type, stride, ptr); \
-    }
-
-#define DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(...) \
-    template <> \
-    void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean is_normalized, GLsizei stride, const GLvoid* ptr) { \
-        glVertexAttribPointer(index, size, type, is_normalized, stride, ptr); \
     }
 
     DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_HALF_FLOAT);

@@ -5,20 +5,27 @@
 #include <limits>
 using namespace wee;
 
-const mat4 mat4::identity = { 
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-};
 mat4 mat4::create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
-    mat4 res = identity;
+    mat4 res = identity();
     res.m11 = 2.0f / (right - left);
     res.m22 = 2.0f / (top - bottom);
     res.m33 = -2.0f / (far - near);
     res.m41 = -(right + left) / (right - left);
     res.m42 = -(top + bottom) / (top - bottom);
     res.m43 = -(far + near) / (far - near);
+    return res;
+}
+
+mat4 mat4::create_perspective_fov(float fov, float aspectRatio, float near, float far) {
+    mat4 res = identity();
+    float num = 1.0f / std::tan(fov * 0.5f);
+    float num9 = num / aspectRatio;
+    res.m11 = num9;
+    res.m22 = num;
+    res.m33 = -(far / (far - near));
+    res.m34 = -1.0f;
+    res.m43 = -((far * near) / (far - near)); 
+    res.m44 = 0.0f;
     return res;
 }
 
@@ -62,7 +69,7 @@ mat4 mat4::create_from_quaternion(const quaternion& q) {
 
 mat4 mat4::inverted(const mat4& in) 
 {
-    mat4 res = mat4::identity;
+    mat4 res = mat4::identity();
     
 
 	float num23 = (in.m33 * in.m44) - (in.m34 * in.m43);
