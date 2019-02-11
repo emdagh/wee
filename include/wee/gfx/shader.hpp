@@ -11,66 +11,11 @@
 #include <core/range.hpp>
 #include <core/logstream.hpp>
 #include <core/factory.hpp>
+#include <gfx/vertex_declaration.hpp>
 
 
 namespace wee {
 
-    enum class kVertexStreamIndex : uint8_t {
-        Position = 0,
-        BlendWeight,
-        Normal,
-        Color0,
-        Color1,
-        FogCoord,
-        PointSize,
-        BlendIndex,
-        TexCoord0,
-        TexCoord1,
-        TexCoord2,
-        TexCoord3,
-        TexCoord4,
-        TexCoord5,
-        TexCoord6,
-        TexCoord7,
-        StreamIndexMax
-    };
-
-    enum class kVertexStreamType : uint8_t {
-        Single,
-        Vector2,
-        Vector3,
-        Vector4,
-        HalfSingle,
-        HalfVector2,
-        HalfVector3,
-        HalfVector4,
-        Color,
-        Short2,
-        Short4,
-        Short2Normalized,
-        Short4Normalized,
-        Byte4,
-        StreamTypeMax
-    };
-
-    static const char* kVertexStreamSemantic[] = {
-        "Position",
-        "BlendWeight",
-        "Normal",
-        "Color0",
-        "Color1",
-        "FogCoord",
-        "PointSize",
-        "BlendIndex0",
-        "TexCoord0",
-        "TexCoord1",
-        "TexCoord2",
-        "TexCoord3",
-        "TexCoord4",
-        "TexCoord5",
-        "TexCoord6",
-        "TexCoord7",
-    };
 
     enum struct kShaderType {
         VertexShader,
