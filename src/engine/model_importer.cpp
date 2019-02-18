@@ -6,6 +6,8 @@
 #include <core/vec3.hpp>
 #include <core/quaternion.hpp>
 #include <core/logstream.hpp>
+#include <gfx/vertex_declaration.hpp>
+#include <gfx/vertex_buffer.hpp>
 #include <engine/model_importer.hpp>
 #include <vector>
 #include <cstddef>
@@ -17,11 +19,16 @@
 #define kMaxBonesPerVertex  4
 
 using namespace wee;
-        
+       
 namespace wee {
+    struct vertex_channel_info {
+        kVertexStreamIndex      index;
+        kVertexStreamType       type;
+    };
+    using vertex_declaration_info = std::vector<vertex_channel_info>; 
+
     struct bone_info {
         int _parentIndex; // int bcause we need -1 for root bone
-        //mat4f _boneOffset, _localTransform, _worldTransform;
         aiMatrix4x4 world, offset;
         std::string _name;
     };
@@ -46,6 +53,7 @@ namespace wee {
         size_t numVertices;
         size_t numIndices;
         size_t meshIndex;
+        vertex_declaration_info vertex_info;
     };
     struct material_entry;
 }
@@ -58,8 +66,6 @@ mat4f convert(const aiMatrix4x4& val) {
         val.d1, val.d2, val.d3, val.d4
     };
 }
-
-
 
 model* model_importer::import(std::istream& is) const {
     DEBUG_METHOD();
@@ -96,7 +102,6 @@ model* model_importer::import(std::istream& is) const {
                 bones[boneName] = -1;
         }
     }
-
     /** 
      * this will hold the bone's information
      */
@@ -104,9 +109,10 @@ model* model_importer::import(std::istream& is) const {
     /**
      * recursive function to get the bone node's world transformation
      */
-    std::function<void(const aiNode*, const aiMatrix4x4&)> read_node_hierarchy = [&] (const aiNode* node, const aiMatrix4x4& parentTransformation) 
+    std::function<void(const aiNode*, const aiMatrix4x4&)> 
+    read_node_hierarchy = [&] (const aiNode* node, const aiMatrix4x4& parentTransformation) 
     -> void {
-        DEBUG_VALUE_OF(node->mName.data);
+        //DEBUG_VALUE_OF(node->mName.data);
         static int boneIndex = 0;
         //aiMatrix4x4 currentTransformation = node->mTransformation * parentTransformation;
         aiMatrix4x4 currentTransformation = parentTransformation * node->mTransformation;
@@ -123,6 +129,8 @@ model* model_importer::import(std::istream& is) const {
 
     read_node_hierarchy(scene->mRootNode, scene->mRootNode->mTransformation);
 
+    DEBUG_VALUE_OF(bones);
+
     std::vector<mesh_entry> entries(scene->mNumMeshes);
     std::vector<aiVector3D> positions, normals, textureCoords;
     std::vector<vertex_bone_data> vertexBoneData;
@@ -136,9 +144,6 @@ model* model_importer::import(std::istream& is) const {
             const aiBone* bone = mesh->mBones[j];
             if(bones.count(bone->mName.data)) {
                 info[bones[bone->mName.data]].offset = bone->mOffsetMatrix;
-                /**
-                 * TODO: vertex weights
-                 */
             }
         }
         entries[i].numIndices = mesh->mNumFaces * 3;
@@ -152,10 +157,60 @@ model* model_importer::import(std::istream& is) const {
 
     vertexBoneData.resize(numVertices);
 
+    /**
+     * observation:
+     *  The vertexbuffer couldn't care less about the data layout, that's been decoupled. The challenge now
+     *  is to get the data into the buffer, and get a more or less dynamic vertex layout. It's a bit of a 
+     *  shame that I put as much time into the (very nicely) templated version. However, the general idea would
+     *  be to select a vertex_p3_n3_t2 as a default, and a skinned_vertex_p3_n3_t2 (or similar syntax) when 
+     *  the list of bones is not empty perhaps? Anyway: the selection of vertex layout seems to be a runtume 
+     *  issue in general and has very little to do with the step where we create the vertex and index buffers
+     *  (e.g.: this step)
+     */
+
     for(auto& entry: entries) {
         const aiVector3D zero = { 0.f, 0.f, 0.f };
 
         const aiMesh* mesh = scene->mMeshes[entry.meshIndex];
+        size_t vertex_size = 0;
+
+        entry.vertex_info.push_back({
+            kVertexStreamIndex::Position,
+            kVertexStreamType::Vector3
+        });
+
+        vertex_size += sizeof(float) * 3;
+
+        if(mesh->HasNormals()) {
+            entry.vertex_info.push_back({
+                kVertexStreamIndex::Normal,
+                kVertexStreamType::Vector3
+            });
+            vertex_size += sizeof(float) * 3;
+        }
+
+        if(mesh->HasTextureCoords(0)) {
+            entry.vertex_info.push_back({
+                kVertexStreamIndex::TexCoord0,
+                kVertexStreamType::Vector2
+            });
+            vertex_size += sizeof(float) * 2;
+        }
+
+        if(mesh->mNumBones) {
+            entry.vertex_info.push_back({
+                kVertexStreamIndex::BlendWeight,
+                kVertexStreamType::Vector4
+            });
+            vertex_size += sizeof(float) * 4;
+            entry.vertex_info.push_back({
+                kVertexStreamIndex::BlendIndex,
+                kVertexStreamType::Short4
+            });
+            vertex_size += sizeof(int16_t) * 4;
+        }
+
+        [[maybe_unused]] vertex_buffer* vb = new vertex_buffer(vertex_size * mesh->mNumVertices);
  
         for(auto j: range(entry.numVertices)) {
             const aiVector3D& position  = mesh->mVertices[j];
@@ -163,8 +218,12 @@ model* model_importer::import(std::istream& is) const {
             const aiVector3D& texcoord  = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][j] : zero;
             
             positions.push_back(position);
-            normals.push_back(normal);
-            textureCoords.push_back(texcoord);
+            if(mesh->HasNormals()) {
+                normals.push_back(normal);
+            }
+            if(mesh->HasTextureCoords(0)) {
+                textureCoords.push_back(texcoord);
+            }
         }
 
         for(auto j: range(mesh->mNumFaces)) {
@@ -190,11 +249,14 @@ model* model_importer::import(std::istream& is) const {
 
     for(auto i: range(scene->mNumMaterials)) {
         const aiMaterial* material = scene->mMaterials[i];
+        //for(auto t: range(material->GetTextureCount(aiTextureType_DIFFUSE))) {
+        //TODO: enable texture loading here.... / for loops and alll
+
+        //`}
         DEBUG_VALUE_OF(material);
     }
 
-
-
+     
 
     return nullptr;
 }

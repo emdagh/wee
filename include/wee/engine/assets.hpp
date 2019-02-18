@@ -64,6 +64,29 @@ namespace wee {
         }
     };
 
+    template <> 
+    struct assets<SDL_Surface> : singleton<assets<SDL_Surface> > {
+        template <typename T>
+        using dictionary = std::unordered_map<std::string, T>;
+
+        dictionary<SDL_Surface*> _data;
+
+        SDL_Surface* load(const std::string& name, std::istream& is) {
+            if(_data.count(name) == 0) {
+                DEBUG_VALUE_AND_TYPE_OF(name);
+                SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
+                if(!surface) {
+                    throw std::runtime_error(IMG_GetError());
+                }
+                _data[name] = surface;
+                //return from_surface(name, surface);
+            }
+            return _data[name];
+
+        }
+
+    };
+
     template <>
     struct assets<SDL_Texture> : singleton<assets<SDL_Texture> > {
         typename dictionary<SDL_Texture*>::type resources;

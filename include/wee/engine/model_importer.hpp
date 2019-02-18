@@ -16,5 +16,6 @@ namespace wee {
 
     public:
         model* import(std::istream&) const;
+        //std::ostream operator << (std::ostream&, model*);
     };
 }

@@ -107,7 +107,11 @@ namespace wee {
 
         template <typename T>
         T* get_uniform(const std::string& key) {
-            return dynamic_cast<T*>(_info[key]._uniform);
+            if(_info.count(key) != 0) {
+                return dynamic_cast<T*>(_info[key]._uniform);
+            }
+            throw std::out_of_range(key);
+            return NULL;
         }
 
         void cache_all_uniforms() {
@@ -122,6 +126,7 @@ namespace wee {
                 glGetActiveUniform(_handle, it, 1024, &len, NULL /*size*/, &type, name.data());
                 auto* u = uniform_factory::instance().create(type);
                 _info.insert(std::make_pair(name.substr(0, len), (uniform_info){u,glGetUniformLocation(_handle, name.c_str())}));
+                DEBUG_VALUE_OF(name);
             }
         }
 

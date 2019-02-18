@@ -1,5 +1,9 @@
 #pragma once
 
+#include <wee/weegl.h>
+#include <core/vec2.hpp>
+#include <core/vec3.hpp>
+
 #define DECLARE_VERTEXATTRIBPTR_IMPL_INT(...) \
     template <> \
     void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean, GLsizei stride, const GLvoid* ptr) { \
@@ -13,6 +17,14 @@
     }
 
 namespace wee {
+
+    struct vec4i {
+        uint16_t x, y, z, w;
+    };
+    struct ushort2 {
+        uint16_t x, y;
+    };
+
     enum class kVertexStreamIndex : uint8_t {
         Position = 0,
         BlendWeight,
@@ -51,6 +63,24 @@ namespace wee {
         StreamTypeMax
     };
 
+    static const size_t kVertexStreamTypeSize[] = {
+        sizeof(float),
+        sizeof(float) * 2,
+        sizeof(float) * 3,
+        sizeof(float) * 4,
+        sizeof(int16_t),
+        sizeof(int16_t) * 2,
+        sizeof(int16_t) * 3,
+        sizeof(int16_t) * 4,
+        sizeof(uint8_t) * 4, // Color,
+        sizeof(int16_t) * 2,
+        sizeof(int16_t) * 4,
+        sizeof(int16_t) * 2,
+        sizeof(int16_t) * 4,
+        sizeof(uint8_t) * 4, // Byte4,
+    };
+
+    [[maybe_unused]] 
     static const char* kVertexStreamSemantic[] = {
         "Position",
         "BlendWeight",
@@ -101,7 +131,7 @@ namespace wee {
         vertex() : Ts()... {}
     };
 
-    template <typename T> // , typename = std::enable_if_t<T::type == GL_FLOAT> > // g++ segfaults here....
+    template <typename T> 
     struct vertex_attribute_installer
     {
         void operator () (size_t stride, size_t& offset) {
@@ -125,4 +155,36 @@ namespace wee {
         size_t offset = 0;
         install_vertex_attributes<T, I>(offset, std::make_index_sequence<T::kAttributeCount>{});
     }
+    struct attributes {
+
+        struct blend_index {
+            vec4i _index;
+            enum {
+                size    = 4,
+                type    = GL_UNSIGNED_SHORT,
+                is_normalized = false,
+                semantic = static_cast<int>(kVertexStreamIndex::BlendIndex)
+            };
+        };
+        struct position {
+            vec3f _position;
+            enum {
+                size = 3,
+                type = GL_FLOAT,
+                is_normalized = GL_FALSE,
+                semantic = static_cast<int>(kVertexStreamIndex::Position)
+            };
+        };
+
+
+        struct texcoord {
+            vec2f _texcoord;
+            enum {
+                size = 2,
+                type = GL_FLOAT, //GL_UNSIGNED_SHORT,
+                is_normalized = GL_FALSE,
+                semantic = static_cast<int>(kVertexStreamIndex::TexCoord0)
+            };
+        };
+    };
 }
