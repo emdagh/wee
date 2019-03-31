@@ -12,7 +12,7 @@
 #include <base/applet.hpp>
 #include <engine/particles.hpp>
 #include <core/random.hpp>
-
+#include <gfx/graphics_device.hpp>
 using namespace wee;
 
 SDL_Rect SDL_ScaleRect(const SDL_Rect& r, float scale) {
@@ -131,7 +131,8 @@ public:
         return 0;
     }
 
-    virtual int draw(SDL_Renderer* renderer) {
+    int draw(graphics_device* dev) { 
+        auto* renderer = dev->get_renderer();
         static SDL_Texture* fb = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_TARGET, 640, 480);
 
 

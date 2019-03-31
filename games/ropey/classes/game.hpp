@@ -15,6 +15,6 @@ public:
     virtual ~game();
     int load_content(); 
     int update(int dt) ;
-    int draw(SDL_Renderer* renderer);
+    int draw(wee::graphics_device*);
     void set_callbacks(wee::application*);
 };

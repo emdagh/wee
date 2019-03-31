@@ -4,6 +4,7 @@
 #include <base/SDL_Application.h>
 #include <core/logstream.hpp>
 #include <weegl.h>
+#include <gfx/graphics_device.hpp>
 
 using namespace wee;
 void GLAPIENTRY
@@ -19,6 +20,11 @@ glDebugCallback( GLenum source,
     //        ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
     //        type, severity, message );
     DEBUG_LOG("OpenGL: ", message);
+    if(severity == GL_DEBUG_SEVERITY_HIGH) {
+        //SDL_Quit();
+        //exit(0);
+        throw std::runtime_error(message);
+    }
 }
 
 // During init, enable debug output
@@ -32,7 +38,7 @@ application::application(applet* a)
         DEBUG_LOG(SDL_GetError());
         SDL_Quit();
     }
-    DEBUG_LOG(glGetString(GL_VENDOR));
+    DEBUG_LOG("vendor:", glGetString(GL_VENDOR));
     DEBUG_LOG(glGetString(GL_RENDERER));
     DEBUG_LOG(glGetString(GL_VERSION));
     DEBUG_LOG(glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -62,6 +68,14 @@ application::application(applet* a)
             return -1;
         }
         return 0;
+    });
+
+    SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_CREATED, [] (const SDL_Application* app, const void* ) {
+
+        application* a = static_cast<application*>(SDL_GetApplicationUserData(app));
+        a->_graphics_device = new graphics_device(SDL_GetApplicationRenderer(app));
+        return 0;
+            
     });
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_STARTED, [] (const SDL_Application* app, const void* ) {
@@ -94,12 +108,18 @@ application::application(applet* a)
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_RENDER, [] (const SDL_Application* app, const void* ) {
         application* self = static_cast<application*>(SDL_GetApplicationUserData(app));
-        SDL_Renderer* renderer = SDL_GetApplicationRenderer(app);
-        return self->_applet->draw(renderer);
+        //graphics_device* device = nullptr;
+        //SDL_Renderer* renderer = SDL_GetApplicationRenderer(app);
+        return self->_applet->draw(self->_graphics_device);
     });
 }
 
 application::~application() {
+}
+
+int application::get_graphics_device(graphics_device** pp) {
+    
+    return 0;
 }
 
 void application::resize(int w, int h) {

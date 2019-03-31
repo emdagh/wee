@@ -22,14 +22,7 @@ void camera::_update_transform() {
             _viewport.y * 0.5f, 
             0.0f
             );
-    _transform = mat4::mul(
-            mat4::mul(
-                Mt,
-                mat4::mul(
-                    Mr, Ms
-                    )
-                ), Mt2
-            );
+    _transform = mat4::mul(mat4::mul(Mt, mat4::mul(Mr, Ms)), Mt2);
     _changed = false;
 }
 

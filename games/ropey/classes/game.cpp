@@ -4,6 +4,7 @@
 #include <base/application.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
+#include <gfx/graphics_device.hpp>
 #include <engine/assets.hpp>
 #include <nlohmann/json.hpp>
 
@@ -57,7 +58,9 @@ int game::update(int dt) {
     return 0;
 }
 
-int game::draw(SDL_Renderer* renderer) {
+int game::draw(graphics_device* dev) {
+    auto* renderer = dev->get_renderer();
+
     SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
     SDL_RenderClear(renderer);
     gamescreen::draw_all(renderer);

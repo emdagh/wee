@@ -3,6 +3,7 @@
 #include <base/applet.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
+#include <gfx/graphics_device.hpp>
 #include <engine/gui/layout.hpp>
 #include <core/logstream.hpp>
 #include <SDL.h>
@@ -210,7 +211,8 @@ struct game : applet {
         return 0;
     }
 
-    virtual int draw(SDL_Renderer* renderer) {
+    virtual int draw(graphics_device* device) {
+        SDL_Renderer* renderer = device->get_renderer();
         if(!_renderer) {
             _renderer = renderer;
             imgui::uistate._draw = [&] (int, const SDL_Rect& r) {

@@ -17,6 +17,7 @@
 #include <base/application.hpp>
 #include <base/applet.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
+#include <gfx/graphics_device.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <engine/b2DebugDrawImpl.hpp>
 #include <engine/b2RayCastImpl.hpp>
@@ -956,7 +957,9 @@ struct game : public wee::applet {
         }
 	}
 
-    int draw(SDL_Renderer* renderer) {
+    int draw(graphics_device* dev) {
+
+        SDL_Renderer* renderer = dev->get_renderer();
         int w, h;
         SDL_GetRendererOutputSize(renderer, &w, &h);
 

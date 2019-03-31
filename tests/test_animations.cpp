@@ -8,7 +8,7 @@
 #include <fstream>
 #include <gfx/SDL_RendererEXT.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
-
+#include <gfx/graphics_device.hpp>
 using wee::get_resource_path;
 using nlohmann::json;
 
@@ -184,7 +184,9 @@ struct game : wee::applet {
         return 0;
     }
 
-    int draw(SDL_Renderer* renderer) {
+    int draw(graphics_device* dev) { 
+        auto* renderer = dev->get_renderer();
+
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
         for(const auto& e : kult::join<transform, visual>()) {

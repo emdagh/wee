@@ -3,16 +3,23 @@
 #include <wee/weegl.h>
 #include <core/vec2.hpp>
 #include <core/vec3.hpp>
+#include <core/enum_cast.hpp>
+#include <tuple>
+#include <core/logstream.hpp>
 
+/**
+ * trick here was to `inline` the definitions.
+ * An inline function is allowed to be defined in multiple translation units.
+ */
 #define DECLARE_VERTEXATTRIBPTR_IMPL_INT(...) \
     template <> \
-    void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean, GLsizei stride, const GLvoid* ptr) { \
+    inline void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean, GLsizei stride, const GLvoid* ptr) { \
         glVertexAttribIPointer(index, size, type, stride, ptr); \
     }
 
 #define DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(...) \
     template <> \
-    void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean is_normalized, GLsizei stride, const GLvoid* ptr) { \
+    inline void glVertexAttribTPointer<__VA_ARGS__>(GLuint index, GLint size, GLenum type, GLboolean is_normalized, GLsizei stride, const GLvoid* ptr) { \
         glVertexAttribPointer(index, size, type, is_normalized, stride, ptr); \
     }
 
@@ -101,24 +108,11 @@ namespace wee {
     };
 
     template <GLenum T>
-    void glVertexAttribTPointer(GLuint,GLint,GLenum,GLboolean,GLsizei,const GLvoid *) {
+    void glVertexAttribTPointer(GLuint, GLint, GLenum, GLboolean, GLsizei, const GLvoid *) {
+        DEBUG_METHOD();
         throw not_implemented();
     }
 
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_HALF_FLOAT);
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_FLOAT);
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_DOUBLE);
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_FIXED);
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_INT_2_10_10_10_REV);
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_UNSIGNED_INT_2_10_10_10_REV)
-    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_UNSIGNED_INT_10F_11F_11F_REV);
-    
-    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_BYTE);
-    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_SHORT);
-    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_INT);
-    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_BYTE);
-    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_SHORT);
-    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_INT);
     
 
     template <typename... Ts>
@@ -157,6 +151,16 @@ namespace wee {
     }
     struct attributes {
 
+        struct normal {
+            vec3f _normal;
+            enum {
+                size = 3,
+                type = GL_FLOAT,
+                is_normalized = GL_FALSE,
+                semantic = static_cast<int>(kVertexStreamIndex::Normal)
+            };
+        };
+
         struct blend_index {
             vec4i _index;
             enum {
@@ -186,5 +190,30 @@ namespace wee {
                 semantic = static_cast<int>(kVertexStreamIndex::TexCoord0)
             };
         };
+
+        struct primary_color {
+            unsigned int _color;
+            enum {
+                size = 4,
+                type = GL_UNSIGNED_BYTE,
+                is_normalized = GL_FALSE,
+                semantic = static_cast<int>(kVertexStreamIndex::Color0)
+            };
+        };
+        
     };
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_HALF_FLOAT);
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_FLOAT);
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_DOUBLE);
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_FIXED);
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_INT_2_10_10_10_REV);
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_UNSIGNED_INT_2_10_10_10_REV)
+    DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_UNSIGNED_INT_10F_11F_11F_REV);
+    
+    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_BYTE);
+    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_SHORT);
+    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_INT);
+    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_BYTE);
+    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_SHORT);
+    DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_INT);
 }

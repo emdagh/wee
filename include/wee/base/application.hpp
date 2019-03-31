@@ -6,17 +6,21 @@ struct SDL_Application;
 
 namespace wee {
 
-
+    class graphics_device;
     class applet;
     class application {
         SDL_Application* _handle;
         applet* _applet;
+        graphics_device* _graphics_device = nullptr;
     public:
         explicit application(applet*);
         virtual ~application();
         int start();
         //int stop(); 
-        void resize(int w, int h); 
+        void resize(int w, int h);
+
+    protected:
+        int get_graphics_device(graphics_device**);
 
     public:
         event_handler<int(uint16_t)> on_keypress;

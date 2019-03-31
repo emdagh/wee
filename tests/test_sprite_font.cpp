@@ -5,6 +5,7 @@
 #include <engine/sprite_font.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
+#include <gfx/graphics_device.hpp>
 #include <fstream>
 
 namespace {
@@ -48,7 +49,9 @@ struct game : wee::applet {
         return 0;
     }
     int update(int) { return 0; }
-    int draw(SDL_Renderer* renderer) {
+//    int draw(SDL_Renderer* renderer) {
+    int draw(wee::graphics_device* dev) {
+        auto* renderer = dev->get_renderer();
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
 

@@ -5,6 +5,8 @@
 #include <engine/sprite_font.hpp>
 #include <core/logstream.hpp>
 #include <nlohmann/json.hpp>
+
+#include <gfx/graphics_device.hpp>
 //std::map<uint16_t, SDL_Rect> index;
 //
 //
@@ -88,7 +90,8 @@ struct game : wee::applet {
     int update(int) {
         return 0;
     }
-    int draw(SDL_Renderer* renderer) {
+    int draw(graphics_device* dev) { //* renderer) {
+        auto* renderer = dev->get_renderer();
         //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);

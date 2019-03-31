@@ -1,5 +1,21 @@
 #pragma once
+#if 1
+#include <gfx/basic_device_buffer.hpp>
 
+namespace wee {
+
+    enum struct index_type: uint8_t {
+        kUnsignedByte,
+        kUnsignedShort,
+        kUnsignedInt
+    };
+
+    template <typename T>
+    using basic_index_buffer = basic_device_buffer<T, GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING>; 
+    typedef basic_index_buffer<char> index_buffer;
+
+}
+#else
 namespace wee {
     template <typename T, typename Traits = std::char_traits<T> >
     struct index_buffer {
@@ -36,3 +52,4 @@ namespace wee {
         }
     };
 };
+#endif

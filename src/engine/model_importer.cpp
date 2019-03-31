@@ -67,6 +67,7 @@ mat4f convert(const aiMatrix4x4& val) {
     };
 }
 
+
 model* model_importer::import(std::istream& is) const {
     DEBUG_METHOD();
     std::vector<char> data((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());

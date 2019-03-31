@@ -12,8 +12,7 @@ namespace wee {
         typedef std::function<T*(Args...)> fn;
         std::unordered_map<S, fn> _create;
 
-        factory() {
-        }
+        factory() = default;
 
         DISALLOW_COPY_AND_ASSIGN(factory);
 

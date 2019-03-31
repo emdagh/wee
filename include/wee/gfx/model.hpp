@@ -1,11 +1,15 @@
 #pragma once
 
 #include <core/mat4.hpp>
+#include <core/aabb.hpp>
+#include <gfx/vertex_buffer.hpp>
+#include <gfx/index_buffer.hpp>
+#include <gfx/graphics_device.hpp>
+#include <vector>
 
 namespace wee {
 
-    struct index_buffer;
-    struct vertex_buffer;
+    struct graphics_device;
     struct texture;
 
     struct material {
@@ -29,9 +33,12 @@ namespace wee {
     struct mesh {
         vertex_buffer*  _vertices;
         index_buffer*   _indices;
+        std::vector<mesh_part> _parts;
+        aabb _bounds;
     };
 
     struct model {
-        std::vector<mesh*> _meshes;
+        std::vector<mesh> _meshes;
+        void draw(graphics_device*);
     };
 }

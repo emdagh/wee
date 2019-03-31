@@ -12,7 +12,9 @@
 #include <core/logstream.hpp>
 #include <core/factory.hpp>
 #include <gfx/vertex_declaration.hpp>
-
+#include <gfx/texture_sampler.hpp>
+#include <prettyprint.hpp>
+#include <SDL.h>
 
 namespace wee {
 
@@ -26,14 +28,22 @@ namespace wee {
     };
 
     struct uniform_variable_base {
+
+        GLuint _handle = -1;
+
+
+        constexpr void set_location(GLuint i) {
+            _handle = i;
+
+        }
         virtual void validate() = 0;
     };
     
     template <typename T, size_t N> 
     struct uniform_variable : public uniform_variable_base {
-        GLuint _handle;
+        typedef T type;
         static constexpr size_t _size = N;
-        T _value;
+        type _value;
 
         void set_value(const T& a) {
             _value = a;
@@ -48,6 +58,7 @@ namespace wee {
     typedef uniform_variable<float, 3> uniform3f;
     typedef uniform_variable<float, 4> uniform4f;
     typedef uniform_variable<mat4, 1> uniform4x4f;
+    typedef uniform_variable<texture_sampler, 1> uniform_sampler;
     //typedef uniform_variable<vec2, 1> uniform2fv;
     //typedef uniform_variable<vec3, 1> uniform3fv;
 
@@ -71,6 +82,19 @@ namespace wee {
     void uniform4x4f::validate() {
         glUniformMatrix4fv(_handle, _size, GL_TRUE, &_value.cell[0]);
     }
+    template <>
+    void uniform_sampler::validate() {
+        if(!_value.texture) 
+            return;
+        glActiveTexture(GL_TEXTURE0 + _value.unit); 
+        SDL_GL_BindTexture(_value.texture, NULL, NULL);
+        //glBindTexture(GL_TEXTURE_2D, _value.handle);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        //glUniform1i(_handle, _value.unit);
+    }
 
 #define REGISTER_UNIFORM_FACTORY(Type, Id) \
     register_factory<uniform_variable_base, Type, int>(Id)
@@ -83,6 +107,7 @@ namespace wee {
             REGISTER_UNIFORM_FACTORY(uniform3f,   GL_FLOAT_VEC3);
             REGISTER_UNIFORM_FACTORY(uniform4f,   GL_FLOAT_VEC4);
             REGISTER_UNIFORM_FACTORY(uniform4x4f, GL_FLOAT_MAT4);
+            REGISTER_UNIFORM_FACTORY(uniform_sampler, GL_SAMPLER_2D);
         }
     }_;
 
@@ -97,13 +122,10 @@ namespace wee {
             GLint _location;
         };
 
+
         std::unordered_map<std::string, uniform_info> _info;
 
-        shader_program() {
-            _handle = glCreateProgram();
-            _shader[static_cast<int>(kShaderType::VertexShader)] = glCreateShader(GL_VERTEX_SHADER);
-            _shader[static_cast<int>(kShaderType::PixelShader)]  = glCreateShader(GL_FRAGMENT_SHADER);
-        }
+        shader_program() ;
 
         template <typename T>
         T* get_uniform(const std::string& key) {
@@ -114,100 +136,25 @@ namespace wee {
             return NULL;
         }
 
-        void cache_all_uniforms() {
-            DEBUG_LOG("caching uniforms...");
-            GLint n = 0;
-            glGetProgramiv(_handle, GL_ACTIVE_UNIFORMS, &n);
-            for(auto it: range(n)) {
-                GLenum type;
-                std::string name(1024, '\0');
-                GLsizei len;
-
-                glGetActiveUniform(_handle, it, 1024, &len, NULL /*size*/, &type, name.data());
-                auto* u = uniform_factory::instance().create(type);
-                _info.insert(std::make_pair(name.substr(0, len), (uniform_info){u,glGetUniformLocation(_handle, name.c_str())}));
-                DEBUG_VALUE_OF(name);
+        template <typename T>
+        void set_uniform(const std::string& key, const typename T::type& x) {
+            if(auto* param = get_uniform<T>(key); param) {
+                param->set_value(x);
             }
         }
 
-        void compile(const std::vector<const char*>& source, GLuint id) {
-            DEBUG_LOG("compiling shader...");
-            size_t n = source.size();
-            glShaderSource(id, n, &source[0], nullptr);
-            glCompileShader(id);
+        void cache_all_uniforms() ;
 
+        void compile(const std::vector<const char*>& source, GLuint id) ;
 
-            GLint status;
-            glGetShaderiv(id, GL_COMPILE_STATUS, &status);
-            if(!status) {
-                std::string err(1024, '\0');
-                glGetShaderInfoLog(id, 1024, nullptr, err.data());
-                throw std::runtime_error(err);
-            }
-        }
+        void compile(const char* source) ;
+        
 
-        void compile(const char* source) {
+        void set_attribute_locations() ;
 
-            //logstream::instance(std::cout) << loglevel::warn<< "foo" << std::endl; 
-            static const char* glsl_version = "#version 130\n";
+        void link() ;
 
-            compile({
-                    glsl_version,
-                "#undef  FRAGMENT\n",
-                "#define VERTEX 1\n",
-                source
-                }, _shader[static_cast<int>(kShaderType::VertexShader)]);
-            compile({
-                    glsl_version,
-                "#define FRAGMENT 1\n",
-                "#undef  VERTEX\n",
-                source
-                }, _shader[static_cast<int>(kShaderType::PixelShader)]);
-            set_attribute_locations();
-            cache_all_uniforms();
-
-        }
-
-        void set_attribute_locations() {
-            DEBUG_LOG("setting attribute locations");
-            for(auto i: range(static_cast<int>(kVertexStreamIndex::StreamIndexMax))) 
-                glBindAttribLocation(_handle, i, kVertexStreamSemantic[i]);
-            link();
-        }
-
-        void link() {
-            DEBUG_LOG("linking shader...");
-             
-            for(auto i: range(static_cast<int>(kShaderType::MaxShaderType))) 
-                if(_shader[i] > 0) 
-                    glAttachShader(_handle, _shader[i]);            
-
-            glLinkProgram(_handle);
-            GLint res;
-            glGetProgramiv(_handle, GL_LINK_STATUS, &res);
-            if(!res) {
-                std::string err(1024, '\0');
-                glGetProgramInfoLog(_handle, 1024, nullptr, err.data());
-                throw std::runtime_error(err);
-            }
-        }
-
-        void validate() {
-            GLint res;
-            glGetProgramiv(_handle, GL_LINK_STATUS, &res);
-            
-            if(res != GL_TRUE) {
-                link();
-                validate();
-            }
-            glValidateProgram(_handle);
-            glGetProgramiv(_handle, GL_VALIDATE_STATUS, &res);
-            if(!res) {
-                std::string err;
-                glGetProgramInfoLog(_handle, 1024, nullptr, err.data());
-                throw std::runtime_error(err);
-            }
-        }
+        void validate() ;
     };
 
     struct scoped_shader_program {

@@ -7,4 +7,4 @@
 #else
 #include <OpenGL/OpenGL.h>
 #endif
-
+#define BUFFER_OFFSET(i) ((char *)NULL + (i)) 

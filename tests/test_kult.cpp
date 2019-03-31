@@ -22,7 +22,7 @@
 #include <engine/b2ContactListenerImpl.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
 #include <gfx/SDL_RendererEXT.hpp>
-
+#include <gfx/graphics_device.hpp>
 #include <core/vec2.hpp>
 //#include "terrain.hpp"
 
@@ -463,7 +463,9 @@ struct game : applet {
 
         return 0; 
     }
-    virtual int draw(SDL_Renderer* renderer) { 
+    virtual int draw(graphics_device* dev) { 
+
+        auto* renderer = dev->get_renderer();
         
         _debugdraw.SetRenderer(renderer);
         SDL_RenderGetLogicalSize(renderer, &viewport_.w, &viewport_.h);
