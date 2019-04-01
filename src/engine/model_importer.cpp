@@ -15,10 +15,56 @@
 #include <unordered_map>
 #include <functional>
 #include <prettyprint.hpp>
+#include <nlohmann/json.hpp>
+#include <SDL.h>
 
 #define kMaxBonesPerVertex  4
 
 using namespace wee;
+
+namespace wee {
+    using nlohmann::json;
+    void to_json(json& j, const SDL_Color& c) {
+        uint32_t value = 0;
+
+        value |= static_cast<int>(c.r)  << 24;
+        value |= static_cast<int>(c.g) << 16;
+        value |= static_cast<int>(c.b) <<  8;
+        value |= static_cast<int>(c.a);
+    }
+
+    void from_json(const json& j, SDL_Color& c) {
+        uint32_t value = j["value"];
+        c.r = value & 0xff000000;
+        c.g = value & 0x00ff0000;
+        c.b = value & 0x0000ff00;
+        c.a = value & 0x000000ff;
+    }
+
+    void to_json(json& j, const aiColor4D& c) {
+        uint32_t value = 0;
+        value |= static_cast<int>(c.r * 255.0f) << 24;
+        value |= static_cast<int>(c.g * 255.0f) << 16;
+        value |= static_cast<int>(c.b * 255.0f) << 8;
+        value |= static_cast<int>(c.a * 255.0f);
+        j["value"] = value;
+    }
+
+    void from_json(const json& j, aiColor4D& c) {
+        uint32_t value = j["value"];
+        c.r = (value & 0xff000000) / 255.f;
+        c.g = (value & 0x00ff0000) / 255.f;
+        c.b = (value & 0x0000ff00) / 255.f;
+        c.a = (value & 0x000000ff) / 255.f;
+    }
+}
+
+
+std::ostream& operator << (std::ostream& os, const aiColor4D& color) {
+    json j;
+    to_json(j, color);
+    return os << std::dec << j;
+}
        
 namespace wee {
     struct vertex_channel_info {
@@ -250,6 +296,33 @@ model* model_importer::import(std::istream& is) const {
 
     for(auto i: range(scene->mNumMaterials)) {
         const aiMaterial* material = scene->mMaterials[i];
+
+        aiString name;
+        aiGetMaterialString(material, AI_MATKEY_NAME, &name);
+        DEBUG_VALUE_OF(std::string(name.C_Str()));
+        
+        aiColor4D color_ka;
+        aiColor4D color_kd;
+        aiColor4D color_ks;
+        aiColor4D color_ke;
+        aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &color_ka);
+        aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &color_kd);
+        aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &color_ks);
+        aiGetMaterialColor(material, AI_MATKEY_COLOR_EMISSIVE, &color_ke);
+        
+        DEBUG_VALUE_OF(color_ka);
+        DEBUG_VALUE_OF(color_kd);
+        DEBUG_VALUE_OF(color_ks);
+        
+        aiString path_ka;
+        aiString path_kd;
+        aiString path_ks;
+        aiString path_ke;
+        aiGetMaterialTexture(material, aiTextureType_AMBIENT, 0, &path_ka, NULL, NULL, NULL, NULL, NULL);
+        aiGetMaterialTexture(material, aiTextureType_DIFFUSE, 0, &path_kd, NULL, NULL, NULL, NULL, NULL);
+        aiGetMaterialTexture(material, aiTextureType_SPECULAR, 0, &path_ks, NULL, NULL, NULL, NULL, NULL);
+        aiGetMaterialTexture(material, aiTextureType_EMISSIVE, 0, &path_ke, NULL, NULL, NULL, NULL, NULL);
+        DEBUG_VALUE_OF(std::string(path_kd.C_Str()));
         //for(auto t: range(material->GetTextureCount(aiTextureType_DIFFUSE))) {
         //TODO: enable texture loading here.... / for loops and alll
 

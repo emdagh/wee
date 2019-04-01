@@ -156,7 +156,7 @@ namespace wee {
             enum {
                 size = 3,
                 type = GL_FLOAT,
-                is_normalized = GL_FALSE,
+                is_normalized = GL_TRUE,
                 semantic = static_cast<int>(kVertexStreamIndex::Normal)
             };
         };
