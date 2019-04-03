@@ -1,28 +1,46 @@
 #include <engine/camera.hpp>
+#include <core/logstream.hpp>
 
 using namespace wee;
 
-/*auto randf = [] (float min, float max) -> float {
-    using wee::random;
-    static auto milliseconds_since_epoch =
-        std::chrono::system_clock::now().time_since_epoch() / 
-        std::chrono::milliseconds(1);
+/**
+ * assuming world-space coordinates
+ */
+/*
+void camera::lookat(const vec3f& target) {
+    _orientation[0] = quaternion::look_rotation(_position[0], target);
+    _valid = false;
+}
+void camera::advance(float) {
+    _valid = false;
+}
+void camera::strafe(float) {
+    _valid = false;
+}*/
 
-    static random rnd(milliseconds_since_epoch);
-    return rnd.next(min, max);
-};*/
 
+void camera::transform(mat4* p) { 
+    if(!_valid) {
+        //DEBUG_VALUE_OF(_rotation);
+        mat4 t = mat4::create_translation(-_position[0]);
+        mat4 r = mat4::create_rotation(_rotation.x, _rotation.y, _rotation.z);
+        _transform = mat4::mul(t, r);
+    }
+    *p = _transform;
+}
+/*
 void camera::_update_transform() {
-    mat4 Mt, Mr, Ms, Mt2;
-    Mt = mat4::create_translation(-_position.x, -_position.y, 0.0f);
-    Ms = mat4::create_scale(_zoom, _zoom, 1.0f);
-    Mr = mat4::create_rotation(0.f, 0.f, _rotation);
+    //mat4 Mt, Mr, Ms, Mt2;
+    //Mt = mat4::create_translation(-_position.x, -_position.y, 0.0f);
+    //Ms = mat4::create_scale(_zoom, _zoom, 1.0f);
+    //Mr = mat4::create_rotation(0.f, 0.f, _rotation);
     Mt2 = mat4::create_translation(
             _viewport.x * 0.5f,
             _viewport.y * 0.5f, 
             0.0f
             );
     _transform = mat4::mul(mat4::mul(Mt, mat4::mul(Mr, Ms)), Mt2);
+
     _changed = false;
 }
 
@@ -92,3 +110,4 @@ void camera::screen_to_world(const vec3& src, vec3* dst) {
     dst->y = Pa.y;
     dst->z = Pa.z;
 }
+*/

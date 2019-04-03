@@ -5,37 +5,40 @@
 #include <core/random.hpp>
 #include <core/vec3.hpp>
 #include <core/vec2.hpp>
+#include <core/quaternion.hpp>
 
 #define MAX_SHAKE_X     5.f
 #define MAX_SHAKE_Y     5.f
 #define MAX_SHAKE_Z     5.f
 
 namespace wee {
+
     class camera {
+        //quaternion _orientation[2];
+        vec3 _rotation;
+        vec3 _position[2];
         mat4 _transform;
-        float _zoom = 1.0f;;
-        float _rotation = 0.0f;
-        bool _changed = true;
-        bool _shaking = false;
-        bool _restore_after = true;
-        vec3 _position = { 0.0f, 0.0f };
-        vec3 _stored_position = { 0.0f, 0.0f };
-        vec2 _viewport = { 0.0f, 0.0f };
-        int _shaketime = 0;
-    protected:
-        void _update_transform();
+        bool _valid = false;
+
     public:
-        void set_viewport(int w, int h);
-        void set_position(float x, float y, float z);
-        void shake(int t, bool restorePositionAfter = true);
-        void end_shake();
-        void update(int dt);
-        const mat4& get_transform();
-        void screen_to_world(const vec3& src, vec3* dst);
-        void set_zoom(float a) { 
-            _zoom = a; 
+        //void lookat(const vec3f&);
+        //void strafe(float);
+        //void advance(float);
+        void shake(int, bool = true) {}
+
+        void transform(mat4*);
+        mat4 get_transform() {
+            mat4 res;
+            transform(&res);
+            return res;
         }
-        float get_zoom() const { return _zoom; }
+        void set_viewport(float, float) {}
+        void set_position(float x, float y, float z) { _position[0] = _position[1] = vec3 { x, y, z }; _valid = false; }
+        void set_rotation(float x, float y, float z) { _rotation = vec3 {x, y, z}; _valid = false; }
+    public:
+        void set_zoom(float) {}
+        float get_zoom() { return 1.0f; }
+        void update(int) {}
     };
 }
 

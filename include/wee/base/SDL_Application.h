@@ -21,6 +21,7 @@ typedef enum {
     SDL_APPLICATION_CALLBACK_RENDER,
     SDL_APPLICATION_CALLBACK_MOUSEMOVE,
     SDL_APPLICATION_CALLBACK_MOUSEBUTTON,
+    SDL_APPLICATION_CALLBACK_LOG,
 
     SDL_APPLICATION_CALLBACK_KEY,
 
@@ -33,6 +34,7 @@ typedef enum {
 
 
 APICALL struct SDL_Application* SDL_CreateApplication();
+APICALL int SDL_InitApplication(struct SDL_Application*);
 APICALL int SDL_DestroyApplication(struct SDL_Application*);
 APICALL struct SDL_Window* SDL_GetApplicationWindow(const struct SDL_Application*);
 APICALL struct SDL_Renderer* SDL_GetApplicationRenderer(const struct SDL_Application*);

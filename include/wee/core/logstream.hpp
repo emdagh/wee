@@ -49,6 +49,7 @@ namespace wee {
             std::string _context = context;
             os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
             os << "[" << _context << "] " << RED "> " << RESET;
+            //os << RED "> " << RESET;
         }
 
         virtual ~log() {
@@ -74,10 +75,10 @@ namespace wee {
     };
 }
 
-#define DEBUG_METHOD()              wee::log(std::cout, __FUNCTION__).write(__FUNCTION__) 
-#define DEBUG_LOG(...)              wee::log(std::cout, __FUNCTION__).write(__VA_ARGS__)
-#define DEBUG_VALUE_OF(x)           wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, false))
-#define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, __FUNCTION__).write(wee::value_of(#x, x, true))
+#define DEBUG_METHOD()              wee::log(std::cout, __PRETTY_FUNCTION__).write(__FUNCTION__) 
+#define DEBUG_LOG(...)              wee::log(std::cout, __PRETTY_FUNCTION__).write(__VA_ARGS__)
+#define DEBUG_VALUE_OF(x)           wee::log(std::cout, __PRETTY_FUNCTION__).write(wee::value_of(#x, x, false))
+#define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, __PRETTY_FUNCTION__).write(wee::value_of(#x, x, true))
 #define TRACE(...)                  wee::log(std::cout, __FILE__##":"##__LINE__).write(__VA_ARGS__)
 
 namespace wee {

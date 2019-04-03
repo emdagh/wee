@@ -7,25 +7,6 @@
 #include <gfx/graphics_device.hpp>
 
 using namespace wee;
-void GLAPIENTRY
-glDebugCallback( GLenum source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
-        const GLchar* message,
-        const void* userParam )
-{
-    //fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-    //        ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-    //        type, severity, message );
-    DEBUG_LOG("OpenGL: ", message);
-    if(severity == GL_DEBUG_SEVERITY_HIGH) {
-        //SDL_Quit();
-        //exit(0);
-        throw std::runtime_error(message);
-    }
-}
 
 // During init, enable debug output
 
@@ -38,21 +19,6 @@ application::application(applet* a)
         DEBUG_LOG(SDL_GetError());
         SDL_Quit();
     }
-    DEBUG_LOG("vendor:", glGetString(GL_VENDOR));
-    DEBUG_LOG(glGetString(GL_RENDERER));
-    DEBUG_LOG(glGetString(GL_VERSION));
-    DEBUG_LOG(glGetString(GL_SHADING_LANGUAGE_VERSION));
-    glEnable              ( GL_DEBUG_OUTPUT );
-    glDebugMessageCallback( glDebugCallback, 0 );
-    assets<SDL_Texture>::instance().after= [&] (SDL_Surface* surface) {
-        return SDL_CreateTextureFromSurface(SDL_GetApplicationRenderer(_handle), surface);
-    };
-
-    SDL_SetApplicationUserData(_handle, this);
-    int w, h;
-    SDL_GetWindowSize(SDL_GetApplicationWindow(_handle), &w, &h);
-    SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
-
     /**
      * note that event.keysym.sym will return symbolic key values so: on azerty, pressing 'a' will result in 'a', whereas event.keysym.scancode would return 'q'
      * On AZERTY, pressing 'A' will emit 'Q' scancode and 'a' keysym
@@ -70,6 +36,11 @@ application::application(applet* a)
         return 0;
     });
 
+    SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_LOG, [] (const SDL_Application* app, const void* data) {
+        const char* str = reinterpret_cast<const char*>(data);
+        DEBUG_LOG(str);
+        return 0;
+    });
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_CREATED, [] (const SDL_Application* app, const void* ) {
 
         application* a = static_cast<application*>(SDL_GetApplicationUserData(app));
@@ -112,6 +83,18 @@ application::application(applet* a)
         //SDL_Renderer* renderer = SDL_GetApplicationRenderer(app);
         return self->_applet->draw(self->_graphics_device);
     });
+
+    SDL_SetApplicationUserData(_handle, this);
+    SDL_InitApplication(_handle);
+
+
+    int w, h;
+    SDL_GetWindowSize(SDL_GetApplicationWindow(_handle), &w, &h);
+    SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
+    assets<SDL_Texture>::instance().after= [&] (SDL_Surface* surface) {
+        return SDL_CreateTextureFromSurface(SDL_GetApplicationRenderer(_handle), surface);
+    };
+
 }
 
 application::~application() {
@@ -125,6 +108,10 @@ int application::get_graphics_device(graphics_device** pp) {
 void application::resize(int w, int h) {
     SDL_SetWindowSize(SDL_GetApplicationWindow(_handle), w, h);
     SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
+}
+
+void application::set_mouse_position(int x, int y) {
+    SDL_WarpMouseInWindow(SDL_GetApplicationWindow(_handle), x, y);
 }
 
 int application::start() {

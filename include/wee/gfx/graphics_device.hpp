@@ -6,6 +6,7 @@
 #include <gfx/vertex_buffer.hpp>
 #include <gfx/index_buffer.hpp>
 #include <gfx/vertex_declaration.hpp>
+#include <gfx/SDL_ColorEXT.hpp>
 
 #include <core/enum_cast.hpp>
 #include <core/range.hpp>
@@ -53,7 +54,8 @@ namespace wee {
     enum struct clear_options : uint8_t {
         kClearColor     = 0b0001,
         kClearDepth     = 0b0010,
-        kClearStencil   = 0b0100
+        kClearStencil   = 0b0100,
+        kClearAll       = 0b0111
     };
     struct graphics_device {
         SDL_Renderer* _renderer;
@@ -61,16 +63,13 @@ namespace wee {
 
         SDL_Renderer* get_renderer() const { return _renderer; }
 
-        explicit graphics_device(SDL_Renderer* renderer) 
-        : _renderer(renderer) {
+        explicit graphics_device(SDL_Renderer* renderer);
 
-        }
-
-        virtual void clear(const SDL_Color* color, const clear_options& copt, float depth, int stencil) {
+        virtual void clear(const SDL_Color& color, const clear_options& copt = clear_options::kClearAll, float depth = 1.0f, int stencil = 0x0) {
             constexpr static float val = 1.0f / 255;
             glClearDepthf(depth);
             glClearStencil(stencil);
-            glClearColor(color->r * val, color->g * val, color->b * val, color->a * val);
+            glClearColor(color.r * val, color.g * val, color.b * val, color.a * val);
 
             GLenum glClearOptions= GL_NONE;
             glClearOptions |= static_cast<GLenum>(copt) & static_cast<GLenum>(clear_options::kClearColor) ? GL_COLOR_BUFFER_BIT : GL_NONE;

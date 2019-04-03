@@ -3,6 +3,9 @@
 #include <string.h>
 #include <weegl.h>
 
+#define DELEGATE(x, arg_0, arg_1) \
+    return ptr->callback[x] ? ptr->callback[x](arg_0, (const void*)arg_1) : 0
+
 typedef int(*SDL_ConditionalEvent)(const SDL_Event*);
 typedef void(*SDL_UnconditionalEvent)(const void*);
 
@@ -31,62 +34,61 @@ void* SDL_GetApplicationUserData(const struct SDL_Application* ptr) {
 int SDL_ApplicationHandleWindowEvent(struct SDL_Application* ptr, const SDL_WindowEvent* e) {
     switch(e->event) {
         case SDL_WINDOWEVENT_SHOWN:
-            SDL_Log("Window shown");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window shown");
             break;
         case SDL_WINDOWEVENT_HIDDEN:
-            SDL_Log("Window hidden");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window hidden");
             break;
         case SDL_WINDOWEVENT_EXPOSED:
-            SDL_Log("Window exposed");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window exposed");
             break;
         case SDL_WINDOWEVENT_MOVED:
-            SDL_Log("Window moved (%d, %d)", 
-                e->data1,
-                e->data2);
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window moved");
+//                e->data1,
+//                e->data2);
             break;
         case SDL_WINDOWEVENT_RESIZED:
-            SDL_Log("Window resized (%d, %d)",
-                    e->data1,
-                    e->data2);
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window resized");// (%d, %d)",
+//                    e->data1,
+//                    e->data2);
             break;
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-            SDL_Log("Window size changed (%d, %d)",
-                    e->data1,
-                    e->data2);
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window size changed");// (%d, %d)",
+//                    e->data1,
+//                    e->data2);
             break;
         case SDL_WINDOWEVENT_MINIMIZED:
-            SDL_Log("Window minimized");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window minimized");
             break;
         case SDL_WINDOWEVENT_MAXIMIZED:
-            SDL_Log("Window minimized");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window minimized");
             break;
         case SDL_WINDOWEVENT_RESTORED:
-            SDL_Log("Window restored");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window restored");
             break;
         case SDL_WINDOWEVENT_ENTER:
-            SDL_Log("Window entered");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window entered");
             break;
         case SDL_WINDOWEVENT_LEAVE:
-            SDL_Log("Window left");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window left");
             break;
         case SDL_WINDOWEVENT_FOCUS_GAINED:
-            SDL_Log("Window focus acquired");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window focus acquired");
             break;
         case SDL_WINDOWEVENT_FOCUS_LOST:
-            SDL_Log("Window focus lost");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window focus lost");
             break;
         case SDL_WINDOWEVENT_CLOSE:
-            SDL_Log("Window closed");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window closed");
             break;
         default:
             SDL_Log("Unknown window event");
+            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Unknown window event");
             break;
     }
     return 0;
 }
 
-#define DELEGATE(x, arg_0, arg_1) \
-    return ptr->callback[x] ? ptr->callback[x](arg_0, (const void*)arg_1) : 0;
 
 int SDL_ApplicationHandleTextEditingEvent(struct SDL_Application* ptr, const SDL_TextEditingEvent* e) {
     return 0;
@@ -117,6 +119,10 @@ struct SDL_Application* SDL_CreateApplication() {
     }
     struct SDL_Application* res = (struct SDL_Application*)malloc(sizeof(SDL_Application));
     memset(res, 0, sizeof(SDL_Application));
+    return res;
+}
+
+int SDL_InitApplication(SDL_Application* res) {
     /**
      * create the window
      */
@@ -148,7 +154,7 @@ struct SDL_Application* SDL_CreateApplication() {
     }
 
     if(!res->window) 
-        return NULL;
+        return -1;
 
     /**
      * create the renderer
@@ -168,14 +174,14 @@ struct SDL_Application* SDL_CreateApplication() {
         res->renderer = _ren;
     }
     if(!res->renderer) 
-        return NULL;
+        return -1;
 
 
     if(res->callback[SDL_APPLICATION_CALLBACK_CREATED]) 
         res->callback[SDL_APPLICATION_CALLBACK_CREATED](res, NULL);
 
-    return res;
 }
+
 int SDL_DestroyApplication(SDL_Application* ptr) {
 
 	return 0;
