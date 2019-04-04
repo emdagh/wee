@@ -16,8 +16,8 @@ namespace wee {
         {
         }
 
-        virtual int write_content() const = 0;
-        virtual int write_json() const = 0;
+        virtual int write_content() = 0;
+        virtual int write_json() = 0;
     }; 
 
     class model_content_writer : public basic_content_writer {
@@ -28,8 +28,8 @@ namespace wee {
         , _content(content)
         {
         }
-        virtual int write_content() const; 
-        virtual int write_json() const {
+        virtual int write_content() ; 
+        virtual int write_json() {
             return throw not_implemented(), 0;
         }
     };

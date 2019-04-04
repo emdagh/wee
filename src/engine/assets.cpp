@@ -94,19 +94,24 @@ namespace wee {
 
         return std::string(path);
     }
+    std::string extension(const std::string& s) {
+        auto beg = s.find_last_of(".");
+        return s.substr(beg + 1);
+    }
 
     std::string basename(const std::string& in) {
-        const char* p = strrchr(in.c_str(), PATH_SEP);
-        return p ? std::string(p + 1) : in;
+        auto beg = in.find_last_of(PATH_SEP);
+        auto end = in.find_last_of(".");
+        //const char* p = strrchr(in.c_str(), PATH_SEP);
+        //return p ? std::string(p + 1) : in;
+        return in.substr(beg + 1, end - beg - 1);
     }
+    std::ofstream open_ofstream(const std::string& pt, std::ios_base::openmode mode) {
+        return open_fstream<std::ofstream>(pt, mode | std::ios_base::out);
+    }
+
     std::ifstream open_ifstream(const std::string& pt, std::ios_base::openmode mode) {
-        std::string base_name = wee::basename(pt);
-        std::string abs_path = get_resource_path(dirname(pt)) + basename(pt);
-        std::ifstream res(abs_path, mode);
-        if(!res.is_open()) {
-            throw file_not_found(abs_path);
-        }
-        return res;
+        return open_fstream<std::ifstream>(pt, mode | std::ios_base::in);
     }
 
     std::string get_resource_path(const std::string& subDir) {

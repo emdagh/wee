@@ -1,4 +1,5 @@
 #include <engine/model_content_reader.hpp>
+#include <engine/model_content.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -18,7 +19,6 @@
 #include <nlohmann/json.hpp>
 #include <SDL.h>
 
-#define kMaxBonesPerVertex  4
 
 using namespace wee;
 
@@ -66,48 +66,6 @@ std::ostream& operator << (std::ostream& os, const aiColor4D& color) {
     return os << std::dec << j;
 }
        
-namespace wee {
-    struct vertex_channel_info {
-        kVertexStreamIndex      index;
-        kVertexStreamType       type;
-    };
-    using vertex_declaration_info = std::vector<vertex_channel_info>; 
-
-    struct bone_content {
-        int _parentIndex; // int bcause we need -1 for root bone
-        aiMatrix4x4 world, offset;
-        std::string _name;
-    };
-    struct vertex_bone_data {
-        int   _id[kMaxBonesPerVertex];
-        float _weight[kMaxBonesPerVertex];
-        static void add_bone_to(vertex_bone_data& data, int bone, float weight) {
-            for(auto i: range(kMaxBonesPerVertex)) {
-                if(data._weight[i] == 0.0f) {
-                    data._id[i] = bone;
-                    data._weight[i] = weight;
-                    return;
-                }
-            }
-        }
-    };
-
-
-    struct mesh_content {
-        size_t baseVertex;
-        size_t baseIndex;
-        size_t numVertices;
-        size_t numIndices;
-        size_t meshIndex;
-        vertex_declaration_info vertex_info;
-    };
-    struct material_entry;
-    
-    struct model_content {
-        std::vector<mesh_content> _meshes;
-        std::vector<bone_content> _bones;
-    };
-}
 
 mat4f convert(const aiMatrix4x4& val) {
     return mat4f {
@@ -188,11 +146,8 @@ model_content* model_content_reader::read(std::istream& is) const {
 
 
     //std::vector<mesh_content> entries(scene->mNumMeshes);
-    std::vector<aiVector3D> positions, normals, textureCoords;
-    std::vector<aiColor4D> colors;
-    std::vector<vertex_bone_data> vertexBoneData;
 
-    std::vector<size_t> indices;
+    //std::vector<size_t> indices;
     size_t numVertices = 0;
     size_t numIndices = 0;
 
@@ -214,7 +169,7 @@ model_content* model_content_reader::read(std::istream& is) const {
         numIndices  += res->_meshes[i].numIndices;
     }
 
-    vertexBoneData.resize(numVertices);
+    res->vertexBoneData.resize(numVertices);
 
     /**
      * observation:
@@ -278,30 +233,46 @@ model_content* model_content_reader::read(std::istream& is) const {
         }
 
         [[maybe_unused]] vertex_buffer* vb = new vertex_buffer(vertex_size * mesh->mNumVertices);
+
+        auto convert_vec3 = [] (const aiVector3D& a) {
+            return vec3 { a.x, a.y, a.z };
+        };
+
+        auto convert_color = [] (const aiColor4D& c) {
+            return SDL_Color { 
+                static_cast<uint8_t>(c.r * 255.0f),
+                static_cast<uint8_t>(c.g * 255.0f),
+                static_cast<uint8_t>(c.b * 255.0f),
+                static_cast<uint8_t>(c.a * 255.0f)
+            };
+        };
+
  
         for(auto j: range(entry.numVertices)) {
             const aiVector3D& position  = mesh->mVertices[j];
-            const aiVector3D& normal    = mesh->HasNormals() ? mesh->mNormals[j] : zero;
-            const aiVector3D& texcoord  = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][j] : zero;
-            const aiColor4D& color      = mesh->HasVertexColors(0) ? mesh->mColors[0][j] : opaque_white; 
-            
-            positions.push_back(position);
+            const aiVector3D& normal    = mesh->HasNormals()        ? mesh->mNormals[j]             : zero;
+            const aiVector3D& texcoord  = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][j]    : zero;
+            const aiColor4D& color      = mesh->HasVertexColors(0)  ? mesh->mColors[0][j]           : opaque_white; 
+            //
+            // TODO: change `res->` to `entry.`
+            //
+            res->positions.push_back(convert_vec3(position));
             if(mesh->HasNormals()) {
-                normals.push_back(normal);
+                res->normals.push_back(convert_vec3(normal));
             }
             if(mesh->HasTextureCoords(0)) {
-                textureCoords.push_back(texcoord);
+                res->textureCoords.push_back(convert_vec3(texcoord));
             }
             if(mesh->HasVertexColors(0)) {
-                colors.push_back(color);
+                res->colors.push_back(convert_color(color));
             }
         }
 
         for(auto j: range(mesh->mNumFaces)) {
             const aiFace* face = &mesh->mFaces[j];
-            indices.push_back(face->mIndices[0]);
-            indices.push_back(face->mIndices[1]);
-            indices.push_back(face->mIndices[2]);
+            res->indices.push_back(face->mIndices[0]);
+            res->indices.push_back(face->mIndices[1]);
+            res->indices.push_back(face->mIndices[2]);
         }
 
         for(auto j: range(mesh->mNumBones)) {
@@ -312,7 +283,7 @@ model_content* model_content_reader::read(std::istream& is) const {
                 for(auto k: range(bone->mNumWeights)) {
                     const auto& weight = bone->mWeights[k];
                     auto vertexId = entry.baseVertex + weight.mVertexId;
-                    vertex_bone_data::add_bone_to(vertexBoneData[vertexId], (int)boneIndex, weight.mWeight);
+                    vertex_bone_data::add_bone_to(res->vertexBoneData[vertexId], (int)boneIndex, weight.mWeight);
                 }
             }
         }
@@ -353,6 +324,8 @@ model_content* model_content_reader::read(std::istream& is) const {
 
         //`}
         DEBUG_VALUE_OF(material);
+
+
     }
     return res;
 }

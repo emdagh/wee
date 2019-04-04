@@ -19,6 +19,5 @@ namespace wee {
         void _import_animations();
     public:
         model_content* read(std::istream&) const;
-        //std::ostream operator << (std::ostream&, model*);
     };
 }

@@ -128,7 +128,22 @@ namespace wee {
 
     std::string dirname(const std::string&);
     std::string basename(const std::string&);
+    std::string extension(const std::string&);
 
+    //std::fstream open_fstream(const std::string&, std::ios_base::openmode);
+    template <typename T>
+    T open_fstream(const std::string& pt, std::ios_base::openmode mode) {
+        std::string base_name = wee::basename(pt);
+        std::string abs_path = get_resource_path(dirname(pt)) + basename(pt) + "." + extension(pt);
+        T res(abs_path, mode);
+        if(!res.is_open()) {
+            throw file_not_found(abs_path);
+        }
+        return res;
+
+    }
+
+    std::ofstream open_ofstream(const std::string& pt, std::ios_base::openmode mode = std::ios_base::out); 
     std::ifstream open_ifstream(const std::string& pt, std::ios_base::openmode mode = std::ios_base::in); 
 
     namespace asset_helper {
