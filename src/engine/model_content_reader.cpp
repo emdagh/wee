@@ -159,17 +159,17 @@ model_content* model_content_reader::read(std::istream& is) const {
                 res->_bones[boneNames[bone->mName.data]].offset = bone->mOffsetMatrix;
             }
         }
-        res->_meshes[i].numVertices = mesh->mNumVertices;
-        res->_meshes[i].numIndices = mesh->mNumFaces * 3;
-        res->_meshes[i].baseVertex = numVertices;
-        res->_meshes[i].baseIndex  = numIndices;
-        res->_meshes[i].meshIndex  = i;
+        auto& entry = res->_meshes[i];
+        entry.numVertices = mesh->mNumVertices;
+        entry.numIndices = mesh->mNumFaces * 3;
+        entry.baseVertex = numVertices;
+        entry.baseIndex  = numIndices;
+        entry.meshIndex  = i;
 
         numVertices += mesh->mNumVertices;
         numIndices  += res->_meshes[i].numIndices;
     }
 
-    res->vertexBoneData.resize(numVertices);
 
     /**
      * observation:
@@ -230,6 +230,7 @@ model_content* model_content_reader::read(std::istream& is) const {
                 kVertexStreamType::Short4
             });
             vertex_size += sizeof(int16_t) * 4;
+            entry.vertexBoneData.resize(numVertices);
         }
 
         [[maybe_unused]] vertex_buffer* vb = new vertex_buffer(vertex_size * mesh->mNumVertices);
@@ -256,23 +257,23 @@ model_content* model_content_reader::read(std::istream& is) const {
             //
             // TODO: change `res->` to `entry.`
             //
-            res->positions.push_back(convert_vec3(position));
+            entry.positions.push_back(convert_vec3(position));
             if(mesh->HasNormals()) {
-                res->normals.push_back(convert_vec3(normal));
+                entry.normals.push_back(convert_vec3(normal));
             }
             if(mesh->HasTextureCoords(0)) {
-                res->textureCoords.push_back(convert_vec3(texcoord));
+                entry.textureCoords.push_back(convert_vec3(texcoord));
             }
             if(mesh->HasVertexColors(0)) {
-                res->colors.push_back(convert_color(color));
+                entry.colors.push_back(convert_color(color));
             }
         }
 
         for(auto j: range(mesh->mNumFaces)) {
             const aiFace* face = &mesh->mFaces[j];
-            res->indices.push_back(face->mIndices[0]);
-            res->indices.push_back(face->mIndices[1]);
-            res->indices.push_back(face->mIndices[2]);
+            entry.indices.push_back(face->mIndices[0]);
+            entry.indices.push_back(face->mIndices[1]);
+            entry.indices.push_back(face->mIndices[2]);
         }
 
         for(auto j: range(mesh->mNumBones)) {
@@ -283,7 +284,7 @@ model_content* model_content_reader::read(std::istream& is) const {
                 for(auto k: range(bone->mNumWeights)) {
                     const auto& weight = bone->mWeights[k];
                     auto vertexId = entry.baseVertex + weight.mVertexId;
-                    vertex_bone_data::add_bone_to(res->vertexBoneData[vertexId], (int)boneIndex, weight.mWeight);
+                    vertex_bone_data::add_bone_to(entry.vertexBoneData[vertexId], (int)boneIndex, weight.mWeight);
                 }
             }
         }
