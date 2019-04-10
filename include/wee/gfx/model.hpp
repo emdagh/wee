@@ -6,16 +6,13 @@
 #include <gfx/index_buffer.hpp>
 #include <gfx/graphics_device.hpp>
 #include <vector>
+#include <map>
 
 namespace wee {
 
     struct graphics_device;
     struct texture;
-
-    struct material {
-        texture* _diffuse;
-    };
-
+    
     struct bone {
         std::string _name;
         mat4f       _local;//_world_to_bone;
@@ -23,22 +20,48 @@ namespace wee {
         size_t      _parent;
     };
 
-    struct mesh_part {
+    struct model_mesh_part {
+        int material_index;
         int base_vertex;
         int base_index;
         size_t num_vertices;
         size_t num_indices;
     };
+
+    struct model_mesh {
+        vertex_buffer* _vertices;
+        index_buffer* _indices;
+        std::map<size_t, model_mesh_part> _parts;
+        
+    };
+
+    struct material {
+        SDL_Color Kd;
+    };
     
-    struct mesh {
+    struct model {
+        std::vector<model_mesh> _meshes;
+        std::vector<material> _materials;
+
+        void draw(graphics_device*);
+    };
+
+    std::ostream& operator << (std::ostream& os, const material& mat);
+
+
+    /*
+    struct model_mesh {
         vertex_buffer*  _vertices;
         index_buffer*   _indices;
-        std::vector<mesh_part> _parts;
         aabb _bounds;
+        int base_vertex;
+        int base_index;
+        size_t num_vertices;
+        size_t num_indices;
     };
 
     struct model {
-        std::vector<mesh> _meshes;
+        std::vector<model_mesh> _meshes;
         void draw(graphics_device*);
-    };
+    };*/
 }

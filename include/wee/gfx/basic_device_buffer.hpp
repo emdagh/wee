@@ -45,7 +45,6 @@ namespace wee {
         }
 
         ~basic_device_buffer() {
-            DEBUG_METHOD();
             sync();
             delete[] _pbuf;
             glDeleteBuffers(1, &_handle);
@@ -53,7 +52,6 @@ namespace wee {
 
         virtual int_type overflow(int_type c = traits_type::eof()) override {
 
-            DEBUG_METHOD();
             if(traits_type::eq_int_type(c, eof)) {
                 return traits_type::not_eof(c);
             } else {
@@ -64,7 +62,6 @@ namespace wee {
         }
         
         int flush() {
-            DEBUG_METHOD();
             int n = base_type::pptr() - base_type::pbase();
             {
                 scope with(_handle);
