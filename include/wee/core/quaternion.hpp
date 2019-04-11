@@ -1,23 +1,18 @@
 #pragma once
 
+#include <numeric>
+#include <limits>
+#include <cmath>
+
 namespace wee {
+    struct vec3;
     struct quaternion {
         float x, y, z, w;
 
         typedef quaternion& ref;
         typedef const quaternion& const_ref;
 
-        static quaternion axis_angle(const vec3& axis, float angle) {
-            quaternion q;
-            float num2 = angle * 0.5f;
-            float num = std::sin(num2);
-            float num3 = std::cos(num2);
-            q.x = axis.x * num;
-            q.y = axis.y * num;
-            q.z = axis.z * num;
-            q.w = num3;
-            return q;
-        }
+        static quaternion axis_angle(const vec3& axis, float angle);
 
         static void normalize(quaternion& a) {
             float ilen = 1.0f / quaternion::length(a);
@@ -57,13 +52,8 @@ namespace wee {
             return copy;
         }
 
-        static quaternion lookat(const vec3f& pos, const vec3f& target, const vec3f& up);
+        static quaternion lookat(const vec3& pos, const vec3& target, const vec3& up);
 
-        static quaternion look_rotation(const vec3& a, const vec3& b) {
-            vec3 axis = vec3::normalized(vec3::cross(b, a));
-            float angle = std::acos(vec3::dot(a, b));
-            return normalized(axis_angle(axis, angle));
-        }
 
         static quaternion slerp(const_ref a, const_ref b, float c) { //TODO: triple check this
             if(c <= 0.0f) return a;
@@ -154,20 +144,7 @@ namespace wee {
             return *this;
         }
 
-        static vec3 transform(const vec3& v, const quaternion& q)
-        {
-            vec3 r;
-            float x =  q.y * v.z - q.z * v.y + q.w * v.x;
-            float y = -q.x * v.z + q.z * v.x + q.w * v.y;
-            float z =  q.x * v.y - q.y * v.x + q.w * v.z;
-            float w = -q.x * v.x - q.y * v.y - q.z * v.z;
-
-            r.x =  x *  q.w + y * -q.z - z * -q.y + w * -q.x;
-            r.y = -x * -q.z + y *  q.w + z * -q.x + w * -q.y;
-            r.z =  x * -q.y - y * -q.x + z *  q.w + w * -q.z;
-            return r;
-        }
-
+        static vec3 transform(const vec3& v, const quaternion& q);
 
         quaternion operator - () { // negation, not conjugation!
             quaternion copy = {
