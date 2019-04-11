@@ -24,29 +24,7 @@ void camera::set_rotation(float y, float p, float r) {
 void camera::lookat(float x, float y, float z) {
 	//_q = quaternion::look_rotation(vec3 { x, y, z }, vec3::_up);
     //
-    vec3 destPoint = vec3 { x, y, z };
-    vec3 sourcePoint = _x;
-
-    vec3 forwardVector = vec3::normalized(destPoint - sourcePoint);
-
-    float dot = vec3::dot(vec3::_forward, forwardVector);
-
-    if (std::abs(dot - (-1.0f)) < 0.000001f)
-    {
-        _q = quaternion { vec3::_up.x, vec3::_up.y, vec3::_up.z, M_PI };
-        return;
-    }
-    if (std::abs(dot - (1.0f)) < 0.000001f)
-    {
-        _q = quaternion { 0.0f, 0.0f, 0.0f, 1.0f }; //Quaternion.identity;
-        return;
-    }
-
-    float rotAngle = std::acos(dot);
-    vec3 rotAxis = vec3::cross(vec3::_forward, forwardVector);
-    rotAxis = vec3::normalized(rotAxis);
-    _q = quaternion::axis_angle(rotAxis, rotAngle);
-
+    _q = quaternion::lookat(_x, vec3 { x, y, z }, vec3::_up);
 	_dirty = true;
 }
 /*

@@ -57,6 +57,8 @@ namespace wee {
             return copy;
         }
 
+        static quaternion lookat(const vec3f& pos, const vec3f& target, const vec3f& up);
+
         static quaternion look_rotation(const vec3& a, const vec3& b) {
             vec3 axis = vec3::normalized(vec3::cross(b, a));
             float angle = std::acos(vec3::dot(a, b));
