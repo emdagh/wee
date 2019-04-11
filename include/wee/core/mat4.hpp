@@ -31,6 +31,7 @@ namespace wee {
             };
         }
 
+        static mat4 create_scale(float s) { return create_scale(s,s,s); }
         static mat4 create_scale(const vec3&);
         static mat4 create_scale(float sx, float sy, float sz) {
             mat4 res = identity();

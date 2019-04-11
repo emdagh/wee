@@ -31,6 +31,26 @@ namespace wee {
             return std::sqrt(dot(a, a));
         }
 
+        static quaternion euler_angles(float yaw, float pitch, float roll) {
+            float y_half = yaw * 0.5f;
+            float p_half = pitch * 0.5f;
+            float r_half = roll * 0.5f;
+
+            float r_sin = std::sin(r_half);
+            float r_cos = std::cos(r_half);
+            float p_sin = std::sin(p_half);
+            float p_cos = std::cos(p_half);
+            float y_sin = std::sin(y_half);
+            float y_cos = std::cos(y_half);
+
+            return quaternion {
+                ((y_cos * p_sin) * r_cos) + ((y_sin * p_cos) * r_sin),
+                ((y_sin * p_cos) * r_cos) - ((y_cos * p_sin) * r_sin),
+                ((y_cos * p_cos) * r_sin) - ((y_sin * p_sin) * r_cos),
+                ((y_cos * p_cos) * r_cos) + ((y_sin * p_sin) * r_sin),
+            };
+        }
+
         static quaternion normalized(const quaternion& a) {
             quaternion copy(a);
             normalize(copy);

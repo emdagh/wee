@@ -20,19 +20,13 @@ namespace wee {
         size_t      _parent;
     };
 
-    struct model_mesh_part {
+
+    struct model_mesh {
         int material_index;
         int base_vertex;
         int base_index;
         size_t num_vertices;
-        size_t num_indices;
-    };
-
-    struct model_mesh {
-        vertex_buffer* _vertices;
-        index_buffer* _indices;
-        std::map<size_t, model_mesh_part> _parts;
-        
+        size_t num_indices;        
     };
 
     struct material {
@@ -40,8 +34,12 @@ namespace wee {
     };
     
     struct model {
+        vertex_buffer* _vertices;
+        index_buffer* _indices;
+       // std::map<size_t, model_mesh_part> _parts;
         std::vector<model_mesh> _meshes;
         std::vector<material> _materials;
+        aabb _aabb;
 
         void draw(graphics_device*);
     };

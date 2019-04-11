@@ -3,9 +3,52 @@
 
 using namespace wee;
 
-/**
- * assuming world-space coordinates
- */
+const mat4& camera::get_transform() {
+    if(_dirty) {
+        vec3 direction = vec3::transform(vec3::_forward, _q);
+        _transform = mat4::create_lookat(_x, _x + direction, vec3::_up);
+        _dirty = false;
+    }
+    return _transform;
+}
+void camera::set_position(float x, float y, float z) {
+    _x.x = x;
+    _x.y = y;
+    _x.z = z;
+    _dirty = true;
+}
+void camera::set_rotation(float y, float p, float r) {
+    _q = quaternion::euler_angles(y, p, r);
+    _dirty = true;
+}
+void camera::lookat(float x, float y, float z) {
+	//_q = quaternion::look_rotation(vec3 { x, y, z }, vec3::_up);
+    //
+    vec3 destPoint = vec3 { x, y, z };
+    vec3 sourcePoint = _x;
+
+    vec3 forwardVector = vec3::normalized(destPoint - sourcePoint);
+
+    float dot = vec3::dot(vec3::_forward, forwardVector);
+
+    if (std::abs(dot - (-1.0f)) < 0.000001f)
+    {
+        _q = quaternion { vec3::_up.x, vec3::_up.y, vec3::_up.z, M_PI };
+        return;
+    }
+    if (std::abs(dot - (1.0f)) < 0.000001f)
+    {
+        _q = quaternion { 0.0f, 0.0f, 0.0f, 1.0f }; //Quaternion.identity;
+        return;
+    }
+
+    float rotAngle = std::acos(dot);
+    vec3 rotAxis = vec3::cross(vec3::_forward, forwardVector);
+    rotAxis = vec3::normalized(rotAxis);
+    _q = quaternion::axis_angle(rotAxis, rotAngle);
+
+	_dirty = true;
+}
 /*
 void camera::lookat(const vec3f& target) {
     _orientation[0] = quaternion::look_rotation(_position[0], target);
@@ -18,16 +61,6 @@ void camera::strafe(float) {
     _valid = false;
 }*/
 
-
-void camera::transform(mat4* p) { 
-    if(!_valid) {
-        //DEBUG_VALUE_OF(_rotation);
-        mat4 t = mat4::create_translation(-_position[0]);
-        mat4 r = mat4::create_rotation(_rotation.x, _rotation.y, _rotation.z);
-        _transform = mat4::mul(t, r);
-    }
-    *p = _transform;
-}
 /*
 void camera::_update_transform() {
     //mat4 Mt, Mr, Ms, Mt2;

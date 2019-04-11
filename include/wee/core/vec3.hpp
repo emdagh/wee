@@ -6,6 +6,7 @@
 namespace wee {
 
     struct mat4;
+	struct quaternion;
     struct vec3 {
         static const vec3 _one;
         static const vec3 _zero;
@@ -27,11 +28,16 @@ namespace wee {
         }
 
         static vec3 transform(const vec3&, const mat4&);
+        static vec3 transform(const vec3&, const quaternion&);
 
         static float length(const vec3& a) {
             return std::sqrt(dot(a, a));
         }
         static vec3 normalized(const vec3& a) {
+            float len_sq = dot(a, a);
+            if(len_sq == 0.0f) {
+                return a;
+            }
             float r = 1.0f / length(a);
             return { 
                 a.x * r, 

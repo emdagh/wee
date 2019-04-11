@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <gfx/model.hpp>
+#include <gfx/vertex_declaration.hpp>
 #include <functional>
 #include <prettyprint.hpp>
 
@@ -22,6 +23,22 @@ public:
 };
 
 #define kMaxBonesPerVertex  4
+
+
+        /*
+           std::function<void(const aiNode*, std::function<void(const aiNode*)>)>
+           iterate = [&] (const aiNode* node, std::function<void(const aiNode*)> fn)
+           {
+           fn(node);
+           for(auto i: range(node->mNumChildren)) {
+           iterate(node->mChildren[i], fn);
+           }
+           };
+           iterate(scene->mRootNode, [] (const aiNode* node) {
+           DEBUG_VALUE_OF(node->mName.C_Str());
+           DEBUG_VALUE_OF(node->mNumMeshes);
+           });
+           */
 /*
    std::function<void(const aiNode*, const aiMatrix4x4&)> 
    read_node_hierarchy = [&] (const aiNode* node, const aiMatrix4x4& parentTransformation) 
@@ -61,13 +78,13 @@ namespace wee {
             return false;
         }
         virtual void OnDebug(const char* m) {
-            DEBUG_VALUE_OF(m);
+            //DEBUG_VALUE_OF(m);
         }
         virtual void OnError(const char* m) {
             DEBUG_VALUE_OF(m);
         }
         virtual void OnInfo(const char* m) {
-            DEBUG_VALUE_OF(m);
+            //DEBUG_VALUE_OF(m);
         }
         virtual void OnWarn(const char* m) {
             DEBUG_VALUE_OF(m);
@@ -221,22 +238,64 @@ namespace wee {
         if(!scene) {
             throw std::runtime_error(importer.GetErrorString());
         }
-        return import(scene);
-        /*
-           std::function<void(const aiNode*, std::function<void(const aiNode*)>)>
-           iterate = [&] (const aiNode* node, std::function<void(const aiNode*)> fn)
-           {
-           fn(node);
-           for(auto i: range(node->mNumChildren)) {
-           iterate(node->mChildren[i], fn);
-           }
-           };
-           iterate(scene->mRootNode, [] (const aiNode* node) {
-           DEBUG_VALUE_OF(node->mName.C_Str());
-           DEBUG_VALUE_OF(node->mNumMeshes);
-           });
-           */
 
+        /**
+         * The following structures hold all of the data across meshes
+         * later on, we will compile this data into a single vertex / index buffer.
+         */
+        std::vector<aiVector3D> positions;
+        std::vector<aiVector3D> normals;
+        std::vector<aiVector2D> texcoords;
+        std::vector<uint32_t>   indices;
 
+        aabb box;
+        
+        size_t numVertices = 0, numIndices = 0;
+        std::vector<model_mesh> parts(scene->mNumMeshes);
+
+        for(auto j: range(scene->mNumMeshes)) {
+            const auto* mesh = scene->mMeshes[j];
+            if(!mesh->HasTextureCoords(0)) {
+                throw std::runtime_error("models are required to have texture coordinates!");
+            }
+            if(!mesh->HasNormals()) {
+                throw std::runtime_error("models are required to have normals!");
+            }
+
+            for(auto i: range(mesh->mNumVertices)) {
+                box.add( vec3f { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
+                positions.push_back(mesh->mVertices[i]);
+                normals.push_back(mesh->mNormals[i]);
+                texcoords.push_back(aiVector2D { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
+            }
+            for(auto i: range(mesh->mNumFaces)) {
+                const auto* face = &mesh->mFaces[i];
+                indices.push_back(numIndices + face->mIndices[0]);
+                indices.push_back(numIndices + face->mIndices[1]);
+                indices.push_back(numIndices + face->mIndices[2]);
+            }
+
+            parts[j].base_index  = numIndices;
+            parts[j].num_indices = mesh->mNumFaces * 3;
+            parts[j].base_vertex = numVertices;
+            parts[j].num_vertices= mesh->mNumVertices;
+            
+            numIndices  += parts[j].num_indices; 
+            numVertices += parts[j].num_vertices; 
+        }
+
+        size_t vertexSize = 2 * sizeof(vec3) + sizeof(vec2);
+        vertex_buffer* vb = new vertex_buffer(numVertices * vertexSize);
+        index_buffer* ib  = new index_buffer(numIndices * sizeof(uint32_t));
+
+        std::vector<material> materials;
+
+        for(auto i: range(scene->mNumMaterials)) {
+            [[maybe_unused]] const auto* mat = scene->mMaterials[i];
+        }
+
+        return new model {
+            vb, ib, parts, materials, box
+        }; 
     }
 }

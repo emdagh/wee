@@ -1,6 +1,7 @@
 #include <core/intersect.hpp>
 #include <core/vec3.hpp>
 #include <core/ray.hpp>
+#include <core/aabb.hpp>
 #include <core/sphere.hpp>
 #include <cmath>
 
@@ -24,6 +25,18 @@ namespace wee {
         }
         return 0;
     }
+
+    template <>
+    int intersect(const aabb& b, const vec3f& p, float*) {
+        if( (p.x >= b.min.x && p.x <= b.max.x) &&
+            (p.y >= b.min.y && p.y <= b.max.y) && 
+            (p.z >= b.min.z && p.z <= b.max.z)
+        ) {
+            return static_cast<int>(intersection::kContains);
+        }
+        return static_cast<int>(intersection::kDisjoint);
+    }
+
     template <>
     int intersect<ray, ray>(const ray&, const ray&, float*) {
         return 0;

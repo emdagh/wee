@@ -5,21 +5,18 @@ using namespace wee;
 
 
 void model::draw(graphics_device* dev) {
+    dev->set_vertex_buffer(_vertices);
+    dev->set_index_buffer(_indices);
     for(const auto& mesh: _meshes) {
-        
-        dev->set_vertex_buffer(mesh._vertices);
-        dev->set_index_buffer(mesh._indices);
-
-        for(const auto& p: mesh._parts) {
-            const auto& part = p.second;
+        //for(const auto& p: mesh._parts) {
 
             dev->draw_indexed_primitives<primitive_type::kLineList, index_type::kUnsignedInt>(
-                part.base_vertex, 
-                part.base_index, 
-                part.num_indices, 
-                part.base_index
+                mesh.base_vertex, 
+                mesh.base_index, 
+                mesh.num_indices, 
+                mesh.base_index
             );
-        }
+        //}
     }
 }
 namespace wee {

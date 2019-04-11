@@ -40,12 +40,15 @@ model* mesh_generator::ico_sphere(float radius, int n) {
 
     vertices.resize(list.size());
 
+    aabb box;
+
     for(auto i : range(list.size())) {
         auto& v = vertices[i];
         v._position = list[i];
         v._normal = vec3f::normalized(list[i]);
         v._texcoord = { 0.f, 0.f };
         //vertices.push_back(v);
+        box.add(list[i]);
     }
 
     std::vector<uint32_t> ix = {
@@ -78,15 +81,14 @@ model* mesh_generator::ico_sphere(float radius, int n) {
     ibo->sputn(reinterpret_cast<char*>(&ix[0]), sizeof(uint32_t) * ix.size());
 
 
+
     return new model {
-        { 
-            model_mesh {  
-                vbo,
-                ibo,
-                {   
-                    { 0, model_mesh_part { 0, 0, 0, vertices.size(), ix.size() } }
-                }
-            }
-        }
+        vbo,
+        ibo,
+        {
+            model_mesh { 0, 0, 0, vertices.size(), ix.size() }
+        }, 
+        {} ,
+        box
     }; 
 }

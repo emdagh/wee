@@ -11,34 +11,27 @@
 #define MAX_SHAKE_Y     5.f
 #define MAX_SHAKE_Z     5.f
 
+#define DEFINE_LEGACY_FUNCTIONS \
+    float get_zoom() { return 1.f; } \
+    void set_zoom(float) {} \
+    void set_viewport(float, float) {} \
+    void update(int) {} \
+    void shake(int, bool) {} 
+
 namespace wee {
 
     class camera {
-        //quaternion _orientation[2];
-        vec3 _rotation;
-        vec3 _position[2];
+        quaternion _q;
+        vec3f _x;
+        bool _dirty;
         mat4 _transform;
-        bool _valid = false;
-
     public:
-        //void lookat(const vec3f&);
-        //void strafe(float);
-        //void advance(float);
-        void shake(int, bool = true) {}
+        const mat4& get_transform();
+        void set_position(float, float, float);
+        void set_rotation(float, float, float);
+        void lookat(float, float, float);
 
-        void transform(mat4*);
-        mat4 get_transform() {
-            mat4 res;
-            transform(&res);
-            return res;
-        }
-        void set_viewport(float, float) {}
-        void set_position(float x, float y, float z) { _position[0] = _position[1] = vec3 { x, y, z }; _valid = false; }
-        void set_rotation(float x, float y, float z) { _rotation = vec3 {x, y, z}; _valid = false; }
-    public:
-        void set_zoom(float) {}
-        float get_zoom() { return 1.0f; }
-        void update(int) {}
+        DEFINE_LEGACY_FUNCTIONS;
     };
 }
 
