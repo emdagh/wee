@@ -3,6 +3,7 @@
 #include <numeric>
 #include <limits>
 #include <cmath>
+#include <iosfwd>
 
 namespace wee {
     struct vec3;
@@ -154,4 +155,6 @@ namespace wee {
             return copy;
         }
     };
+
+    std::ostream& operator << (std::ostream&, const quaternion&);
 }

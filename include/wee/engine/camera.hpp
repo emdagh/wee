@@ -31,6 +31,11 @@ namespace wee {
         void set_rotation(float, float, float);
         void lookat(float, float, float);
 
+    public:
+        void move_forward(float);
+        void strafe(float);
+        void rotate(float, float, float);
+
         DEFINE_LEGACY_FUNCTIONS;
     };
 }

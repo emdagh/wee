@@ -27,6 +27,24 @@ void camera::lookat(float x, float y, float z) {
     _q = quaternion::lookat(_x, vec3 { x, y, z }, vec3::_up);
 	_dirty = true;
 }
+
+void camera::move_forward(float x) {
+    vec3 f = vec3::transform(vec3::_forward, _q);
+    _x = _x + f * x;
+    _dirty = true;
+}
+void camera::strafe(float x) {
+    vec3 right = vec3::transform(vec3::_right, _q);
+    _x = _x + right * x;
+    _dirty = true;
+}
+
+void camera::rotate(float x, float y, float z) {
+    quaternion b = quaternion::euler_angles(x, y, z);
+    _q = _q * b; // multiplication is addition
+    DEBUG_VALUE_OF(_q);
+    _dirty = true;
+}
 /*
 void camera::lookat(const vec3f& target) {
     _orientation[0] = quaternion::look_rotation(_position[0], target);
