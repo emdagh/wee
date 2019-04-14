@@ -31,8 +31,7 @@ void shader_program::cache_all_uniforms() {
 
 void shader_program::compile(const std::vector<const char*>& source, GLuint id) {
     DEBUG_LOG("compiling shader...");
-    size_t n = source.size();
-    glShaderSource(id, n, &source[0], nullptr);
+    glShaderSource(id, source.size(), &source[0], nullptr);
     glCompileShader(id);
 
 

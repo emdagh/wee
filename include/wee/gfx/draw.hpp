@@ -47,7 +47,7 @@ namespace wee {
             __primitive__<static_cast<int>(_Primitive)>::type,
             count,
             __index__<static_cast<int>(_Index)>::type,
-            NULL,
+            BUFFER_OFFSET(0),
             baseVertex
         );
     }

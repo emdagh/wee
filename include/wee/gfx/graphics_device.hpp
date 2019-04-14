@@ -15,6 +15,12 @@
 
 //struct SDL_Renderer;
 
+#define DECLARE_PRIMITIVE(a, b) \
+    template <> \
+    struct glGetPrimitiveType<primitive_type::a> { \
+        static const GLenum type = b;\
+    }
+
 namespace wee {
 
     template <primitive_type T>
@@ -22,14 +28,24 @@ namespace wee {
         static const GLenum type = GL_NONE;
     };
 
-    template <>
+    DECLARE_PRIMITIVE(kLineList,    GL_LINES);
+    DECLARE_PRIMITIVE(kLineStrip,   GL_LINE_STRIP);
+    DECLARE_PRIMITIVE(kLineLoop,    GL_LINE_LOOP);
+    DECLARE_PRIMITIVE(kPoints,      GL_POINTS);
+    DECLARE_PRIMITIVE(kTriangles,   GL_TRIANGLES);
+    DECLARE_PRIMITIVE(kTriangleFan, GL_TRIANGLE_FAN);
+    DECLARE_PRIMITIVE(kTriangleStrip, GL_TRIANGLE_STRIP);
+    DECLARE_PRIMITIVE(kQuads,       GL_QUADS);
+    DECLARE_PRIMITIVE(kQuadStrip,   GL_QUAD_STRIP);
+
+    /*template <>
     struct glGetPrimitiveType<primitive_type::kTriangles> {
         static const GLenum type =  GL_TRIANGLES;
     };
     template <>
     struct glGetPrimitiveType<primitive_type::kLineList> {
         static const GLenum type =  GL_LINE_STRIP;
-    };
+    };*/
 
 
     template <index_type T>

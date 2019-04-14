@@ -75,6 +75,14 @@ namespace wee {
     };
 }
 
+/*template <typename T, template <typename, typename...> typename C, typename... Args>
+std::ostream& operator << (std::ostream& os, const C<T, Args...>& objects) {
+    for(const auto& obj : objects) {
+        os << obj << ',';
+    }
+    return os;
+}*/
+
 #define DEBUG_METHOD()              wee::log(std::cout, __PRETTY_FUNCTION__).write(__FUNCTION__) 
 #define DEBUG_LOG(...)              wee::log(std::cout, __PRETTY_FUNCTION__).write(__VA_ARGS__)
 #define DEBUG_VALUE_OF(x)           wee::log(std::cout, __PRETTY_FUNCTION__).write(wee::value_of(#x, x, false))

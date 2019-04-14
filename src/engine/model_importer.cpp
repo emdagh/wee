@@ -78,13 +78,13 @@ namespace wee {
             return false;
         }
         virtual void OnDebug(const char* m) {
-            //DEBUG_VALUE_OF(m);
+            DEBUG_VALUE_OF(m);
         }
         virtual void OnError(const char* m) {
             DEBUG_VALUE_OF(m);
         }
         virtual void OnInfo(const char* m) {
-            //DEBUG_VALUE_OF(m);
+            DEBUG_VALUE_OF(m);
         }
         virtual void OnWarn(const char* m) {
             DEBUG_VALUE_OF(m);
@@ -111,141 +111,34 @@ namespace wee {
         aiProcess_CalcTangentSpace | 
         aiProcess_ValidateDataStructure | 
         aiProcess_RemoveRedundantMaterials | 
-        // aiProcess_JoinIdenticalVertices | 
+        aiProcess_JoinIdenticalVertices | 
         aiProcess_OptimizeMeshes | 
         aiProcess_FlipUVs | 
-        aiProcess_LimitBoneWeights;
+        aiProcess_LimitBoneWeights |
+        aiProcess_FixInfacingNormals
+        ;
 
     std::map<std::string, size_t> materialNames;
     std::vector<material> materials;
 
-    void import_mesh(const aiScene* scene, const aiMesh* mesh) {
-        size_t vertex_size = sizeof(vec3f);
-        /**
-         * TODO: split model mesh into model mesh parts
-         * these should be groupable by material index so they may
-         * be batched.
-         */
+    using vertex_p3_n3_t2 = vertex<
+        attributes::position,
+        attributes::normal,
+        attributes::texcoord
+    >;
 
-        DEBUG_VALUE_OF(mesh->mMaterialIndex);
-        /*using int4 = int[4];
-          using float4 = float[4];
-
-          if(mesh->HasNormals()) {
-          vertex_size += sizeof(vec3f); 
-          }
-
-          if(mesh->HasTextureCoords(0)) {
-          vertex_size += sizeof(vec3f); 
-          }
-
-          if(mesh->mNumBones > 0) {
-          vertex_size += sizeof(float4);
-          vertex_size += sizeof(int4);
-          }*/
-
-        using index_type = uint32_t;
-        static const size_t index_size = sizeof(index_type);
-
-        vertex_buffer* vb = new vertex_buffer(vertex_size * mesh->mNumVertices);
-        index_buffer* ib  = new index_buffer(index_size * mesh->mNumFaces * 3);
-
-        std::vector<vec3> positions;
-
-        for(auto i: range(mesh->mNumVertices)) {
-            const auto position = mesh->mVertices[i];
-            positions.push_back(vec3 {position.x, position.y, position.z});
+        vec3 convert(const aiVector3D& In) {
+            return vec3 { In.x, In.y, In.z };
         }
 
-        vb->sputn(reinterpret_cast<char*>(&positions[0]), vertex_size * positions.size());
-
-        std::vector<index_type> indices;
-        for(auto i: range(mesh->mNumFaces)) {
-            const auto* face = &mesh->mFaces[i];
-            indices.push_back(face->mIndices[0]);
-            indices.push_back(face->mIndices[1]);
-            indices.push_back(face->mIndices[2]);
-        }
-        ib->sputn(reinterpret_cast<char*>(&indices[0]), index_size * indices.size());
-
-        for(auto i: range(mesh->mNumBones)) {
-            [[maybe_unused]] const auto* bone = mesh->mBones[i];
-        }
-    }
-
-    void import_material(const aiScene* scene, aiMaterial* mat) {
-        DEBUG_METHOD();
-        auto convert_color = [] (const aiColor4D& c) {
-            return SDL_Color { 
-                static_cast<uint8_t>(c.r * 255.0f),
-                    static_cast<uint8_t>(c.g * 255.0f),
-                    static_cast<uint8_t>(c.b * 255.0f),
-                    static_cast<uint8_t>(c.a * 255.0f)
-            };
-        };
-        std::string key(mat->GetName().C_Str());
-        size_t value = materials.size();
-        materialNames.insert({key, value});
-
-        aiColor4D color_kd;
-        aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &color_kd);
-        materials.push_back({ 
-                convert_color(color_kd)
-
-                });
-    }
-
-    model* import(const aiScene* scene) {
-
-        materialNames.clear();
-        materials.clear();
-        // Select the kinds of messages you want to receive on this log stream
-
-        DEBUG_VALUE_OF(scene->mNumMaterials);
-        for(auto i: range(scene->mNumMaterials)) {
-            import_material(scene, scene->mMaterials[i]);
-        }
-        DEBUG_VALUE_OF(materialNames);
-
-        for(auto i: range(scene->mNumMeshes)) {
-            import_mesh(scene, scene->mMeshes[i]);
-        }
-
-
-        for(auto i: range(scene->mNumAnimations)) {
-            [[maybe_unused]] const auto* mat = scene->mMaterials[i];
-        }
-
-        [[maybe_unused]] const auto* node = scene->mRootNode;
-
-        return new model;
-    }
-
-    model* import_model_from_file(const std::string& pt) {
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(pt, kImportOptions);
-        if(!scene) {
-            throw std::runtime_error(importer.GetErrorString());
-        }
-        return import(scene);
-
-    }
-
-    model* import_model(std::istream& is) {
-        std::vector<char> data((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFileFromMemory(&data[0], data.size(), kImportOptions);
-        if(!scene) {
-            throw std::runtime_error(importer.GetErrorString());
-        }
-
+    model* import_impl(const aiScene* scene) {
         /**
          * The following structures hold all of the data across meshes
          * later on, we will compile this data into a single vertex / index buffer.
          */
         std::vector<aiVector3D> positions;
         std::vector<aiVector3D> normals;
-        std::vector<aiVector2D> texcoords;
+        std::vector<aiVector3D> textureCoords;
         std::vector<uint32_t>   indices;
 
         aabb box;
@@ -266,7 +159,7 @@ namespace wee {
                 box.add( vec3f { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
                 positions.push_back(mesh->mVertices[i]);
                 normals.push_back(mesh->mNormals[i]);
-                texcoords.push_back(aiVector2D { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
+                textureCoords.push_back(mesh->mTextureCoords[0][i]);
             }
             for(auto i: range(mesh->mNumFaces)) {
                 const auto* face = &mesh->mFaces[i];
@@ -284,9 +177,24 @@ namespace wee {
             numVertices += parts[j].num_vertices; 
         }
 
-        size_t vertexSize = 2 * sizeof(vec3) + sizeof(vec2);
-        vertex_buffer* vb = new vertex_buffer(numVertices * vertexSize);
+        vertex_buffer* vb = new vertex_buffer(numVertices * sizeof(vertex_p3_n3_t2));
         index_buffer* ib  = new index_buffer(numIndices * sizeof(uint32_t));
+        
+
+        std::vector<vertex_p3_n3_t2> vertices(positions.size());
+
+        for(auto i: range(positions.size())) {
+            vec3 tmp = convert(textureCoords[i]);
+            vec2 texcoord = vec2 { tmp.x, tmp.y };
+
+            auto& vertex = vertices[i];
+            vertex._position = convert(positions[i]);
+            vertex._normal = convert(normals[i]);
+            vertex._texcoord = texcoord;
+        }
+
+        vb->sputn(reinterpret_cast<char*>(&vertices[0]), sizeof(vertex_p3_n3_t2) * vertices.size());
+        ib->sputn(reinterpret_cast<char*>(&indices[0]), sizeof(uint32_t) * indices.size());
 
         std::vector<material> materials;
 
@@ -297,5 +205,26 @@ namespace wee {
         return new model {
             vb, ib, parts, materials, box
         }; 
+    }
+
+    model* import_model_from_file(const std::string& pt) {
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(pt, kImportOptions);
+        if(!scene) {
+            throw std::runtime_error(importer.GetErrorString());
+        }
+        return import_impl(scene);
+
+    }
+
+    model* import_model(std::istream& is) {
+        std::vector<char> data((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFileFromMemory(&data[0], data.size(), kImportOptions);
+        if(!scene) {
+            throw std::runtime_error(importer.GetErrorString());
+        }
+        return import_impl(scene);
+
     }
 }
