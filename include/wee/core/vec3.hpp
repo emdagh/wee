@@ -8,11 +8,22 @@ namespace wee {
     struct mat4;
 	struct quaternion;
     struct vec3 {
-        static const vec3 _one;
-        static const vec3 _zero;
-        static const vec3 _up;
-        static const vec3 _right;
-        static const vec3 _forward;
+
+        static const constexpr vec3 zero() {
+            return vec3 { .x = 0.0f, .y = 0.0f, .z = 0.0f };
+        }
+        static const constexpr vec3 one() {
+            return vec3 { .x = 1.0f, .y = 1.0f, .z = 1.0f };
+        }
+        static const constexpr vec3 up() {
+            return vec3 { .x = 0.0f, .y = 1.0f, .z = 0.0f };
+        }
+        static const constexpr vec3 right() {
+            return vec3 { .x = 1.0f, .y = 0.0f, .z = 0.0f };
+        }
+        static const constexpr vec3 forward() {
+            return vec3 { .x = 0.0f, .y = 0.0f, .z = -1.0f };
+        }
 
         typedef const vec3& const_ref;
 

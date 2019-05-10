@@ -26,6 +26,7 @@ namespace wee {
         bool _dirty;
         mat4 _transform;
     public:
+        camera();
         const mat4& get_transform();
         void set_position(float, float, float);
         void set_rotation(float, float, float);

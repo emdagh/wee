@@ -2,22 +2,30 @@
 #include <core/vec3.hpp>
 #include <core/mat4.hpp>
 #include <core/quaternion.hpp>
+#include <nlohmann/json.hpp>
 
 namespace wee {
 
+    using nlohmann::json;
+    void to_json(json& j, const vec3& v) {
+        j = json { "x", v.x, "y", v.y, "z", v.z };
+    }
+
+    void from_json(const json& j, vec3 v) {
+        v.x = j["x"];
+        v.y = j["y"];
+        v.z = j["z"];
+    }
+
 std::ostream& operator << (std::ostream& os, const vec3& self) {
-    return os << "["<<self.x<<","<<self.y<<","<<self.z<<"]";
+    json j;
+    to_json(j, self);
+    return os << j;
 }
 }
 
 using namespace wee;
         
-const vec3 vec3::_one = { 1.f, 1.f, 1.f};
-const vec3 vec3::_zero = { .0f, .0f, .0f };
-const vec3 vec3::_up = { 0.f, 1.f, 0.f };
-const vec3 vec3::_right = { 1.f, 0.f, 0.f };
-const vec3 vec3::_forward { 0.f, 0.f, -1.f };
-
 vec3 vec3::transform(const vec3& a, const mat4& b) {
 	vec3 res;
 	res.x = (a.x * b.m11) + (a.y * b.m21) + (a.z * b.m31) + b.m41;

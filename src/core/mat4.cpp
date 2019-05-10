@@ -121,7 +121,7 @@ mat4 mat4::create_lookat(const vec3& eye, const vec3& at, const vec3& up) {
     vec3 vx = vec3::cross(up, vz);
 
     if (vec3::dot(vx, vx) < std::numeric_limits<float>::epsilon())
-        vx = vec3::_right;
+        vx = vec3::right();
     else
         vx = vec3::normalized(vx);
 

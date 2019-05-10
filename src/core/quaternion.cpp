@@ -45,7 +45,7 @@ quaternion quaternion::lookat(const vec3& sourcePoint, const vec3& destPoint, co
 
     vec3 forwardVector = vec3::normalized(destPoint - sourcePoint);
 
-    float dot = vec3::dot(vec3::_forward, forwardVector);
+    float dot = vec3::dot(vec3::forward(), forwardVector);
 
     if (std::abs(dot - (-1.0f)) < 0.000001f)
     {
@@ -57,7 +57,7 @@ quaternion quaternion::lookat(const vec3& sourcePoint, const vec3& destPoint, co
     }
 
     float rotAngle = std::acos(dot);
-    vec3 rotAxis = vec3::cross(vec3::_forward, forwardVector);
+    vec3 rotAxis = vec3::cross(vec3::forward(), forwardVector);
     rotAxis = vec3::normalized(rotAxis);
     return  quaternion::axis_angle(rotAxis, rotAngle);
 }

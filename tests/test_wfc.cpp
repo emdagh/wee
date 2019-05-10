@@ -968,6 +968,7 @@ struct game : public wee::applet {
         _debugdraw.SetCameraTransform(_camera.get_transform());
         SDL_SetRenderDrawColorEXT(renderer, SDL_ColorPresetEXT::CornflowerBlue);
         SDL_RenderClear(renderer);
+#if 0
         joint_t& a = kult::get<joint>(_rope);
         if(a.joint) {
 
@@ -989,7 +990,7 @@ struct game : public wee::applet {
             SDL_RenderDrawLine(renderer, x0, y0, x1, y1); 
         }
 
-
+#endif
         for(auto self: kult::join<transform, visual>()) {
 
             const auto& vis = kult::get<visual>(self);

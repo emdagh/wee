@@ -8,7 +8,7 @@ namespace wee {
     struct mat4;
 
     struct aabb {
-        vec3f min = vec3f::_zero, max = vec3f::_zero;
+        vec3f min = vec3f::zero(), max = vec3f::zero();
         static aabb transform(const aabb&, const mat4&);
         aabb& add(const vec3f&);
         vec3 get_corner(int) const;

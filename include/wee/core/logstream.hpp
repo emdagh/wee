@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <date/date.h>
+#include <core/string.hpp>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -83,11 +84,15 @@ std::ostream& operator << (std::ostream& os, const C<T, Args...>& objects) {
     return os;
 }*/
 
-#define DEBUG_METHOD()              wee::log(std::cout, __PRETTY_FUNCTION__).write(__FUNCTION__) 
-#define DEBUG_LOG(...)              wee::log(std::cout, __PRETTY_FUNCTION__).write(__VA_ARGS__)
-#define DEBUG_VALUE_OF(x)           wee::log(std::cout, __PRETTY_FUNCTION__).write(wee::value_of(#x, x, false))
-#define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, __PRETTY_FUNCTION__).write(wee::value_of(#x, x, true))
-#define TRACE(...)                  wee::log(std::cout, __FILE__##":"##__LINE__).write(__VA_ARGS__)
+#define STRINGIFY(x)                #x
+#define TO_STRING(x)                STRINGIFY(x)
+#define AT  __FILE__ ":" TO_STRING(__LINE__)
+
+#define DEBUG_METHOD()              wee::log(std::cout, AT).write(__FUNCTION__) 
+#define DEBUG_LOG(...)              wee::log(std::cout, AT).write(__VA_ARGS__)
+#define DEBUG_VALUE_OF(x)           wee::log(std::cout, AT).write(wee::value_of(#x, x, false))
+#define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, AT).write(wee::value_of(#x, x, true))
+#define TRACE(...)                  wee::log(std::cout, AT).write(__VA_ARGS__)
 
 namespace wee {
     enum class loglevel : uint8_t {

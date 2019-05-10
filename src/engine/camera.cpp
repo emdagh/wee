@@ -3,10 +3,18 @@
 
 using namespace wee;
 
+camera::camera() 
+: _q(quaternion::identity())
+, _x(vec3::zero())
+, _dirty(true)
+, _transform(mat4::identity())
+{
+}
+
 const mat4& camera::get_transform() {
     if(_dirty) {
-        vec3 direction = vec3::transform(vec3::_forward, _q);
-        _transform = mat4::create_lookat(_x, _x + direction, vec3::_up);
+        vec3 direction = vec3::transform(vec3::forward(), _q);
+        _transform = mat4::create_lookat(_x, _x + direction, vec3::up());
         _dirty = false;
     }
     return _transform;
@@ -24,17 +32,17 @@ void camera::set_rotation(float y, float p, float r) {
 void camera::lookat(float x, float y, float z) {
 	//_q = quaternion::look_rotation(vec3 { x, y, z }, vec3::_up);
     //
-    _q = quaternion::lookat(_x, vec3 { x, y, z }, vec3::_up);
+    _q = quaternion::lookat(_x, vec3 { x, y, z }, vec3::up());
 	_dirty = true;
 }
 
 void camera::move_forward(float x) {
-    vec3 f = vec3::transform(vec3::_forward, _q);
+    vec3 f = vec3::transform(vec3::forward(), _q);
     _x = _x + f * x;
     _dirty = true;
 }
 void camera::strafe(float x) {
-    vec3 right = vec3::transform(vec3::_right, _q);
+    vec3 right = vec3::transform(vec3::right(), _q);
     _x = _x + right * x;
     _dirty = true;
 }
