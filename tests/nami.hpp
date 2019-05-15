@@ -188,10 +188,21 @@ struct wave {
 
 };
 
+/**
+ * TODO 2019-05-15:
+ * basic model should have *some* notion of dimensionality, right? I mean.. it seems 
+ * weird for the propagator to have ownership of this parameter entirely.
+ *
+ * Propbably  a template <size_t n> should suffice. Then just assert n == shape.size() or 
+ * whatever. The risk to be mitigated is that 2D and 3D examples (adjacencies) get mixed.
+ * Also, templates open the option to statically initialize the adjacency list.
+ */
+
 struct basic_model {
     typedef std::unordered_map<size_t, uint64_t> adjacency_list_type;
     adjacency_list_type _adjacency;
     tileset _ts;
+    
     //std::vector<float> _weights;
     
     template <typename S>
