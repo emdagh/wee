@@ -1,0 +1,47 @@
+{
+    "model" : {
+        "type" : "adjacency",
+        "example" : null
+    },
+    "symmetry" : {
+        "rotational" : 4,
+        "reflectional" : false
+    },
+    "tiles" : [
+        { "src": "assets/castle/empty.vox",             "name": "empty",            "symmetry": "X" },
+        { "src": "assets/castle/ground.vox",            "name": "ground",           "symmetry": "X" },
+        { "src": "assets/castle/wall.vox",              "name": "wall",             "symmetry": "E" },
+        { "src": "assets/castle/wall_outer_corner.vox", "name": "wall_outer_corner","symmetry": "L" },
+        { "src": "assets/castle/wall_inner_corner.vox", "name": "wall_inner_corner","symmetry": "L" },
+        { "src": "assets/castle/solid.vox",             "name": "solid",            "symmetry": "X" }
+    ],
+    "todo" : "add more adjacencies types", 
+    "adjacencies": [
+        { "left": ["ground"], "right" : ["ground"] },
+        { "left": ["empty"], "right" : ["empty"] },
+        { "above": ["empty"], "below" : [
+            "ground", 
+            "empty"
+        ]},
+        { "below": ["ground"], "above": [
+            "wall", 
+            "wall_outer_corner", 
+            "wall_inner_corner", 
+            "solid"
+        ]}
+    ],
+    "constraints": [
+        {
+            "class": "border",
+            "tile": "empty"
+        },
+        {
+            "class": "fixed",
+            "tile" : "turret_top",
+            "at": {
+                "x": 5, "y": 4, "z": 8
+            }
+        }
+    ]
+}
+
