@@ -298,9 +298,7 @@ struct wave_propagator {
     cb_t on_done;
 
     wave_propagator() { //size_t len) : _len(len) {
-        //_wave = new wave<T>(len);
-        //
-        _randgen.reset(3211800525); // non-square grid fail for 4x3 case (demo 1)
+        //_randgen.reset(3211800525); // non-square grid fail for 4x3 case (demo 1)
         DEBUG_VALUE_OF(_randgen.seed());
     }
 

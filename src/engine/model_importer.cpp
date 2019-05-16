@@ -78,13 +78,13 @@ namespace wee {
             return false;
         }
         virtual void OnDebug(const char* m) {
-            DEBUG_VALUE_OF(m);
+            //DEBUG_VALUE_OF(m);
         }
         virtual void OnError(const char* m) {
             DEBUG_VALUE_OF(m);
         }
         virtual void OnInfo(const char* m) {
-            DEBUG_VALUE_OF(m);
+            //DEBUG_VALUE_OF(m);
         }
         virtual void OnWarn(const char* m) {
             DEBUG_VALUE_OF(m);
@@ -96,8 +96,8 @@ namespace wee {
         gRegisterAssimpLogstream() {
             Assimp::DefaultLogger::set(new AssimpLogger);
             const unsigned int severity = 
-                Assimp::Logger::Debugging| 
-                Assimp::Logger::Info| 
+                //Assimp::Logger::Debugging| 
+                //Assimp::Logger::Info| 
                 Assimp::Logger::Err| 
                 Assimp::Logger::Warn;
             // Attaching it to the default logger

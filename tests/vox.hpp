@@ -4,8 +4,11 @@
 #include <core/binary_writer.hpp>
 #include <core/factory.hpp>
 #include <nlohmann/json.hpp>
+#include <map>
 /**
  * LEARNING MOMENTS:
+ *
+ * std::istream.good() will *NOT* check if the stream is currently at EOF, but if it has read *past* eof. Slight nuance...
  *
  * << with aggregate inheritance, a parent is a subobject of the aggregate! no
  * clue how multiple inheritance would work,
@@ -28,20 +31,23 @@
 // magicavoxel format.
 //
 //
+/**
+ * static classes will only be initialized as top-level (namespace) classes. Nested statics won't be initialized on program start.
+ */
 
 #define TAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
 namespace vox {
 
 using wee::binary_reader;
+using nlohmann::json;
 
 struct chunk {
-#if 1
     virtual ~chunk() = default;
-#endif
 };
 struct voxel {
     char x, y, z, i;
 };
+
 struct pack : chunk {
     int num_models;
 };
@@ -65,62 +71,45 @@ struct vox {
     std::vector<chunk*> chunks;
 };
 
+void to_json(json& j, const voxel& v) {
+    j = {
+        { "x", v.x },
+        { "y", v.y },
+        { "z", v.z },
+        { "i", v.i },
+    };
+}
+
+std::ostream& operator << (std::ostream& os, const voxel& v) {
+    json j;
+    to_json(j, v);
+    return os << j;
+}
+void to_json(json& j, const size& s) {
+    j = {
+        { "x", s.x },
+        { "y", s.y },
+        { "z", s.z },
+    };
+}
+
+std::ostream& operator << (std::ostream& os, const size& s) {
+    json j;
+    to_json(j, s);
+    return os << j;
+}
+
+static const int VOX_= TAG('V', 'O', 'X', ' ');
+static const int MAIN= TAG('M', 'A', 'I', 'N');
+static const int PACK= TAG('P', 'A', 'C', 'K');
+static const int SIZE= TAG('S', 'I', 'Z', 'E');
+static const int XYZI= TAG('X', 'Y', 'Z', 'I');
+static const int RGBA= TAG('R', 'G', 'B', 'A');
+
 struct vox_reader {
-    static const int VOX_ = TAG('V', 'O', 'X', ' ');
-    static const int MAIN = TAG('M', 'A', 'I', 'N');
-    static const int PACK = TAG('P', 'A', 'C', 'K');
-    static const int SIZE = TAG('S', 'I', 'Z', 'E');
-    static const int XYZI = TAG('X', 'Y', 'Z', 'I');
-    static const int RGBA = TAG('R', 'G', 'B', 'A');
 
     typedef wee::factory<chunk, int> factory_t;
     typedef std::function<chunk*(chunk*, binary_reader&)> builder;
-
-    static std::map<int, builder> readers;
-
-    static struct register_factories_and_readers {
-        register_factories_and_readers() {
-            wee::register_factory<chunk, pack>(PACK);
-            wee::register_factory<chunk, size>(SIZE);
-            wee::register_factory<chunk, rgba>(RGBA);
-            wee::register_factory<chunk, xyzi>(XYZI);
-
-            vox_reader::readers[PACK] = [](chunk* in, binary_reader& reader) {
-                if (auto* a = dynamic_cast<pack*>(in); a != nullptr) {
-                    a->num_models = reader.read_object<int>();
-                }
-                return in;
-            };
-
-            vox_reader::readers[SIZE] = [](chunk* in, binary_reader& reader) {
-                if (auto* a = dynamic_cast<size*>(in); a != nullptr) {
-                    a->x = reader.read_object<int>();
-                    a->y = reader.read_object<int>();
-                    a->z = reader.read_object<int>();
-                }
-                return in;
-            };
-            vox_reader::readers[RGBA] = [](chunk* in, binary_reader& reader) {
-                if (auto* a = dynamic_cast<rgba*>(in); a != nullptr) {
-                    reader.read<char>(&a->colors[0], 255);
-                }
-                return in;
-            };
-            vox_reader::readers[XYZI] = [](chunk* in, binary_reader& reader) {
-                if (auto* a = dynamic_cast<xyzi*>(in); a != nullptr) {
-                    a->voxels = vox_reader::read_voxels(reader);
-                }
-                return in;
-            };
-        }
-    } _;
-
-    static std::vector<char> read_unkown(binary_reader& reader, int n) {
-        std::vector<char> res;
-        reader.read<char>(std::back_inserter(res), 255);
-        return res;
-    }
-
     static std::vector<voxel> read_voxels(binary_reader& reader) {
         std::vector<voxel> res;
         int num_voxels = reader.read_object<int>();
@@ -135,6 +124,16 @@ struct vox_reader {
         return res;
     }
 
+    static const std::map<int, builder> readers;
+
+
+    static std::vector<char> read_unkown(binary_reader& reader, int n) {
+        std::vector<char> res;
+        reader.read<char>(std::back_inserter(res), 255);
+        return res;
+    }
+
+
     static chunk* read_chunk(binary_reader& reader) {
         int chunk_id = reader.read_object<int>();
         [[maybe_unused]] int content_size = reader.read_object<int>();
@@ -143,14 +142,13 @@ struct vox_reader {
         if (num_children != 0)
             throw std::runtime_error("recursive chunks not supported!");
 
-        return readers[chunk_id](factory_t::instance().create(chunk_id),
-                                 reader);
+        return readers.at(chunk_id)(factory_t::instance().create(chunk_id), reader);
     }
 
     static std::vector<chunk*> read_chunks(binary_reader& reader) {
         std::vector<chunk*> chunks;
 
-        while (reader.good()) {
+        while (reader.good() && reader.peek() != EOF) {
             chunks.push_back(read_chunk(reader));
         }
         return chunks;
@@ -218,5 +216,48 @@ struct vox_reader {
         }
     }
 };
+
+const std::map<int, vox_reader::builder> vox_reader::readers = {
+    {PACK,
+     [](chunk* in, binary_reader& reader) {
+         if (auto* a = dynamic_cast<pack*>(in); a != nullptr) {
+             a->num_models = reader.read_object<int>();
+         }
+         return in;
+     }},
+    {SIZE,
+     [](chunk* in, binary_reader& reader) {
+         if (auto* a = dynamic_cast<size*>(in); a != nullptr) {
+             a->x = reader.read_object<int>();
+             a->y = reader.read_object<int>();
+             a->z = reader.read_object<int>();
+         }
+         return in;
+     }},
+    {RGBA,
+     [](chunk* in, binary_reader& reader) {
+         if (auto* a = dynamic_cast<rgba*>(in); a != nullptr) {
+             reader.read<char>(&a->colors[0], 255);
+         }
+         return in;
+     }},
+    {XYZI, [](chunk* in, binary_reader& reader) {
+         if (auto* a = dynamic_cast<xyzi*>(in); a != nullptr) {
+             a->voxels = vox_reader::read_voxels(reader);
+         }
+         return in;
+     }}};
+    static class register_factories_and_readers {
+    public:
+        register_factories_and_readers() {
+            DEBUG_METHOD();
+            wee::register_factory<chunk, pack>(PACK);
+            wee::register_factory<chunk, size>(SIZE);
+            wee::register_factory<chunk, rgba>(RGBA);
+            wee::register_factory<chunk, xyzi>(XYZI);
+
+        }
+        virtual ~register_factories_and_readers() = default;
+    } _;
 
 }  // namespace vox

@@ -147,13 +147,12 @@ void demo1() {
     auto test = nami::basic_model(ts, 2);
 
     auto copy_coeff = [&res] (const std::vector<int>& w) {
-        //DEBUG_VALUE_OF(w);
         res = w;
     };
 
     test.on_update += copy_coeff;
     test.on_done   += copy_coeff;
-    //test.weights_from_example(&example[0], example.size());
+    
     test.add_example(&example[0], { 7, 4 });
     static const int OUT_W =114;
     static const int OUT_H =13;
@@ -171,7 +170,59 @@ void demo1() {
 }
 
 #include "vox.hpp"
-void demo2() {
+std::vector<int> demo2() {
+    auto ifs = wee::open_ifstream("assets/8x8x8.vox");
+    if(!ifs.is_open()) {
+        throw file_not_found("file not found");
+    }
+    binary_reader rd(ifs);
+    [[maybe_unused]] vox::vox* v = vox::vox_reader::read(rd);
+
+    auto index_of_voxel = [] (const vox::voxel& v, const std::array<int, 3>& dim) {
+        return v.z + dim[2] * (v.y + dim[1] * v.x); // row major linearize, just like the wee::linearize for ndarrays
+    };
+
+    int w, h, d;
+
+    for(const auto* ptr: v->chunks) {
+        if(const auto* a = dynamic_cast<const vox::size*>(ptr); a != nullptr) {
+            //DEBUG_VALUE_OF(*a);
+            w = a->x;
+            h = a->y;
+            d = a->z;
+        }
+    }
+    size_t example_len = w * h * d;;
+    std::vector<int> example(example_len, 0);
+
+    for(const auto* ptr: v->chunks) {
+        if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
+            for(const auto& v: a->voxels) {
+                example[index_of_voxel(v, { w, h, d})] = v.i;
+            }
+        }
+    }
+
+    static int OUT_D = 4;
+    static int OUT_H = 4;
+    static int OUT_W = 4;
+
+    std::vector<int> res;
+
+    nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
+    nami::basic_model test(ts, 3);
+    test.on_done += [&res] (const std::vector<int>& a) {
+        res = a;
+    };
+
+    test.add_example(&example[0], { d, h, w });
+    test.solve_for({OUT_D, OUT_H, OUT_W});
+
+    return res;
+}
+
+void voxel_to_mesh(vox::vox* data) {
+
 
 }
 
@@ -185,17 +236,11 @@ struct game : public applet {
 
     std::unordered_map<std::string, shader_program*> _shaders;
     std::vector<model*> _models;
+    std::vector<int> _voxels;
 
     int load_content() {
-
-        demo1();
-        exit(0);
-
-        std::vector<uint16_t> voxels;
-
-        std::ifstream is = open_ifstream("assets/exported.vox", std::ios::in| std::ios::binary);
-        binary_reader rd(is);
-        from_magica_voxel(rd, std::back_inserter(voxels));
+        _voxels = demo2();
+        //exit(1);
         try {
             {
                 auto is = open_ifstream("assets/shaders.json");

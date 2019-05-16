@@ -47,6 +47,10 @@ namespace wee {
             _is.read(reinterpret_cast<char*>(&res), n * sizeof(T));
             return res;
         }
+
+        int peek() const {
+            return _is.peek();
+        }
        
         bool good() const {
             return _is.good();
@@ -56,7 +60,7 @@ namespace wee {
             _is.ignore(n);
             return *this;
         }
-        std::streampos tell() {
+        std::streampos tell() const {
             return _is.tellg();
         }
 
