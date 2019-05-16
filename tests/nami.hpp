@@ -224,6 +224,10 @@ struct basic_model {
     std::unordered_map<int, int> _index;
     topology _topo;
     uint64_t _banned;
+
+    typedef wee::event_handler<void(const std::vector<int>&)> cb_t;
+    cb_t on_done;
+    cb_t on_update;
     
     //std::vector<float> _weights;
     
@@ -295,6 +299,9 @@ struct wave_propagator {
 
     wave_propagator() { //size_t len) : _len(len) {
         //_wave = new wave<T>(len);
+        //
+        _randgen.reset(3211800525); // non-square grid fail for 4x3 case (demo 1)
+        DEBUG_VALUE_OF(_randgen.seed());
     }
 
     size_t min_entropy(wave<T>* _wave) {
@@ -379,6 +386,7 @@ struct wave_propagator {
                 auto any_possible = _wave->at(other_i) & opts;
                 if(!any_possible) {
                     //reset(&_initial[0], _initial.size());
+                    exit(2);
                     return;
                 }
                 //!
@@ -529,8 +537,23 @@ void basic_model::solve_for(const topology::shape& s) {
     assert(_topo.num_dimensions() == s.size());
     wave_propagator<uint64_t> wp;
 
+
     wp.on_progress += [] (const wave<uint64_t>& w) {
         DEBUG_VALUE_OF(w.progress());
+    };
+
+    wp.on_done += [this] (const wave<uint64_t>& w) {
+        std::vector<int> res;
+        //copy_as_tiles(w._coeff.begin(), w._coeff.end(), std::back_inserter(res));
+        std::transform(
+            w._coeff.begin(), 
+            w._coeff.end(), 
+            std::back_inserter(res), 
+            [this] (uint64_t i) { 
+                return _ts.tile(indexof(i)); 
+            } 
+        );
+        this->on_done(res);
     };
 
     std::vector<int> res;

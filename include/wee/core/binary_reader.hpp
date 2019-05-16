@@ -42,9 +42,9 @@ namespace wee {
         }
 
         template <typename T>
-        T read_object() {
+        T read_object(size_t n=1) {
             T res = {};
-            _is.read(reinterpret_cast<char*>(&res), sizeof(T));
+            _is.read(reinterpret_cast<char*>(&res), n * sizeof(T));
             return res;
         }
        
@@ -55,6 +55,13 @@ namespace wee {
         binary_reader& ignore(std::streamsize n = 1) {
             _is.ignore(n);
             return *this;
+        }
+        std::streampos tell() {
+            return _is.tellg();
+        }
+
+        void seek(std::streamoff off, std::ios_base::seekdir way) {
+            _is.seekg(off, way);
         }
     };
 }

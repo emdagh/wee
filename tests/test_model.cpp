@@ -114,7 +114,66 @@ struct input : wee::singleton<input> {
     };
 };
 
+void demo1() {
+    /**
+     * this demonstrates the most basic of outputs: the console.
+     */
 
+    std::unordered_map<int, const char*> tile_colors = {
+        { 110, GREEN },
+        { 111, YELLOW },
+        { 112, BLUE }
+    };
+
+    std::unordered_map<int, char> tiles = {
+        { 110, '#' },
+        { 111, '.' },
+        { 112, '~' }
+    };
+
+    std::vector<int> example = {
+        110, 110, 110, 110,
+        110, 110, 110, 110,
+        110, 110, 110, 110,
+        110, 111, 111, 110,
+        111, 112, 112, 111,
+        112, 112, 112, 112,
+        112, 112, 112, 112
+    };
+
+    std::vector<int> res;
+
+    auto ts = nami::tileset::from_example(&example[0], example.size());
+    auto test = nami::basic_model(ts, 2);
+
+    auto copy_coeff = [&res] (const std::vector<int>& w) {
+        //DEBUG_VALUE_OF(w);
+        res = w;
+    };
+
+    test.on_update += copy_coeff;
+    test.on_done   += copy_coeff;
+    //test.weights_from_example(&example[0], example.size());
+    test.add_example(&example[0], { 7, 4 });
+    static const int OUT_W =114;
+    static const int OUT_H =13;
+    test.solve_for({OUT_H, OUT_W});
+
+
+    for(int y=0; y < OUT_H; y++) {
+        for(int x=0; x < OUT_W; x++) {
+            auto t = res[x + y * OUT_W];
+            std::cout << tile_colors[t] << tiles[t]; 
+        }
+        std::cout << std::endl;
+    }
+
+}
+
+#include "vox.hpp"
+void demo2() {
+
+}
 
 struct game : public applet {
     model* _model;
@@ -129,28 +188,7 @@ struct game : public applet {
 
     int load_content() {
 
-        std::unordered_map<int, char> tiles = {
-            { 110, '#' },
-            { 111, '.' },
-            { 112, '~' }
-        };
-
-        std::vector<int> example = {
-            110, 110, 110, 110,
-            110, 110, 110, 110,
-            110, 110, 110, 110,
-            110, 111, 111, 110,
-            111, 112, 112, 111,
-            112, 112, 112, 112,
-            112, 112, 112, 112
-        };
-
-        auto ts = nami::tileset::from_example(&example[0], example.size());
-        auto test = nami::basic_model(ts, 2);
-        //test.weights_from_example(&example[0], example.size());
-        test.add_example(&example[0], { 7, 4 });
-        test.solve_for({4, 4});
-
+        demo1();
         exit(0);
 
         std::vector<uint16_t> voxels;

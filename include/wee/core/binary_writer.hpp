@@ -11,6 +11,15 @@ namespace wee {
             
         }
 
+        std::streampos tell() {
+            return _os.tellp();
+
+        }
+
+        void seek(std::streamoff off, std::ios_base::seekdir way) {
+            _os.seekp(off, way);
+        }
+
         void write_7bit_encoded_int(int32_t i) {
             using unsigned_type = typename std::make_unsigned<int32_t>::type;
             unsigned_type num = static_cast<unsigned_type>(i);
