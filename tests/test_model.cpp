@@ -146,10 +146,11 @@ struct game : public applet {
         };
 
         auto ts = nami::tileset::from_example(&example[0], example.size());
-        auto test = nami::basic_model(ts);
+        auto test = nami::basic_model(ts, 2);
         //test.weights_from_example(&example[0], example.size());
-        test.add_example(&example[0], { 3, 3 }); // {7, 4 });
-        test.solve_for({80, 80});
+        test.add_example(&example[0], { 7, 4 });
+        test.solve_for({4, 4});
+
         exit(0);
 
         std::vector<uint16_t> voxels;

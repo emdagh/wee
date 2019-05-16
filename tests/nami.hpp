@@ -4,6 +4,7 @@
 #include <core/ndarray.hpp>
 #include <core/range.hpp>
 #include <core/bits.hpp>
+#include <core/delegate.hpp>
 
 namespace nami {
 
@@ -23,6 +24,11 @@ template <typename T>
 float entropyof(const T& t) {
     return 1.0f - 1.0f / static_cast<float>(popcount(t));
 }
+    template <typename S>
+    size_t array_product(const std::valarray<S>& a) {
+        return std::accumulate(std::begin(a), std::end(a), 1,
+                               std::multiplies<int>());
+    }
 
 struct tileset {
 
@@ -71,8 +77,8 @@ struct tileset {
 
     static tileset from_example(const tile_type* data, size_t len) {
         std::vector<tile_type> t(data, data + len);
-        std::sort(t.begin(), t.end());
-        t.erase(std::unique(t.begin(), t.end()), t.end());
+        //std::sort(t.begin(), t.end());
+        //t.erase(std::unique(t.begin(), t.end()), t.end());
         tileset res;
         for(const auto& it: t) {
             res.push(it);
@@ -87,12 +93,17 @@ struct topology {
     using directions = std::valarray<int>;
     shape _shape;
     std::vector<bool> _periodic;
-    directions _axis;
+    /*
+     * TODO: poorly named. This member holds both directions of the axes
+     */
+    directions _neighbor;
+
+    topology() {}
 
     topology(const shape& s, bool isPeriodic = false) 
         : _shape(s)
     {
-        _axis = topology::build_directions(num_dimensions());
+        _neighbor = topology::build_directions(num_dimensions());
     }
 
 
@@ -142,7 +153,7 @@ struct topology {
     size_t num_neighbors() const { return num_dimensions() << 1; }
 
     directions neighbor(size_t i) const {
-        return _axis[std::slice(i * num_dimensions(), num_dimensions(), 1)];
+        return _neighbor[std::slice(i * num_dimensions(), num_dimensions(), 1)];
     }
 };
 
@@ -151,19 +162,27 @@ struct wave {
     std::vector<T> _coeff;
     T _blacklist;
 
-    wave(size_t len) {
-        _coeff.resize(len);
+
+    float progress() const {
+        int num_collapsed =
+            std::count_if(_coeff.begin(), _coeff.end(),
+                          [](const T& i) { return popcount(i) == 1; });
+        return static_cast<float>(num_collapsed) / _coeff.size();
+    }
+
+    wave(size_t len, const T& domain) {
+        _coeff.resize(len, domain); 
         _blacklist = 0;
     }
 
-    bool collapsed_at(size_t i) const {
+    inline bool collapsed_at(size_t i) const {
         return popcount(_coeff[i]) == 1;
     }
 
     bool did_collapse() const {
         for(auto i : range(_coeff.size())) {
         //for(size_t i = 0; i < _coeff.size(); i++) {
-            if(collapsed_at(i)) {
+            if(!collapsed_at(i)) {
                 return false;
             }
         }
@@ -202,16 +221,25 @@ struct basic_model {
     typedef std::unordered_map<size_t, uint64_t> adjacency_list_type;
     adjacency_list_type _adjacency;
     tileset _ts;
+    std::unordered_map<int, int> _index;
+    topology _topo;
+    uint64_t _banned;
     
     //std::vector<float> _weights;
     
-    template <typename S>
-    size_t array_product(const std::valarray<S>& a) {
-        return std::accumulate(std::begin(a), std::end(a), 1,
-                               std::multiplies<int>());
-    }
 
-    basic_model(const tileset& ts);
+    basic_model(const tileset& ts, size_t);
+
+    /**
+     * return the effective domain of this model
+     */
+    uint64_t domain() const {
+        uint64_t res = 0;
+        for(auto i : range(_ts.size())) {
+            res |= bitmaskof<uint64_t>(i);
+        }
+        return res & ~_banned;
+    }
 
     template <typename OutputIt>
     void weights(OutputIt it, bool normalize = false) {
@@ -233,22 +261,43 @@ struct basic_model {
             const std::vector<int>& to, 
             const topology::directions& d);
     void add_adjacency(int a, int b, const topology::directions& d);
+    void add_adjacency(int a, int b, size_t i);
     //void weights_from_example(const int* data, size_t len);
     void add_example(const int* data, const topology::shape& shape);
     void solve_for(const topology::shape&);
 };
 
+/**
+ * TODO 2019-05-15: create adjacency list struct
+ */
+struct adjacency_list {
+    topology _topo;
+    std::unordered_map<int, int> _index;
+    
+    adjacency_list(size_t nd) {
+        _topo = topology(topology::shape(3, nd));
+        for(auto n: range(nd << 1)) {
+            _index.insert({_topo.index_of(_topo.neighbor(n) + 1), n});
+
+        }
+    }
+};
+
 template <typename T>
 struct wave_propagator {
-
+    
     wee::random _randgen;
-    wave<T>* _wave;
+    size_t _len;
 
-    wave_propagator(size_t len) {
-        _wave = new wave<T>(len);
+    typedef wee::event_handler<void(const wave<T>&)> cb_t;
+    cb_t on_progress;
+    cb_t on_done;
+
+    wave_propagator() { //size_t len) : _len(len) {
+        //_wave = new wave<T>(len);
     }
 
-    size_t min_entropy() {
+    size_t min_entropy(wave<T>* _wave) {
         size_t ret = 0;
         float min_h = std::numeric_limits<float>::infinity();
         for (size_t i : range(_wave->_coeff.size())) {
@@ -265,13 +314,13 @@ struct wave_propagator {
         return ret;
     }
 
-    bool collapse(size_t i, const std::vector<float>& weights) { 
+    bool collapse(wave<T>* _wave, size_t i, const std::vector<float>& weights) { 
         //auto i = at.x + at.y * _size.x;
         
         std::map<int, float> w; 
         float total_weight = 0.0f;
-        //auto avail_at = avail(_coefficients[i]);
-        for(auto t: _wave->avail_at(i)) {
+        auto avail = _wave->avail_at(i);//(_coefficients[i]);
+        for(auto t: avail) {
             w.insert(std::pair(t, weights[t]));
             total_weight += weights[t];
         }
@@ -289,7 +338,7 @@ struct wave_propagator {
         return false;
     }
 
-    void propagate(size_t at, const topology& topo, const basic_model::adjacency_list_type& adjacency) { 
+    void propagate(wave<T>* _wave, size_t at, const topology& topo, const basic_model::adjacency_list_type& adjacency) { 
         std::vector<size_t> open = { at };
 
         while(!open.empty()) {
@@ -315,7 +364,7 @@ struct wave_propagator {
                 //    continue;
                 
                 //size_t other_i = linearize(other_coords, _output_shape);
-                
+               
                 auto opts = 0;
                 for(auto ct: cur_avail) {
                     //opts |= _adjacency[ct * kNumNeighbors + i];
@@ -345,44 +394,60 @@ struct wave_propagator {
         }
     }
 
-    void step(const topology& topo, const auto& weights, const basic_model::adjacency_list_type& adjacency) {
-        size_t i = min_entropy();
-        if(collapse(i, weights)) {
-            propagate(i, topo, adjacency);
+    void step(wave<T>* _wave, const topology& topo, const auto& weights, const basic_model::adjacency_list_type& adjacency) {
+        size_t i = min_entropy(_wave);
+        if(collapse(_wave, i, weights)) {
+            propagate(_wave, i, topo, adjacency);
         }
+        on_progress(*_wave);
     }
 
+    
     void run(basic_model* m, const topology::shape& s) {
         topology topo {s};
         std::vector<float> weights;
         m->weights(std::back_inserter(weights));
-        //basic_model::adjacency_list_type& adjacency = m->_adjacency;
-        while(!_wave->did_collapse()) {
-            step(topo, weights, m->_adjacency);
+        wave<T> current(array_product(s), m->domain());
+
+        while(!current.did_collapse()) {
+            step(&current, topo, weights, m->_adjacency);
         }
+        on_done(current);
     }
 };
 
-basic_model::basic_model(const tileset& ts) 
+basic_model::basic_model(const tileset& ts, size_t n) 
     : _ts(ts)
+    , _banned(0)
 {
     if(_ts.size() == 0) {
         throw std::runtime_error("tileset is empty!");
     }
-    //_adjacency = decltype(_adjacency)(tileset.size() * kNumNeighbors, 0);
+    _topo = topology(topology::shape(3, n)); 
+    for(auto n: range(n << 1)) {
+        _index.insert({_topo.index_of(_topo.neighbor(n) + 1), n});
+    }
 }
 
 void basic_model::add_adjacency(const std::vector<int>& from, 
         const std::vector<int>& to, 
-        const topology::directions& d) {
+        const topology::directions& d) 
+{
+    assert(_topo.num_neighbors() == d.size());
     for(auto a : from) { 
         for(auto b : to) {
             add_adjacency(a, b, d);
         }
     }
 }
+void basic_model::add_adjacency(int a, int b, size_t i) {
+    //size_t num_neighbors = _index.size();
+    size_t y = _ts.tile_to_index(a);
+    _adjacency[y *_topo.num_neighbors() + i] |= bitmaskof<uint64_t>(_ts.tile_to_index(b)); 
+}
 
 void basic_model::add_adjacency(int a, int b, const topology::directions& d) {
+    assert(_topo.num_neighbors() == d.size());
     /**
      * goal: generalized lookup of cartesian coordinates to array subscript for direction only
      *
@@ -424,12 +489,13 @@ void basic_model::add_adjacency(int a, int b, const topology::directions& d) {
      * turns out that it isn't. 2D maps linearly, i.e.: with increments of 2, 
      * 3D has increments of 4, 6, 2, 1, 1, 2 and 6.
      *
+     * In the end, the option was chosen to create a mapping from the tilespace 
+     * indices to linear-sequential indices.
+     *
      */
     topology::shape s(3, d.size());
     auto dt = topology::directions(d + 1);
-    DEBUG_VALUE_OF((linearize(dt, s)));
-    
-    _adjacency[_ts.tile_to_index(a)] |= bitmaskof<uint64_t>(_ts.tile_to_index(b)); 
+    add_adjacency(a, b, _index[linearize(dt, s)]);
 }
 
 /*
@@ -443,35 +509,31 @@ void basic_model::weights_from_example(const int* data, size_t len) {
 
 
 void basic_model::add_example(const int* data, const topology::shape& shape) {
-    topology local(shape);
-
-    topology tilespace(topology::shape(3, shape.size()));
-    std::unordered_map<int, int> index;
-    for(auto n: range(shape.size() << 1)) {
-        index.insert({tilespace.index_of(tilespace.neighbor(n) + 1), n});
-
-    }
-    DEBUG_VALUE_OF(index);
-    exit(1);
-    
+    assert(_topo.num_dimensions() == shape.size());
+    topology local(shape);    
     size_t len = array_product(shape);
     for(auto i: range(len)) {
-        DEBUG_VALUE_OF(i);
         auto sample_coord = local.coordinates_of(i);//delinearize<int>(i, shape);
         for(auto n: range(local.num_neighbors())) {
             auto d = local.neighbor(n);
             size_t j;
-            //DEBUG_VALUE_OF(d);
             if(local.try_move(sample_coord, d, &j)) {
-                add_adjacency(data[i], data[j], d);
-                 //_adjacency[_ts.tile_to_index(data[i]) * local.num_neighbors() + n] |= 
-                 //    bitmaskof<uint64_t>(_ts.tile_to_index(data[j]));
+                add_adjacency(data[i], data[j], n);
             }
         }
     }
 }
+
+
 void basic_model::solve_for(const topology::shape& s) {
-    wave_propagator<uint64_t> wp(array_product(s));
+    assert(_topo.num_dimensions() == s.size());
+    wave_propagator<uint64_t> wp;
+
+    wp.on_progress += [] (const wave<uint64_t>& w) {
+        std::cout << w.progress() << std::endl;
+    };
+
+    std::vector<int> res;
     wp.run(this, s);//topology {s});
 }
 
