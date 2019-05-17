@@ -322,14 +322,6 @@ struct game : public applet {
             }
         };
 
-#if 0
-        std::vector<int> a(16, 1);
-        zero_vec(a, 4, 4, { 0, 0 }, { 0, 4 });
-        DEBUG_VALUE_OF(a);
-        exit(3);
-#endif   
-
-
         for(auto z: range(len.z)) {
             std::vector<std::tuple<int, coord, coord> > coords;
             auto slice = std::valarray<int>(data[std::gslice(z * nrows * ncols, { nrows, ncols }, { nrows, 1 })]);
@@ -344,23 +336,8 @@ struct game : public applet {
                     coords.push_back(std::make_tuple(area, coord_min, coord_max));
                 }
                 zero_vec(bin, nrows, ncols, coord_min, coord_max);
-                                
             }
-
-            //DEBUG_VALUE_OF(coord_min);
-            //DEBUG_VALUE_OF(coord_max);
-
-            for(auto y: range(nrows)) {
-                for(auto x: range(ncols)) {
-                    if(slice[x + y * ncols] == 0) std::cout << ' ';
-                    else std::cout << '#';
-                }
-                std::cout << '|';//std::endl;
-            }
-            std::cout << std::endl;
-
             DEBUG_VALUE_OF(coords);
-            //DEBUG_VALUE_OF(slice);
         }
     }
 
