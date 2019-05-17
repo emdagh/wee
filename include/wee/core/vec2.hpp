@@ -117,7 +117,7 @@ namespace wee {
 
     template <typename T>
     std::ostream& operator << (std::ostream& os, const basic_vec2<T>& vec) {
-        return os << vec.x << ", " << vec.y;
+        return os << "{" << vec.x << ", " << vec.y << "}";
     }
 
 

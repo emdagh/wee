@@ -69,6 +69,18 @@ struct unknown : chunk {
 struct vox {
     int version;
     std::vector<chunk*> chunks;
+
+    static size get_size(const vox& v) {
+        size res;
+        for(const auto* ptr: v.chunks) {
+            if(const auto* a = dynamic_cast<const size*>(ptr); a != nullptr) {
+                res.x = a->x;
+                res.y = a->y;
+                res.z = a->z;
+            }
+        }
+        return res;
+    }
 };
 
 void to_json(json& j, const voxel& v) {

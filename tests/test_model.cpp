@@ -23,26 +23,67 @@
 using namespace wee;
 using nlohmann::json;
 
-//template <size_t N>
-//nami::direction nami::topology::_directions = nami::topology::build_directions<N>();
 
-//nami::model<int, unsigned int, 2> ;
-//
-//
-/*
-nami::model::from_example({ 0, 0, 0, 
-                            0, 0, 0,
-                            0, 0, 0,
-                            0, 0, 0,
-                            0, 1, 0,                    
-                            0, 0, 0,
-                            0, 0, 0,
-                            0, 0, 0,
-                            0, 0, 0 },
-                            { 3, 3, 3 },
-                            { 6, 6, 6 }
-        );
-        */
+typedef vertex<
+    attributes::position,
+    attributes::normal,
+    attributes::texcoord
+> vertex_p3_n3_t2;
+
+typedef vertex<
+    attributes::position,
+    attributes::normal,
+    attributes::primary_color
+> vertex_voxel;
+
+/**
+ * TODO: this should be generalizable to higher dimensions. However, for now; we can keep it at 2-D
+ *
+ * Helper class to find the largest submatrix in a 2-D matrix that doesn't contain the value defined by `skipval`
+ * @param - input matrix
+ * @param - number of rows in input
+ * @param - number of columns in input
+ * @param - value the submatrix is not allowed to contain
+ * @param_out - area of maximum submatrix
+ * @param_out - top-left coordinate of submatrix
+ * @param_out - bottom-right coordinate of submatrix
+ */
+typedef wee::basic_vec2<int> coord;
+template <typename T>
+void max_submatrix(const std::vector<T>& a, int nrows, int ncols, const T& skipval, int* d_max_area, coord* d_min, coord* d_max) {
+    std::vector<T> w(a.size(), 0);
+    std::vector<T> h(a.size(), 0);
+    auto res = std::make_tuple(0, std::array<coord, 2> {}); 
+
+    for(auto r: wee::range(nrows)) {
+        for(auto c: wee::range(ncols)) {
+            auto i = c + r * ncols;
+            auto j = (c + (r-1) * ncols);
+            auto k = ((c-1) + r * ncols);
+            if(a[i] == skipval) continue;
+            if(r == 0)          h[i] = 1;
+            else                h[i] = h[j] + 1; // increment
+            if(c == 0)          w[i] = 1;
+            else                w[i] = w[k] + 1; // increment
+            auto minw = w[i];
+            for(auto dh: wee::range(h[i])) {
+                auto m = c + (r-dh) * ncols;
+                minw = std::min(minw, w[m]);
+                auto area = (dh + 1) * minw;
+
+                auto& [max_area, coords] = res; // LEARNING MOMENT: structured binding on tuples!
+                if(area > max_area) {
+                    max_area = area;
+                    coords = std::array<coord, 2> { r-dh, c-minw+1, r, c };
+                }
+            }
+        }
+    }
+    const auto& [max_area, coords] = res;
+    if(d_max_area) *d_max_area = max_area;
+    if(d_min) *d_min = coords[0];
+    if(d_max) *d_max = coords[1];
+}
 
 struct aabb_renderer {
     vertex_buffer* _vb = nullptr;
@@ -170,6 +211,9 @@ void demo1() {
 }
 
 #include "vox.hpp"
+size_t index_of_voxel(const vox::voxel& v, const std::array<int, 3>& dim) {
+    return v.z + dim[2] * (v.y + dim[1] * v.x); // row major linearize, just like the wee::linearize for ndarrays
+}
 std::vector<int> demo2() {
     auto ifs = wee::open_ifstream("assets/8x8x8.vox");
     if(!ifs.is_open()) {
@@ -178,9 +222,6 @@ std::vector<int> demo2() {
     binary_reader rd(ifs);
     [[maybe_unused]] vox::vox* v = vox::vox_reader::read(rd);
 
-    auto index_of_voxel = [] (const vox::voxel& v, const std::array<int, 3>& dim) {
-        return v.z + dim[2] * (v.y + dim[1] * v.x); // row major linearize, just like the wee::linearize for ndarrays
-    };
 
     int w, h, d;
 
@@ -221,10 +262,6 @@ std::vector<int> demo2() {
     return res;
 }
 
-void voxel_to_mesh(vox::vox* data) {
-
-
-}
 
 struct game : public applet {
     model* _model;
@@ -237,8 +274,123 @@ struct game : public applet {
     std::unordered_map<std::string, shader_program*> _shaders;
     std::vector<model*> _models;
     std::vector<int> _voxels;
+        
+
+    void vox_to_mesh(const vox::vox& v) {
+        /**
+         * first, convert all chunks to a structured 3-D array;
+         */
+        vox::size len = vox::vox::get_size(v);
+        std::valarray<int> data(0, len.z * len.y * len.x);
+        DEBUG_VALUE_OF(data);
+        for(const auto* ptr: v.chunks) {
+            if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
+                for(const auto& v: a->voxels) {
+                    data[index_of_voxel(v, {len.x, len.y, len.z})] = v.i;
+                }
+            }
+        }
+
+        using wee::range;
+        size_t nrows = len.y;
+        size_t ncols = len.x;
+
+
+#if 0
+        std::iota(std::begin(data), std::end(data), 0);
+        for(size_t i: range(8)) {
+            auto slice = std::valarray<int>(data[std::gslice(i * 64, { 8, 8 }, { 8, 1 })]);
+            DEBUG_VALUE_OF(slice);
+        }
+        exit(2);
+#endif
+        //template <typename T>
+
+        auto zero_vec = [] (std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
+
+            int h = b.x - a.x + 1; // x = row
+            int w = b.y - a.y + 1;
+
+            for(int r: range(h)) {
+                for(int c: range(w)) {
+                    int row = r + a.x;
+                    int col = c + a.y;
+
+                    int i = col + row * ncols;
+                    d[i] = 0;
+                }
+            }
+        };
+
+#if 0
+        std::vector<int> a(16, 1);
+        zero_vec(a, 4, 4, { 0, 0 }, { 0, 4 });
+        DEBUG_VALUE_OF(a);
+        exit(3);
+#endif   
+
+
+        for(auto z: range(len.z)) {
+            std::vector<std::tuple<int, coord, coord> > coords;
+            auto slice = std::valarray<int>(data[std::gslice(z * nrows * ncols, { nrows, ncols }, { nrows, 1 })]);
+            std::vector<int> bin;
+            std::transform(std::begin(slice), std::end(slice), std::back_inserter(bin), [] (int x) { return x > 0 ? 1 : 0; });
+
+            while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
+                int area;
+                coord coord_min, coord_max;
+                max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
+                if(area > 1) {
+                    coords.push_back(std::make_tuple(area, coord_min, coord_max));
+                }
+                zero_vec(bin, nrows, ncols, coord_min, coord_max);
+                                
+            }
+
+            //DEBUG_VALUE_OF(coord_min);
+            //DEBUG_VALUE_OF(coord_max);
+
+            for(auto y: range(nrows)) {
+                for(auto x: range(ncols)) {
+                    if(slice[x + y * ncols] == 0) std::cout << ' ';
+                    else std::cout << '#';
+                }
+                std::cout << '|';//std::endl;
+            }
+            std::cout << std::endl;
+
+            DEBUG_VALUE_OF(coords);
+            //DEBUG_VALUE_OF(slice);
+        }
+    }
 
     int load_content() {
+
+        auto ifs = wee::open_ifstream("assets/8x8x8.vox");
+        if(!ifs.is_open()) {
+            throw file_not_found("file not found");
+        }
+        binary_reader rd(ifs);
+        vox_to_mesh(*vox::vox_reader::read(rd));
+        exit(1);
+
+        std::vector<int> a = {
+            0, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 1,
+            0, 0, 0, 0, 0, 0,
+            1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 1,
+            0, 0, 1, 0, 0, 0,
+        };
+
+        coord min_coord, max_coord;
+
+        max_submatrix(a, 6, 6, 1, NULL, &min_coord, &max_coord);
+        DEBUG_VALUE_OF(min_coord);
+        DEBUG_VALUE_OF(max_coord);
+
+        exit(1);
+
         _voxels = demo2();
         //exit(1);
         try {
@@ -331,11 +483,6 @@ struct game : public applet {
         _program->set_uniform<uniform4x4f>("View", view);//worldViewProjection);
         _program->set_uniform<uniform4x4f>("Projection", projection);//worldViewProjection);
         //_program->set_uniform<uniform_sampler>("base_sampler", _sampler);
-        typedef vertex<
-            attributes::position,
-            attributes::normal,
-            attributes::texcoord
-        > vertex_p3_n3_t2;
 
         install_vertex_attributes<vertex_p3_n3_t2, vertex_attribute_installer>();
 #if 0 
