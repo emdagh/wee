@@ -294,7 +294,8 @@ struct game : public applet {
 
         int i = depth_along_axis; // << REMOVE:
         //for(auto i: range(dim[axis])) {
-            auto slice = std::valarray<int>(src[std::gslice(i * aux.sum(), aux, strides)]);
+        size_t offset = std::accumulate(std::begin(aux), std::end(aux), 1, std::multiplies<int>());
+            auto slice = std::valarray<int>(src[std::gslice(i * offset, aux, strides)]);
             return slice;
         //}
 
@@ -322,14 +323,23 @@ struct game : public applet {
 
 
 #if 1 
-        static const int DIM = 4;
-        data = std::valarray<int>(0, DIM * DIM * DIM);
+        data = std::valarray<int>(0, 2 * 3 * 4);
         std::iota(std::begin(data), std::end(data), 0);
-        for(size_t i: range(DIM)) {
-            auto slice = std::valarray<int>(data[std::gslice(i * DIM * DIM, { DIM, DIM }, { DIM, 1 })]);
-            DEBUG_VALUE_OF(slice);
-            DEBUG_VALUE_OF(lattice(data, { DIM, DIM, DIM }, 2, i));
-        }
+
+
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(0, { 2, 3 }, { 12, 4 })]));
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(1, { 2, 3 }, { 12, 4 })]));
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(2, { 2, 3 }, { 12, 4 })]));
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(3, { 2, 3 }, { 12, 4 })]));
+
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(0, { 2, 4 }, { 12, 1 })]));
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(4, { 2, 4 }, { 12, 1 })]));
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(8, { 2, 4 }, { 12, 1 })]));
+        
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(0, { 3, 4 }, { 4, 1 })]));
+        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(12, { 3, 4 }, { 4, 1 })]));
+
+
 
         exit(2);
 #endif
