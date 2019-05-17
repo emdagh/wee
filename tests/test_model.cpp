@@ -274,7 +274,32 @@ struct game : public applet {
     std::unordered_map<std::string, shader_program*> _shaders;
     std::vector<model*> _models;
     std::vector<int> _voxels;
+       
+    /**
+     * generic funcion to extract a 2-D plane from a 3-D array
+     */
+    std::valarray<int> lattice(const std::valarray<int>& src, const std::valarray<size_t>& dim, size_t axis, size_t depth_along_axis) {
+        using wee::range;
+        std::valarray<size_t> aux(dim.size() - 1);
+        std::valarray<size_t> strides(dim.size() - 1);
+
+        for(size_t i=0, j=0; i < dim.size(); i++) {
+            if(i != axis) {
+                aux[j] = dim[i];
+                strides[j] = dim[i];
+                j++;
+            }
+        }
+        strides[strides.size() - 1] = 1;
+
+        int i = depth_along_axis; // << REMOVE:
+        //for(auto i: range(dim[axis])) {
+            auto slice = std::valarray<int>(src[std::gslice(i * aux.sum(), aux, strides)]);
+            return slice;
+        //}
+
         
+    }
 
     void vox_to_mesh(const vox::vox& v) {
         /**
@@ -296,12 +321,16 @@ struct game : public applet {
         size_t ncols = len.x;
 
 
-#if 0
+#if 1 
+        static const int DIM = 4;
+        data = std::valarray<int>(0, DIM * DIM * DIM);
         std::iota(std::begin(data), std::end(data), 0);
-        for(size_t i: range(8)) {
-            auto slice = std::valarray<int>(data[std::gslice(i * 64, { 8, 8 }, { 8, 1 })]);
+        for(size_t i: range(DIM)) {
+            auto slice = std::valarray<int>(data[std::gslice(i * DIM * DIM, { DIM, DIM }, { DIM, 1 })]);
             DEBUG_VALUE_OF(slice);
+            DEBUG_VALUE_OF(lattice(data, { DIM, DIM, DIM }, 2, i));
         }
+
         exit(2);
 #endif
         //template <typename T>
