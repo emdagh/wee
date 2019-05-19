@@ -25,7 +25,7 @@ float entropyof(const T& t) {
     return 1.0f - 1.0f / static_cast<float>(popcount(t));
 }
     template <typename S>
-    size_t array_product(const std::valarray<S>& a) {
+    size_t array_product(const S& a) {
         return std::accumulate(std::begin(a), std::end(a), 1,
                                std::multiplies<int>());
     }

@@ -13,40 +13,41 @@ namespace wee {
     };
 
     template <typename T>
-    class range_class {
+    class range_impl {
         T _begin, _end;
         public:
-        class iterator : input_iterator<T>::type {
-            //friend class range_class;
+        class iterator : public input_iterator<T>::type { // < an example why `public` can be important....
+            //friend class range_impl;
             T i_;
             public:
+
             iterator(T i) : i_ (i) { }   	
             T operator *() const { return i_; }
             const iterator &operator ++() { ++i_; return *this; }
+            T operator - (const iterator& rhs) {
+                return i_ - rhs.i_;
+            }
             iterator operator ++(int) { iterator copy(*this); ++i_; return copy; }
 
             bool operator ==(const iterator &other) const { return i_ == other.i_; }
             bool operator !=(const iterator &other) const { return i_ != other.i_; }
         };
 
-
-
-        range_class(T a, T b) : _begin(a),_end(b) {}
-
+        range_impl(T a, T b) : _begin(a),_end(b) {}
         iterator begin() const { return iterator(_begin); }
         iterator end() const { return iterator(_end); }
+
     };
 
     template <typename T>
-    range_class<T> range(T a, T b) {
-        return range_class<T>(a, b);
+    range_impl<T> range(T a, T b) {
+        return range_impl<T>(a, b);
     }
 
 
 
-
     template <typename T>
-    range_class<T> range(T a) {
-        return range_class<T>(static_cast<T>(0), a);
+    range_impl<T> range(T a) {
+        return range_impl<T>(static_cast<T>(0), a);
     }
 }

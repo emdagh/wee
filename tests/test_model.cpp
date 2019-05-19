@@ -262,6 +262,7 @@ std::vector<int> demo2() {
     return res;
 }
 
+#include "ndview.hpp"
 
 struct game : public applet {
     model* _model;
@@ -275,40 +276,13 @@ struct game : public applet {
     std::vector<model*> _models;
     std::vector<int> _voxels;
        
-    /**
-     * generic funcion to extract a 2-D plane from a 3-D array
-     */
-    std::valarray<int> lattice(const std::valarray<int>& src, const std::valarray<size_t>& dim, size_t axis, size_t depth_along_axis) {
-        using wee::range;
-        std::valarray<size_t> aux(dim.size() - 1);
-        std::valarray<size_t> strides(dim.size() - 1);
-
-        for(size_t i=0, j=0; i < dim.size(); i++) {
-            if(i != axis) {
-                aux[j] = dim[i];
-                strides[j] = dim[i];
-                j++;
-            }
-        }
-        strides[strides.size() - 1] = 1;
-
-        int i = depth_along_axis; // << REMOVE:
-        //for(auto i: range(dim[axis])) {
-        size_t offset = std::accumulate(std::begin(aux), std::end(aux), 1, std::multiplies<int>());
-            auto slice = std::valarray<int>(src[std::gslice(i * offset, aux, strides)]);
-            return slice;
-        //}
-
-        
-    }
 
     void vox_to_mesh(const vox::vox& v) {
         /**
          * first, convert all chunks to a structured 3-D array;
          */
         vox::size len = vox::vox::get_size(v);
-        std::valarray<int> data(0, len.z * len.y * len.x);
-        DEBUG_VALUE_OF(data);
+        std::vector<int> data(len.z * len.y * len.x, 0);
         for(const auto* ptr: v.chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
                 for(const auto& v: a->voxels) {
@@ -316,33 +290,13 @@ struct game : public applet {
                 }
             }
         }
+        DEBUG_VALUE_OF(data);
 
         using wee::range;
         size_t nrows = len.y;
         size_t ncols = len.x;
 
 
-#if 1 
-        data = std::valarray<int>(0, 2 * 3 * 4);
-        std::iota(std::begin(data), std::end(data), 0);
-
-
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(0, { 2, 3 }, { 12, 4 })]));
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(1, { 2, 3 }, { 12, 4 })]));
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(2, { 2, 3 }, { 12, 4 })]));
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(3, { 2, 3 }, { 12, 4 })]));
-
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(0, { 2, 4 }, { 12, 1 })]));
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(4, { 2, 4 }, { 12, 1 })]));
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(8, { 2, 4 }, { 12, 1 })]));
-        
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(0, { 3, 4 }, { 4, 1 })]));
-        DEBUG_VALUE_OF(std::valarray<int>(data[std::gslice(12, { 3, 4 }, { 4, 1 })]));
-
-
-
-        exit(2);
-#endif
         //template <typename T>
 
         auto zero_vec = [] (std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
@@ -361,6 +315,32 @@ struct game : public applet {
             }
         };
 
+        typedef ndview<std::vector<int>, 3> ndview3i;
+        ndview3i view(data, { 8, 8, 8 });
+        DEBUG_VALUE_OF(view);
+
+        for(auto dim: range(3)) {
+            for(auto depth: range(view.shape()[dim])) {
+                std::vector<std::tuple<int, coord, coord> > coords;
+                std::vector<int> plane, bin;
+                view.slice(dim, depth, std::back_inserter(plane));
+
+                std::transform(std::begin(plane), std::end(plane), std::back_inserter(bin), [] (int x) { return x > 0 ? 1 : 0; });
+                DEBUG_VALUE_OF(bin);
+
+                while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
+                    int area;
+                    coord coord_min, coord_max;
+                    max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
+                    if(area > 1) {
+                        coords.push_back(std::make_tuple(area, coord_min, coord_max));
+                    }
+                    zero_vec(bin, nrows, ncols, coord_min, coord_max);
+                }
+            }
+
+        }
+        /**
         for(auto z: range(len.z)) {
             std::vector<std::tuple<int, coord, coord> > coords;
             auto slice = std::valarray<int>(data[std::gslice(z * nrows * ncols, { nrows, ncols }, { nrows, 1 })]);
@@ -378,6 +358,7 @@ struct game : public applet {
             }
             DEBUG_VALUE_OF(coords);
         }
+        */
     }
 
     int load_content() {
