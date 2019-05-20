@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bitset>
+#include <array>
 
 namespace wee {
     template <typename T>
@@ -44,6 +45,26 @@ namespace wee {
     constexpr int popcount<std::bitset<64>>(const std::bitset<64>& b) {
         return b.count();
     }*/
+
+    using byte = int8_t;
+
+    template <typename T>
+    std::array<byte, sizeof(T)> to_bytes(const T& t) {
+        std::array<byte, sizeof(T)> res;
+        const byte* first = reinterpret_cast<const int8_t*>(std::addressof(t));
+        const byte* last  = first + sizeof(T);
+        std::copy(first, last, res.begin());
+        return res;
+    }
+
+    template< typename T >
+    T& from_bytes( const std::array< byte, sizeof(T) >& bytes, T& object ) {
+        // http://en.cppreference.com/w/cpp/types/is_trivially_copyable
+        static_assert( std::is_trivially_copyable<T>::value, "not a TriviallyCopyable type" ) ;
+        byte* begin_object = reinterpret_cast< byte* >( std::addressof(object) ) ;
+        std::copy( std::begin(bytes), std::end(bytes), begin_object ) ;
+        return object ;
+    }
 }
 
 

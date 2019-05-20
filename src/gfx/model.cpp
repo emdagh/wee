@@ -10,7 +10,7 @@ void model::draw(graphics_device* dev) {
     for(const auto& mesh: _meshes) {
         //for(const auto& p: mesh._parts) {
 
-            dev->draw_indexed_primitives<primitive_type::kLineList, index_type::kUnsignedInt>(
+            dev->draw_indexed_primitives<primitive_type::line_list, index_type::unsigned_int>(
                 mesh.base_vertex, 
                 mesh.base_index, 
                 mesh.num_indices, 

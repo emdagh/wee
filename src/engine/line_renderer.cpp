@@ -21,7 +21,7 @@ void line_renderer::draw(graphics_device* dev) {
         _valid = true;
     }
     install_vertex_attributes<line_vertex, vertex_attribute_installer>();
-    dev->draw_primitives<primitive_type::kLineList>(0, _size, 1); 
+    dev->draw_primitives<primitive_type::line_list>(0, _size, 1); 
 }
 
 void line_renderer::resize(size_t) {

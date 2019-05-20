@@ -132,7 +132,7 @@ struct aabb_renderer {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ib->_handle);
         _vb->sputn(reinterpret_cast<char*>(&corners[0]), 8 * sizeof(vec3));
         install_vertex_attributes<vertex_p3, vertex_attribute_installer>();
-        draw_indexed_primitives<primitive_type::kLineList, index_type::kUnsignedInt>(kNumElements, 0);
+        draw_indexed_primitives<primitive_type::line_list, index_type::unsigned_int>(kNumElements, 0);
 
 		//glDrawElements(GL_POINTS, kNumElements, GL_UNSIGNED_INT, NULL);
 
@@ -547,7 +547,7 @@ struct game : public applet {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _model->_indices->_handle);
         install_vertex_attributes<vertex_p3_n3_t2, vertex_attribute_installer>();
         for(const auto& mesh: _model->_meshes) {
-            draw_indexed_primitives<primitive_type::kTriangles, index_type::kUnsignedInt>(mesh.num_indices, mesh.base_vertex);
+            draw_indexed_primitives<primitive_type::triangles, index_type::unsigned_int>(mesh.num_indices, mesh.base_vertex);
         }
         glBindBuffer(GL_ARRAY_BUFFER, prev);
 

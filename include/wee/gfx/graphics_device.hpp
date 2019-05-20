@@ -7,6 +7,7 @@
 #include <gfx/index_buffer.hpp>
 #include <gfx/vertex_declaration.hpp>
 #include <gfx/SDL_ColorEXT.hpp>
+#include <gfx/draw.hpp>
 
 #include <core/enum_cast.hpp>
 #include <core/range.hpp>
@@ -15,29 +16,31 @@
 
 //struct SDL_Renderer;
 
-#define DECLARE_PRIMITIVE(a, b) \
+/*#define DECLARE_PRIMITIVE(a, b) \
     template <> \
     struct glGetPrimitiveType<primitive_type::a> { \
         static const GLenum type = b;\
     }
 
-namespace wee {
+    */
 
+namespace wee {
+    /*
     template <primitive_type T>
     struct glGetPrimitiveType {
         static const GLenum type = GL_NONE;
     };
 
-    DECLARE_PRIMITIVE(kLineList,    GL_LINES);
-    DECLARE_PRIMITIVE(kLineStrip,   GL_LINE_STRIP);
-    DECLARE_PRIMITIVE(kLineLoop,    GL_LINE_LOOP);
-    DECLARE_PRIMITIVE(kPoints,      GL_POINTS);
-    DECLARE_PRIMITIVE(kTriangles,   GL_TRIANGLES);
-    DECLARE_PRIMITIVE(kTriangleFan, GL_TRIANGLE_FAN);
-    DECLARE_PRIMITIVE(kTriangleStrip, GL_TRIANGLE_STRIP);
-    DECLARE_PRIMITIVE(kQuads,       GL_QUADS);
-    DECLARE_PRIMITIVE(kQuadStrip,   GL_QUAD_STRIP);
-
+    DECLARE_PRIMITIVE(line_list,    GL_LINES);
+    DECLARE_PRIMITIVE(line_strip,   GL_LINE_STRIP);
+    DECLARE_PRIMITIVE(line_loop,    GL_LINE_LOOP);
+    DECLARE_PRIMITIVE(points,      GL_POINTS);
+    DECLARE_PRIMITIVE(triangles,   GL_TRIANGLES);
+    DECLARE_PRIMITIVE(triangle_fan, GL_TRIANGLE_FAN);
+    DECLARE_PRIMITIVE(triangle_strip, GL_TRIANGLE_STRIP);
+    DECLARE_PRIMITIVE(quads,       GL_QUADS);
+    DECLARE_PRIMITIVE(quad_strip,   GL_QUAD_STRIP);
+    */
     /*template <>
     struct glGetPrimitiveType<primitive_type::kTriangles> {
         static const GLenum type =  GL_TRIANGLES;
@@ -47,24 +50,24 @@ namespace wee {
         static const GLenum type =  GL_LINE_STRIP;
     };*/
 
-
+    /*
     template <index_type T>
     struct glGetIndexType {
         static const GLenum type =  GL_NONE;
     };
 
     template <>
-    struct glGetIndexType<index_type::kUnsignedByte> {
+    struct glGetIndexType<index_type::unsigned_byte> {
         static const GLenum type = GL_UNSIGNED_BYTE;
     };
     template <>
-    struct glGetIndexType<index_type::kUnsignedShort> {
+    struct glGetIndexType<index_type::unsigned_short> {
         static const GLenum type = GL_UNSIGNED_SHORT;
     };
     template <>
-    struct glGetIndexType<index_type::kUnsignedInt> {
+    struct glGetIndexType<index_type::unsigned_int> {
         static const GLenum type = GL_UNSIGNED_INT;
-    };
+    };*/
 
     
     enum struct clear_options : uint8_t {

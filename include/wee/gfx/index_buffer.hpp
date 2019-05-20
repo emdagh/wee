@@ -5,9 +5,9 @@
 namespace wee {
 
     enum struct index_type: uint8_t {
-        kUnsignedByte,
-        kUnsignedShort,
-        kUnsignedInt
+        unsigned_byte,
+        unsigned_short,
+        unsigned_int
     };
 
     template <typename T>

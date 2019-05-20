@@ -1,7 +1,7 @@
 #include <gfx/shader.hpp>
 #include <gfx/vertex_buffer.hpp>
 #include <gfx/vertex_declaration.hpp>
-
+#include <core/bits.hpp>
 #include <gfx/texture_sampler.hpp>
 #include <base/application.hpp>
 #include <base/applet.hpp>
@@ -51,9 +51,7 @@ typedef vertex<
     attributes::texcoord
 > sprite_vertex;
 
-std::ostream& operator << (std::ostream& os, const sprite_vertex& s) {
-    return os << s._position.x << s._position.y << s._position.z << s._texcoord.x << s._texcoord.y;
-}
+
 
 struct game : public applet{
     shader_program* _program;
@@ -62,7 +60,7 @@ struct game : public applet{
     GLuint _vb;
     texture_sampler _sampler;
     int load_content() {
-        REGISTER_UNIFORM_FACTORY(uniform_sampler, GL_SAMPLER_2D);
+        //REGISTER_UNIFORM_FACTORY(uniform_sampler, GL_SAMPLER_2D);
         std::ifstream ifs = open_ifstream("assets/shaders/default.glsl");
         std::string source((std::istreambuf_iterator<char>(ifs)),
                             std::istreambuf_iterator<char>());
@@ -82,8 +80,9 @@ struct game : public applet{
         
         {
             std::ostream os(_buffer);
-            os.write(reinterpret_cast<char*>(&_vertices[0]), sizeof(sprite_vertex) * 4);
-            //_buffer->sputn(reinterpret_cast<char*>(&_vertices[0]), sizeof(sprite_vertex) * 4);
+            //os.write(reinterpret_cast<char*>(&_vertices[0]), sizeof(sprite_vertex) * 4);
+            auto bytes = to_bytes(_vertices);
+            std::copy(bytes.begin(), bytes.end(), std::ostream_iterator<int8_t>(os));
         }
 
         {
