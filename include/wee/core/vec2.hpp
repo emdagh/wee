@@ -7,7 +7,12 @@
 namespace wee {
     template <typename T>
     struct basic_vec2 {
-        T x, y;
+        union {
+            struct {
+                T x, y;
+            };
+            T cell[2];
+        };
 
         basic_vec2 operator - () const {
             basic_vec2 copy(*this);

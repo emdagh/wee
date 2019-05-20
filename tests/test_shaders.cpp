@@ -51,6 +51,9 @@ typedef vertex<
     attributes::texcoord
 > sprite_vertex;
 
+std::ostream& operator << (std::ostream& os, const sprite_vertex& s) {
+    return os << s._position.x << s._position.y << s._position.z << s._texcoord.x << s._texcoord.y;
+}
 
 struct game : public applet{
     shader_program* _program;
@@ -79,8 +82,6 @@ struct game : public applet{
         
         {
             std::ostream os(_buffer);
-
-            //vertex_stream vs(_buffer);
             os.write(reinterpret_cast<char*>(&_vertices[0]), sizeof(sprite_vertex) * 4);
             //_buffer->sputn(reinterpret_cast<char*>(&_vertices[0]), sizeof(sprite_vertex) * 4);
         }
@@ -100,6 +101,7 @@ struct game : public applet{
 
     int draw(graphics_device*) {
         mat4f worldViewProjection = mat4f::create_ortho_offcenter(0, 640, 0, 480, -1, 1);
+        glDisable(GL_CULL_FACE);
         
         glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);

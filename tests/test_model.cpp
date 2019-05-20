@@ -31,9 +31,9 @@ typedef vertex<
 > vertex_p3_n3_t2;
 
 typedef vertex<
-    attributes::position,
-    attributes::normal,
-    attributes::primary_color
+    attributes::position
+    //attributes::normal,
+    //attributes::primary_color
 > vertex_voxel;
 
 /**
@@ -275,9 +275,49 @@ struct game : public applet {
     std::unordered_map<std::string, shader_program*> _shaders;
     std::vector<model*> _models;
     std::vector<int> _voxels;
-       
+
+    void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad) {
+        /**
+         * dim=0 -> y/z plane (left to right) depth = x
+         * dim=1 -> x/y plane (back to front) depth = z
+         * dim=2 -> x/z plane (top to bottom) depth = y
+         */
+        static const int YZ = 0;
+        static const int XY = 1;
+        static const int XZ = 2;
+
+        float x0 = static_cast<float>(a.x) - 0.5f;
+        float x1 = static_cast<float>(b.x) + 0.5f;
+        float y0 = static_cast<float>(a.y) - 0.5f;
+        float y1 = static_cast<float>(b.y) + 0.5f;
+        float z  = static_cast<float>(depth);
+
+        switch(dim) {
+            case YZ:
+                quad[0] = {z, x0, y0};
+                quad[1] = {z, x1, y0};
+                quad[2] = {z, x1, y1};
+                quad[3] = {z, x0, y1};
+                break;
+            case XZ:
+                quad[0] = {x0, z, y0};
+                quad[1] = {x1, z, y0};
+                quad[2] = {x1, z, y1};
+                quad[3] = {x0, z, y1};
+                break;
+            case XY:
+                quad[0] = {x0, y0, z};
+                quad[1] = {x1, y0, z};
+                quad[2] = {x1, y1, z};
+                quad[3] = {x0, y1, z};
+                break;
+            default:
+                break;
+        }
+    }
 
     void vox_to_mesh(const vox::vox& v) {
+        typedef ndview<std::vector<int>, 3> ndview3i;
         /**
          * first, convert all chunks to a structured 3-D array;
          */
@@ -290,15 +330,9 @@ struct game : public applet {
                 }
             }
         }
-        DEBUG_VALUE_OF(data);
-
         using wee::range;
         size_t nrows = len.y;
         size_t ncols = len.x;
-
-
-        //template <typename T>
-
         auto zero_vec = [] (std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
 
             int h = b.x - a.x + 1; // x = row
@@ -315,53 +349,92 @@ struct game : public applet {
             }
         };
 
-        typedef ndview<std::vector<int>, 3> ndview3i;
-        ndview3i view(data, { 8, 8, 8 });
-        DEBUG_VALUE_OF(view);
-
+        ndview3i view(data, { len.x, len.y, len.z });// TODO: sanity check on magicavoxel coord system
+        std::map<int, std::vector<std::tuple<int, int, coord, coord> > > coords_info;
+        size_t num_vertices = 0;;
         for(auto dim: range(3)) {
             for(auto depth: range(view.shape()[dim])) {
-                std::vector<std::tuple<int, coord, coord> > coords;
-                std::vector<int> plane, bin;
+                std::vector<int> plane, bin, colors;
                 view.slice(dim, depth, std::back_inserter(plane));
+                
+                colors = plane;
+                std::sort(colors.begin(), colors.end());
+                auto last = std::unique(colors.begin(), colors.end());
+                colors.erase(last, colors.end());
 
-                std::transform(std::begin(plane), std::end(plane), std::back_inserter(bin), [] (int x) { return x > 0 ? 1 : 0; });
-                DEBUG_VALUE_OF(bin);
-
-                while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
-                    int area;
-                    coord coord_min, coord_max;
-                    max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
-                    if(area > 1) {
-                        coords.push_back(std::make_tuple(area, coord_min, coord_max));
+                for(int color : colors) {
+                    if(color == 0) 
+                        continue;
+                    std::vector<int> bin;
+                    std::transform(std::begin(plane), std::end(plane), std::back_inserter(bin), [&color] (int x) { return x == color ? 1 : 0; });
+                    while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
+                        int area;
+                        coord coord_min, coord_max;
+                        max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
+                        if(area > 1) {
+                            coords_info[color].push_back(std::make_tuple(dim, depth, coord_min, coord_max));
+                        }
+                        zero_vec(bin, nrows, ncols, coord_min, coord_max);
+                        num_vertices += 4;
                     }
-                    zero_vec(bin, nrows, ncols, coord_min, coord_max);
                 }
+            }
+        }
+        DEBUG_VALUE_OF(coords_info);
+        DEBUG_VALUE_OF(num_vertices);
+        vertex_buffer* vb = new vertex_buffer(sizeof(vertex_voxel) * num_vertices); 
+        std::vector<vertex_voxel> vertices;//(coords_info.size() * 4); 
+        vertices.resize(num_vertices);
+
+        DEBUG_VALUE_OF(num_vertices);
+        size_t i=0;
+        for(const auto& [color, coords] : coords_info) {
+            DEBUG_VALUE_OF(color);
+            for(const auto& coord: coords) {
+                DEBUG_VALUE_OF(coord);
+
+                std::array<vec3f, 4> quad;
+                calculate_coords(
+                    std::get<0>(coord), 
+                    std::get<1>(coord), 
+                    std::get<2>(coord),
+                    std::get<3>(coord),
+                    quad
+                );
+
+                vertices[i++]._position = quad[0];
+                vertices[i++]._position = quad[1];
+                vertices[i++]._position = quad[2];
+                vertices[i++]._position = quad[3];
+        
             }
 
         }
-        /**
-        for(auto z: range(len.z)) {
-            std::vector<std::tuple<int, coord, coord> > coords;
-            auto slice = std::valarray<int>(data[std::gslice(z * nrows * ncols, { nrows, ncols }, { nrows, 1 })]);
-            std::vector<int> bin;
-            std::transform(std::begin(slice), std::end(slice), std::back_inserter(bin), [] (int x) { return x > 0 ? 1 : 0; });
-
-            while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
-                int area;
-                coord coord_min, coord_max;
-                max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
-                if(area > 1) {
-                    coords.push_back(std::make_tuple(area, coord_min, coord_max));
-                }
-                zero_vec(bin, nrows, ncols, coord_min, coord_max);
-            }
-            DEBUG_VALUE_OF(coords);
-        }
-        */
+        std::ostream os(vb);
+        os.write(reinterpret_cast<char*>(&vertices[0]), sizeof(vertex_voxel) * vertices.size());
+        exit(-7);
     }
 
     int load_content() {
+#if 0
+        std::vector<int> test(4 * 3 * 2);
+        std::iota(test.begin(), test.end(), 0);
+        ndview<std::vector<int>, 3> view(test, { 4, 3, 2 });
+        for(int dim : range(3)) {
+            /**
+             * dim=0 -> y/z plane (left to right)
+             * dim=1 -> x/y plane (back to front)
+             * dim=2 -> x/z plane (top to bottom)
+             */
+            for(auto depth: range(view.shape()[dim])) {
+                std::vector<int> plane;
+                view.slice(dim, depth, std::back_inserter(plane));
+
+                DEBUG_VALUE_OF(plane);
+            }
+        }
+        exit(-6);
+#endif
 
         auto ifs = wee::open_ifstream("assets/8x8x8.vox");
         if(!ifs.is_open()) {
@@ -369,26 +442,8 @@ struct game : public applet {
         }
         binary_reader rd(ifs);
         vox_to_mesh(*vox::vox_reader::read(rd));
-        exit(1);
 
-        std::vector<int> a = {
-            0, 0, 0, 0, 1, 0,
-            0, 0, 1, 0, 0, 1,
-            0, 0, 0, 0, 0, 0,
-            1, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 1,
-            0, 0, 1, 0, 0, 0,
-        };
-
-        coord min_coord, max_coord;
-
-        max_submatrix(a, 6, 6, 1, NULL, &min_coord, &max_coord);
-        DEBUG_VALUE_OF(min_coord);
-        DEBUG_VALUE_OF(max_coord);
-
-        exit(1);
-
-        _voxels = demo2();
+        //_voxels = demo2();
         //exit(1);
         try {
             {

@@ -26,9 +26,15 @@ namespace {
         
         template <typename R, typename... Rs>
         ptrdiff_t constexpr compute_index(R first, Rs... rest) const {
+            /**
+             * drop outermost dimension on overflow
+             */
             if constexpr (sizeof...(Rs) + 1 > N) {
                 return compute_index(rest...);
             } 
+            /**
+             * append 0 index for missing outer dimensions
+             */
             else if constexpr (sizeof...(Rs) + 1 < N ) {
                 return compute_index(first, rest..., 0);
             } 
@@ -38,10 +44,6 @@ namespace {
                     static_cast<long>(rest)...
                 });
                 ptrdiff_t offset = std::inner_product(_strides.begin(), _strides.end(), idx.begin(), 0);
-                //ptrdiff_t offset = 0;
-                //for(auto i: range(N)) {
-                //    offset += _strides[i] * idx[i];
-                //}
                 return offset;
             }
         }
@@ -73,10 +75,10 @@ namespace {
             idx[d] = n;
             while(1) {
                 unary_op(idx);
-
                 size_t j;
                 for(j=0; j < N; j++) {
-                    if(j == d) continue;
+                    if(j == d) 
+                        continue;
                     auto i = j;//N - j - 1;
                     idx[i]++;
                     if(idx[i] < _shape[i]) 
