@@ -4,6 +4,7 @@
 #include <array>
 
 namespace wee {
+#if 1
     template <typename T>
     constexpr int ctz(const T& t) {
         throw not_implemented("unknown type for ctz");
@@ -39,7 +40,16 @@ namespace wee {
     constexpr int popcount<unsigned long long>(const unsigned long long& l) {
         return __builtin_popcountll(l);
     }
+#else
+    template <typename T>
+    constexpr int popcount(T x) {
+        int r = 0;
+        for(; x; x &= x-1)
+            ++r;
+        return r;
+}
 
+#endif
 
     /*template <>
     constexpr int popcount<std::bitset<64>>(const std::bitset<64>& b) {
