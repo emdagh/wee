@@ -290,13 +290,13 @@ struct game : public applet {
 
     void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad, float offset) {
         /**
-         * dim=0 -> y/z plane (left to right) depth = x
-         * dim=1 -> x/y plane (back to front) depth = z
-         * dim=2 -> x/z plane (top to bottom) depth = y
+         * dim=0 -> x/y plane (back to front) depth = z
+         * dim=1 -> x/z plane (top to bottom) depth = y
+         * dim=2 -> y/z plane (left to right) depth = x
          */
-        static const int YZ = 0;
-        static const int XY = 1;
-        static const int XZ = 2;
+        static const int XY = 0;
+        static const int XZ = 1;
+        static const int YZ = 2;
 
         float x0 = static_cast<float>(a.x) - 0.5f;
         float x1 = static_cast<float>(b.x) + 0.5f;
@@ -366,49 +366,55 @@ struct game : public applet {
             }
         };
 
-        ndview3i view(data, { len.x, len.y, len.z });// TODO: sanity check on magicavoxel coord system
+        ndview3i view(data, { len.z, len.y, len.x });// TODO: sanity check on magicavoxel coord system
         std::map<int, std::vector<std::tuple<int, int, coord, coord> > > coords_info;
         size_t num_vertices = 0;;
         for(auto dim: range(3)) {
             for(auto depth: range(view.shape()[dim])) {
-                std::vector<int> plane, bin, colors;
+                std::vector<int> plane, colors;
                 std::array<ptrdiff_t, 2> aux;
                 view.slice(dim, depth, aux, std::back_inserter(plane));
-                /**
-                 * TODO: get the rows, cols of the plane here.. They are unknown at this point and incorrect [rows,cols]
-                 * are causing a SIGSEGV here (best case; worst case: infinite loop...)
-                 *
-                 * This will, however, work for symmetric models. That's why the 8x8x8.vox works...
-                 */
-                exit(-8);
                 
                 colors = plane;
                 std::sort(colors.begin(), colors.end());
                 auto last = std::unique(colors.begin(), colors.end());
                 colors.erase(last, colors.end());
-
                 for(int color : colors) {
                     if(color == 0) 
                         continue;
                     std::vector<int> bin;
                     std::transform(std::begin(plane), std::end(plane), std::back_inserter(bin), [&color] (int x) { return x == color ? 1 : 0; });
-                    while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
+                    //DEBUG_VALUE_OF(bin);
+                    /*
+                    DEBUG_VALUE_OF(dim);
+                    DEBUG_VALUE_OF(depth);
+                    DEBUG_VALUE_OF(color);
+                    DEBUG_VALUE_OF(aux);
+                    for(auto row: range(aux[1])) {
+                        for(auto col: range(aux[0])) {
+                            if(bin[col + row * aux[0]]) std::cout<< "#"; else std::cout <<  " ";
+
+                        }
+                        std::cout << std::endl;
+                    }*/
+                    size_t is_empty = std::accumulate(bin.begin(), bin.end(), 0);
+                    while(is_empty != 0) {
                         int area;
                         coord coord_min, coord_max;
-                        //max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
-                        max_submatrix(bin, aux[0], aux[1], 0, &area, &coord_min, &coord_max);
-                        if(area > 1) {
+                        max_submatrix(bin, aux[1], aux[0], 0, &area, &coord_min, &coord_max);
+                        if(area >= 1) {
                             coords_info[color].push_back(std::make_tuple(dim, depth, coord_min, coord_max));
-                        num_vertices += 4;
+                            num_vertices += 4;
                         }
-                        zero_vec(bin, aux[0], aux[1], coord_min, coord_max);
+                        zero_vec(bin, aux[1], aux[0], coord_min, coord_max);
+                        is_empty = std::accumulate(bin.begin(), bin.end(), 0);
                     }
                 }
             }
         }
         num_vertices *= 2;
-        DEBUG_VALUE_OF(coords_info);
-        DEBUG_VALUE_OF(num_vertices);
+        //DEBUG_VALUE_OF(coords_info);
+        //DEBUG_VALUE_OF(num_vertices);
         std::vector<vertex_voxel> vertices;
         std::vector<uint32_t> indices(num_vertices * 6);
         vertices.resize(num_vertices);
@@ -426,7 +432,6 @@ struct game : public applet {
             [[maybe_unused]] unsigned int voxcolor = vox::default_palette[color];
 
             for(const auto& coord: coords) {
-                DEBUG_VALUE_OF(coord);
                 /**
                  * we should emit two primitives per plane: one for the front-face, and one for the
                  * back-face. If we don't do this, we'd have a mesh that is open on one side. 
@@ -459,16 +464,6 @@ struct game : public applet {
                 vertices[num_vertices++]._position = frontface_quad[2];
                 vertices[num_vertices++]._position = frontface_quad[3];
 
-                /**
-                 * here we index the quad as two triangles
-                 * 
-                 * 0-1
-                 * |/|
-                 * 2-3
-                 *
-                 * 0/2/1 1/2/3 (default front-face winding is ccw)
-                 *
-                 */
                 indices[num_indices++] = num_vertices - 8;
                 indices[num_indices++] = num_vertices - 7;
                 indices[num_indices++] = num_vertices - 6;
@@ -512,8 +507,9 @@ struct game : public applet {
              */
             for(auto depth: range(view.shape()[dim])) {
                 std::vector<int> plane;
-                view.slice(dim, depth, std::back_inserter(plane));
-
+                std::array<ptrdiff_t, 2> aux;
+                view.slice(dim, depth, aux, std::back_inserter(plane));
+                DEBUG_VALUE_OF(aux);
                 DEBUG_VALUE_OF(plane);
             }
         }
@@ -608,7 +604,7 @@ struct game : public applet {
         
             shader_program* _program = _shaders["@default_notex"];
         {
-            glPolygonMode( GL_BACK, GL_LINE );
+            //glPolygonMode( GL_BACK, GL_LINE );
             glUseProgram(_program->_handle);
             _program->set_uniform<uniform4x4f>("wvp", mat4::mul(world, mat4::mul(view, projection)));
             _renderer->draw(_model->_aabb);
