@@ -31,9 +31,9 @@ typedef vertex<
 > vertex_p3_n3_t2;
 
 typedef vertex<
-    attributes::position
-    //attributes::normal,
-    //attributes::primary_color
+    attributes::position,
+    attributes::normal,
+    attributes::primary_color
 > vertex_voxel;
 
 /**
@@ -421,6 +421,8 @@ struct game : public applet {
 
         [[maybe_unused]] model* m = new model();
 
+        const vox::rgba* palette = vox::vox::get_rgba(v);
+
         num_vertices = 0;//, num_indices = 0;
         size_t num_indices = 0;
         for(const auto& [color, coords] : coords_info) {
@@ -429,7 +431,6 @@ struct game : public applet {
             mesh->base_vertex = num_vertices;
             mesh->base_index  = num_indices; 
 
-            [[maybe_unused]] unsigned int voxcolor = vox::default_palette[color];
 
             for(const auto& coord: coords) {
                 /**
@@ -463,6 +464,31 @@ struct game : public applet {
                 vertices[num_vertices++]._position = frontface_quad[1];
                 vertices[num_vertices++]._position = frontface_quad[2];
                 vertices[num_vertices++]._position = frontface_quad[3];
+
+                vertices[num_vertices - 8]._color = palette->colors[color];
+                vertices[num_vertices - 7]._color = palette->colors[color];
+                vertices[num_vertices - 6]._color = palette->colors[color];
+                vertices[num_vertices - 5]._color = palette->colors[color];
+                vertices[num_vertices - 4]._color = palette->colors[color];
+                vertices[num_vertices - 3]._color = palette->colors[color];
+                vertices[num_vertices - 2]._color = palette->colors[color];
+                vertices[num_vertices - 1]._color = palette->colors[color];
+
+                vec3f normal = std::get<0>(coord) == 0 
+                    ? vec3f::right() 
+                    : std::get<0>(coord)== 1 
+                        ? vec3f::up() 
+                        : vec3f::forward();
+                
+                vertices[num_vertices - 8]._normal = normal;
+                vertices[num_vertices - 7]._normal = normal;
+                vertices[num_vertices - 6]._normal = normal;
+                vertices[num_vertices - 5]._normal = normal;
+                vertices[num_vertices - 4]._normal = normal;
+                vertices[num_vertices - 3]._normal = normal;
+                vertices[num_vertices - 2]._normal = normal;
+                vertices[num_vertices - 1]._normal = normal;
+
 
                 indices[num_indices++] = num_vertices - 8;
                 indices[num_indices++] = num_vertices - 7;
@@ -516,7 +542,7 @@ struct game : public applet {
         exit(-6);
 #endif
 
-        auto ifs = wee::open_ifstream("assets/exported.vox");
+        auto ifs = wee::open_ifstream("assets/monu10.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
@@ -567,6 +593,7 @@ struct game : public applet {
             _renderer = new aabb_renderer;
         } catch(const std::exception& e) {
             DEBUG_LOG(e.what());
+            exit(-1);
         }
         return 0;
     }
@@ -598,11 +625,11 @@ struct game : public applet {
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::CornflowerBlue, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(2.f), mat4::mul(mat4::create_rotation_y(_time), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_x(90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
-            shader_program* _program = _shaders["@default_notex"];
+            shader_program* _program = _shaders["@voxel_shader"];
         {
             //glPolygonMode( GL_BACK, GL_LINE );
             glUseProgram(_program->_handle);

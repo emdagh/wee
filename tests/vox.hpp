@@ -111,6 +111,16 @@ struct vox {
         return get_size(*this);
     }
 
+    static const rgba* get_rgba(const vox& v) {
+        for(const auto* ptr: v.chunks) {
+            if(const auto* a = dynamic_cast<const rgba*>(ptr); a != nullptr) {
+                //std::copy(&a->colors[0], &a->colors[255], &res.colors[0]);
+                return a;
+            }
+        }
+        return nullptr;
+    }
+
     static size get_size(const vox& v) {
         size res;
         for(const auto* ptr: v.chunks) {

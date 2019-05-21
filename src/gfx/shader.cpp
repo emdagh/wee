@@ -65,8 +65,9 @@ void shader_program::compile(const char* source) {
 }
 
 void shader_program::set_attribute_locations() {
-    for(auto i: range(static_cast<int>(vertex_stream::StreamIndexMax))) 
+    for(auto i: range(static_cast<int>(vertex_stream::StreamIndexMax)))  {
         glBindAttribLocation(_handle, i, vertex_stream_semantic[i]);
+    }
     link();
 }
 
