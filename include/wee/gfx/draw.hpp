@@ -34,6 +34,7 @@ namespace wee {
     OPENGL_DEFINE_PRIMITIVE(primitive_type::triangle_strip,  GL_TRIANGLE_STRIP);
     OPENGL_DEFINE_PRIMITIVE(primitive_type::triangle_fan,    GL_TRIANGLE_FAN);
     OPENGL_DEFINE_PRIMITIVE(primitive_type::triangles,      GL_TRIANGLES);
+    OPENGL_DEFINE_PRIMITIVE(primitive_type::quads,      GL_QUADS);
     //OPENGL_DEFINE_TYPE(primitive_type::k###, GL_LINE_STRIP_ADJACENCY);
     //OPENGL_DEFINE_TYPE(primitive_type::k###, GL_LINES_ADJACENCY);
     //OPENGL_DEFINE_TYPE(primitive_type::k###, GL_TRIANGLE_STRIP_ADJACENCY);

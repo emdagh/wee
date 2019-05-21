@@ -5,13 +5,12 @@ using namespace wee;
 
 shader_program::shader_program() {
     _handle = glCreateProgram();
-    _shader[static_cast<int>(kShaderType::VertexShader)] = glCreateShader(GL_VERTEX_SHADER);
-    _shader[static_cast<int>(kShaderType::PixelShader)]  = glCreateShader(GL_FRAGMENT_SHADER);
+    _shader[static_cast<int>(shader_type::vertex_shader)] = glCreateShader(GL_VERTEX_SHADER);
+    _shader[static_cast<int>(shader_type::pixel_shader)]  = glCreateShader(GL_FRAGMENT_SHADER);
 }
 
 
 void shader_program::cache_all_uniforms() {
-    DEBUG_LOG("caching uniforms...");
     GLint n = 0;
     glGetProgramiv(_handle, GL_ACTIVE_UNIFORMS, &n);
     for(auto it: range(n)) {
@@ -30,7 +29,6 @@ void shader_program::cache_all_uniforms() {
 }
 
 void shader_program::compile(const std::vector<const char*>& source, GLuint id) {
-    DEBUG_LOG("compiling shader...");
     glShaderSource(id, source.size(), &source[0], nullptr);
     glCompileShader(id);
 
@@ -54,29 +52,27 @@ void shader_program::compile(const char* source) {
             "#undef  FRAGMENT\n",
             "#define VERTEX 1\n",
             source
-            }, _shader[static_cast<int>(kShaderType::VertexShader)]);
+            }, _shader[static_cast<int>(shader_type::vertex_shader)]);
     compile({
             glsl_version,
             "#define FRAGMENT 1\n",
             "#undef  VERTEX\n",
             source
-            }, _shader[static_cast<int>(kShaderType::PixelShader)]);
+            }, _shader[static_cast<int>(shader_type::pixel_shader)]);
     set_attribute_locations();
     cache_all_uniforms();
 
 }
 
 void shader_program::set_attribute_locations() {
-    DEBUG_LOG("setting attribute locations");
-    for(auto i: range(static_cast<int>(kVertexStreamIndex::StreamIndexMax))) 
-        glBindAttribLocation(_handle, i, kVertexStreamSemantic[i]);
+    for(auto i: range(static_cast<int>(vertex_stream::StreamIndexMax))) 
+        glBindAttribLocation(_handle, i, vertex_stream_semantic[i]);
     link();
 }
 
 void shader_program::link() {
-    DEBUG_LOG("linking shader...");
 
-    for(auto i: range(static_cast<int>(kShaderType::MaxShaderType))) 
+    for(auto i: range(static_cast<int>(shader_type::max_shader_type))) 
         if(_shader[i] > 0) 
             glAttachShader(_handle, _shader[i]);            
 

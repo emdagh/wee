@@ -12,6 +12,10 @@
         {
             "name": "@default_model",
             "path": "default_p3n3t2.glsl"
+        },
+        {
+            "name": "@voxel_shader",
+            "path": "default_p3c0.glsl"
         }
     ]
 }

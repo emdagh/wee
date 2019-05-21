@@ -74,7 +74,12 @@ void max_submatrix(const std::vector<T>& a, int nrows, int ncols, const T& skipv
                 auto& [max_area, coords] = res; // LEARNING MOMENT: structured binding on tuples!
                 if(area > max_area) {
                     max_area = area;
-                    coords = std::array<coord, 2> { r-dh, c-minw+1, r, c };
+                    coords = std::array<coord, 2> { 
+                        r-dh, 
+                        c-minw+1, 
+                        r, 
+                        c 
+                    };
                 }
             }
         }
@@ -91,9 +96,9 @@ struct aabb_renderer {
     shader_program* _shader = nullptr;
     
 
-        using vertex_p3 =  vertex<
-            attributes::position
-        > ;
+    using vertex_p3 =  vertex<
+        attributes::position
+    > ;
 
 	static const int kNumElements = 24;
 
@@ -264,8 +269,15 @@ std::vector<int> demo2() {
 
 #include "ndview.hpp"
 
+
+/**
+ * ary = planes
+ * std::transform(ary.begin(), ary.end(), vertices.begin(), [] ( 
+ */
+
 struct game : public applet {
     model* _model;
+    model* _voxel_mesh;
     texture_sampler _sampler;
     float _time = 0.0f;
     camera _camera;
@@ -276,7 +288,7 @@ struct game : public applet {
     std::vector<model*> _models;
     std::vector<int> _voxels;
 
-    void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad) {
+    void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad, float offset) {
         /**
          * dim=0 -> y/z plane (left to right) depth = x
          * dim=1 -> x/y plane (back to front) depth = z
@@ -290,7 +302,7 @@ struct game : public applet {
         float x1 = static_cast<float>(b.x) + 0.5f;
         float y0 = static_cast<float>(a.y) - 0.5f;
         float y1 = static_cast<float>(b.y) + 0.5f;
-        float z  = static_cast<float>(depth);
+        float z  = static_cast<float>(depth) + offset;
 
         switch(dim) {
             case YZ:
@@ -316,12 +328,12 @@ struct game : public applet {
         }
     }
 
-    void vox_to_mesh(const vox::vox& v) {
+    model* vox_to_mesh(const vox::vox& v) {
         typedef ndview<std::vector<int>, 3> ndview3i;
         /**
          * first, convert all chunks to a structured 3-D array;
          */
-        vox::size len = vox::vox::get_size(v);
+        vox::size len = v.get_size();
         std::vector<int> data(len.z * len.y * len.x, 0);
         for(const auto* ptr: v.chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
@@ -331,8 +343,13 @@ struct game : public applet {
             }
         }
         using wee::range;
-        size_t nrows = len.y;
-        size_t ncols = len.x;
+        //size_t nrows = len.y;
+        //size_t ncols = len.x;
+        
+        DEBUG_VALUE_OF(len.x);
+        DEBUG_VALUE_OF(len.y);
+        DEBUG_VALUE_OF(len.z);
+
         auto zero_vec = [] (std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
 
             int h = b.x - a.x + 1; // x = row
@@ -355,7 +372,15 @@ struct game : public applet {
         for(auto dim: range(3)) {
             for(auto depth: range(view.shape()[dim])) {
                 std::vector<int> plane, bin, colors;
-                view.slice(dim, depth, std::back_inserter(plane));
+                std::array<ptrdiff_t, 2> aux;
+                view.slice(dim, depth, aux, std::back_inserter(plane));
+                /**
+                 * TODO: get the rows, cols of the plane here.. They are unknown at this point and incorrect [rows,cols]
+                 * are causing a SIGSEGV here (best case; worst case: infinite loop...)
+                 *
+                 * This will, however, work for symmetric models. That's why the 8x8x8.vox works...
+                 */
+                exit(-8);
                 
                 colors = plane;
                 std::sort(colors.begin(), colors.end());
@@ -370,49 +395,108 @@ struct game : public applet {
                     while(std::accumulate(bin.begin(), bin.end(), 0) != 0) {
                         int area;
                         coord coord_min, coord_max;
-                        max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
+                        //max_submatrix(bin, nrows, ncols, 0, &area, &coord_min, &coord_max);
+                        max_submatrix(bin, aux[0], aux[1], 0, &area, &coord_min, &coord_max);
                         if(area > 1) {
                             coords_info[color].push_back(std::make_tuple(dim, depth, coord_min, coord_max));
-                        }
-                        zero_vec(bin, nrows, ncols, coord_min, coord_max);
                         num_vertices += 4;
+                        }
+                        zero_vec(bin, aux[0], aux[1], coord_min, coord_max);
                     }
                 }
             }
         }
+        num_vertices *= 2;
         DEBUG_VALUE_OF(coords_info);
         DEBUG_VALUE_OF(num_vertices);
-        vertex_buffer* vb = new vertex_buffer(sizeof(vertex_voxel) * num_vertices); 
-        std::vector<vertex_voxel> vertices;//(coords_info.size() * 4); 
+        std::vector<vertex_voxel> vertices;
+        std::vector<uint32_t> indices(num_vertices * 6);
         vertices.resize(num_vertices);
 
-        DEBUG_VALUE_OF(num_vertices);
-        size_t i=0;
+        [[maybe_unused]] model* m = new model();
+
+        num_vertices = 0;//, num_indices = 0;
+        size_t num_indices = 0;
         for(const auto& [color, coords] : coords_info) {
             DEBUG_VALUE_OF(color);
+            model_mesh* mesh = new model_mesh();
+            mesh->base_vertex = num_vertices;
+            mesh->base_index  = num_indices; 
+
+            [[maybe_unused]] unsigned int voxcolor = vox::default_palette[color];
+
             for(const auto& coord: coords) {
                 DEBUG_VALUE_OF(coord);
-
-                std::array<vec3f, 4> quad;
+                /**
+                 * we should emit two primitives per plane: one for the front-face, and one for the
+                 * back-face. If we don't do this, we'd have a mesh that is open on one side. 
+                 */
+                [[maybe_unused]] std::array<vec3f, 4> backface_quad, frontface_quad;
                 calculate_coords(
                     std::get<0>(coord), 
                     std::get<1>(coord), 
                     std::get<2>(coord),
                     std::get<3>(coord),
-                    quad
+                    frontface_quad,
+                    -0.5f
+                );
+                calculate_coords(
+                    std::get<0>(coord), 
+                    std::get<1>(coord), 
+                    std::get<2>(coord),
+                    std::get<3>(coord),
+                    backface_quad,
+                    0.5f
                 );
 
-                vertices[i++]._position = quad[0];
-                vertices[i++]._position = quad[1];
-                vertices[i++]._position = quad[2];
-                vertices[i++]._position = quad[3];
-        
-            }
+                vertices[num_vertices++]._position = backface_quad[0];
+                vertices[num_vertices++]._position = backface_quad[1];
+                vertices[num_vertices++]._position = backface_quad[2];
+                vertices[num_vertices++]._position = backface_quad[3];
+                
+                vertices[num_vertices++]._position = frontface_quad[0];
+                vertices[num_vertices++]._position = frontface_quad[1];
+                vertices[num_vertices++]._position = frontface_quad[2];
+                vertices[num_vertices++]._position = frontface_quad[3];
 
+                /**
+                 * here we index the quad as two triangles
+                 * 
+                 * 0-1
+                 * |/|
+                 * 2-3
+                 *
+                 * 0/2/1 1/2/3 (default front-face winding is ccw)
+                 *
+                 */
+                indices[num_indices++] = num_vertices - 8;
+                indices[num_indices++] = num_vertices - 7;
+                indices[num_indices++] = num_vertices - 6;
+                indices[num_indices++] = num_vertices - 5;
+                indices[num_indices++] = num_vertices - 4;
+                indices[num_indices++] = num_vertices - 3;
+                indices[num_indices++] = num_vertices - 2;
+                indices[num_indices++] = num_vertices - 1;
+            }
+            mesh->num_vertices = num_vertices - mesh->base_vertex;
+            mesh->num_indices  = (num_vertices * 6) - mesh->base_index;
+            m->_meshes.push_back(mesh);
         }
-        std::ostream os(vb);
-        os.write(reinterpret_cast<char*>(&vertices[0]), sizeof(vertex_voxel) * vertices.size());
-        exit(-7);
+        {
+            vertex_buffer* vb = new vertex_buffer(sizeof(vertex_voxel) * vertices.size()); 
+            std::ostream os(vb);
+            os.write(reinterpret_cast<char*>(&vertices[0]), sizeof(vertex_voxel) * vertices.size());
+            m->_vertices    = vb;
+        }
+       
+        {
+            index_buffer* ib = new index_buffer(sizeof(uint32_t) * indices.size());
+            std::ostream os(ib);
+            os.write(reinterpret_cast<char*>(&indices[0]), sizeof(uint32_t) * indices.size());
+            m->_indices     = ib;
+        }
+        
+        return m;
     }
 
     int load_content() {
@@ -436,15 +520,13 @@ struct game : public applet {
         exit(-6);
 #endif
 
-        auto ifs = wee::open_ifstream("assets/8x8x8.vox");
+        auto ifs = wee::open_ifstream("assets/exported.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
         binary_reader rd(ifs);
-        vox_to_mesh(*vox::vox_reader::read(rd));
+        _voxel_mesh = vox_to_mesh(*vox::vox_reader::read(rd));
 
-        //_voxels = demo2();
-        //exit(1);
         try {
             {
                 auto is = open_ifstream("assets/shaders.json");
@@ -495,8 +577,8 @@ struct game : public applet {
 
 
     int update(int dt) { 
-        _time += static_cast<float>(dt) * 0.001f;
-#if 0 
+        //_time += static_cast<float>(dt) * 0.001f;
+#if 1 
         static float kSensitivity = 0.01f;
         _camera.set_rotation(
             (input::instance().mouse_x) * kSensitivity, 
@@ -517,17 +599,32 @@ struct game : public applet {
 
     int draw(graphics_device* dev) {
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::CornflowerBlue, clear_options::kClearAll, 1.0f, 0); 
 
         mat4 world = mat4::mul(mat4::create_scale(2.f), mat4::mul(mat4::create_rotation_y(_time), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
-        shader_program* _program = _shaders["@default_notex"];
-        glUseProgram(_program->_handle);
-        _program->set_uniform<uniform4x4f>("wvp", mat4::mul(world, mat4::mul(view, projection)));
-        _renderer->draw(_model->_aabb);
+            shader_program* _program = _shaders["@default_notex"];
+        {
+            glPolygonMode( GL_BACK, GL_LINE );
+            glUseProgram(_program->_handle);
+            _program->set_uniform<uniform4x4f>("wvp", mat4::mul(world, mat4::mul(view, projection)));
+            _renderer->draw(_model->_aabb);
+            install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
+            GLint prev;
+            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev);
+            glBindBuffer(GL_ARRAY_BUFFER, _voxel_mesh->_vertices->_handle);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _voxel_mesh->_indices->_handle);
+            install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
+            for(const auto* mesh: _voxel_mesh->_meshes) {
+                draw_indexed_primitives<primitive_type::quads, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+            }
+            glBindBuffer(GL_ARRAY_BUFFER, prev);
+        }
 
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
         _program = _shaders["@default_model"];
         glUseProgram(_program->_handle);
@@ -546,8 +643,8 @@ struct game : public applet {
         glBindBuffer(GL_ARRAY_BUFFER, _model->_vertices->_handle);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _model->_indices->_handle);
         install_vertex_attributes<vertex_p3_n3_t2, vertex_attribute_installer>();
-        for(const auto& mesh: _model->_meshes) {
-            draw_indexed_primitives<primitive_type::triangles, index_type::unsigned_int>(mesh.num_indices, mesh.base_vertex);
+        for(const auto* mesh: _model->_meshes) {
+            draw_indexed_primitives<primitive_type::triangles, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
         }
         glBindBuffer(GL_ARRAY_BUFFER, prev);
 

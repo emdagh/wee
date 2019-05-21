@@ -9,7 +9,8 @@
 #include <map>
 
 namespace wee {
-
+    struct binary_reader;
+    struct binary_writer;
     struct graphics_device;
     struct texture;
     
@@ -37,11 +38,14 @@ namespace wee {
         vertex_buffer* _vertices;
         index_buffer* _indices;
        // std::map<size_t, model_mesh_part> _parts;
-        std::vector<model_mesh> _meshes;
-        std::vector<material> _materials;
+        std::vector<model_mesh*> _meshes;
+        std::vector<material*> _materials;
         aabb _aabb;
 
         void draw(graphics_device*);
+
+        static model* read(binary_reader&);
+        static void write(const model*, binary_writer&);
     };
 
     std::ostream& operator << (std::ostream& os, const material& mat);

@@ -144,7 +144,7 @@ namespace wee {
         aabb box;
         
         size_t numVertices = 0, numIndices = 0;
-        std::vector<model_mesh> parts(scene->mNumMeshes);
+        std::vector<model_mesh*> parts(scene->mNumMeshes);
 
         for(auto j: range(scene->mNumMeshes)) {
             const auto* mesh = scene->mMeshes[j];
@@ -168,13 +168,15 @@ namespace wee {
                 indices.push_back(numIndices + face->mIndices[2]);
             }
 
-            parts[j].base_index  = numIndices;
-            parts[j].num_indices = mesh->mNumFaces * 3;
-            parts[j].base_vertex = numVertices;
-            parts[j].num_vertices= mesh->mNumVertices;
+            parts[j] = new model_mesh();
+
+            parts[j]->base_index  = numIndices;
+            parts[j]->num_indices = mesh->mNumFaces * 3;
+            parts[j]->base_vertex = numVertices;
+            parts[j]->num_vertices= mesh->mNumVertices;
             
-            numIndices  += parts[j].num_indices; 
-            numVertices += parts[j].num_vertices; 
+            numIndices  += parts[j]->num_indices; 
+            numVertices += parts[j]->num_vertices; 
         }
 
         vertex_buffer* vb = new vertex_buffer(numVertices * sizeof(vertex_p3_n3_t2));
@@ -196,7 +198,7 @@ namespace wee {
         vb->sputn(reinterpret_cast<char*>(&vertices[0]), sizeof(vertex_p3_n3_t2) * vertices.size());
         ib->sputn(reinterpret_cast<char*>(&indices[0]), sizeof(uint32_t) * indices.size());
 
-        std::vector<material> materials;
+        std::vector<material*> materials;
 
         for(auto i: range(scene->mNumMaterials)) {
             [[maybe_unused]] const auto* mat = scene->mMaterials[i];

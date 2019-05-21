@@ -32,7 +32,7 @@ namespace wee {
         uint16_t x, y;
     };
 
-    enum class kVertexStreamIndex : uint8_t {
+    enum class vertex_stream: uint8_t {
         Position = 0,
         BlendWeight,
         Normal,
@@ -52,7 +52,7 @@ namespace wee {
         StreamIndexMax
     };
 
-    enum class kVertexStreamType : uint8_t {
+    enum class vertex_stream_type: uint8_t {
         Single,
         Vector2,
         Vector3,
@@ -70,7 +70,7 @@ namespace wee {
         StreamTypeMax
     };
 
-    static const size_t kVertexStreamTypeSize[] = {
+    static const size_t vertex_streamsize [] = {
         sizeof(float),
         sizeof(float) * 2,
         sizeof(float) * 3,
@@ -88,7 +88,7 @@ namespace wee {
     };
 
     [[maybe_unused]] 
-    static const char* kVertexStreamSemantic[] = {
+    static const char* vertex_stream_semantic[] = {
         "Position",
         "BlendWeight",
         "Normal",
@@ -157,7 +157,7 @@ namespace wee {
                 size = 3,
                 type = GL_FLOAT,
                 is_normalized = GL_TRUE,
-                semantic = static_cast<int>(kVertexStreamIndex::Normal)
+                semantic = static_cast<int>(vertex_stream::Normal)
             };
         };
 
@@ -167,7 +167,7 @@ namespace wee {
                 size    = 4,
                 type    = GL_UNSIGNED_SHORT,
                 is_normalized = false,
-                semantic = static_cast<int>(kVertexStreamIndex::BlendIndex)
+                semantic = static_cast<int>(vertex_stream::BlendIndex)
             };
         };
         struct position {
@@ -176,7 +176,7 @@ namespace wee {
                 size = 3,
                 type = GL_FLOAT,
                 is_normalized = GL_FALSE,
-                semantic = static_cast<int>(kVertexStreamIndex::Position)
+                semantic = static_cast<int>(vertex_stream::Position)
             };
         };
 
@@ -187,7 +187,7 @@ namespace wee {
                 size = 2,
                 type = GL_FLOAT, //GL_UNSIGNED_SHORT,
                 is_normalized = GL_FALSE,
-                semantic = static_cast<int>(kVertexStreamIndex::TexCoord0)
+                semantic = static_cast<int>(vertex_stream::TexCoord0)
             };
         };
 
@@ -197,7 +197,7 @@ namespace wee {
                 size = 4,
                 type = GL_UNSIGNED_BYTE,
                 is_normalized = GL_FALSE,
-                semantic = static_cast<int>(kVertexStreamIndex::Color0)
+                semantic = static_cast<int>(vertex_stream::Color0)
             };
         };
         

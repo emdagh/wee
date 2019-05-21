@@ -19,12 +19,12 @@
 namespace wee {
 
 
-    enum struct kShaderType {
-        VertexShader,
-        PixelShader,
-        GeometryShader,
-        TesselationShader,
-        MaxShaderType
+    enum struct shader_type {
+        vertex_shader,
+        pixel_shader,
+        geometry_shader,
+        tesselation_shader,
+        max_shader_type
     };
 
     struct uniform_variable_base {
@@ -115,7 +115,7 @@ namespace wee {
     struct shader_program {
         GLuint _handle;
         //GLuint _vs, _ps;
-        GLuint _shader[static_cast<int>(kShaderType::MaxShaderType)] = { 0 };
+        GLuint _shader[static_cast<int>(shader_type::max_shader_type)] = { 0 };
 
         struct uniform_info {
             uniform_variable_base* _uniform;

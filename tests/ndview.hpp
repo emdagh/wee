@@ -62,10 +62,14 @@ namespace {
         const shape_type& shape() const { return _shape; }
 
         template <typename OutputIt>
-        void slice(size_t axis, size_t i, OutputIt d_iter) const {
-            iterate(axis, i, [&](const shape_type& s) {
-                size_t i = std::inner_product(s.begin(), s.end(), this->strides().begin(), 0);
-                *d_iter++ = _data[i];
+        void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
+            //std::array<ptrdiff_t, N-1> aux;
+            for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = _shape[i];
+            DEBUG_VALUE_OF(aux);
+
+            iterate(axis, depth, [&](const shape_type& s) {
+                size_t idx = std::inner_product(s.begin(), s.end(), this->strides().begin(), 0);
+                *d_iter++ = _data[idx];
             });
         }
         

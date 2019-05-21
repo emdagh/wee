@@ -86,7 +86,7 @@ model* mesh_generator::ico_sphere(float radius, int n) {
         vbo,
         ibo,
         {
-            model_mesh { 0, 0, 0, vertices.size(), ix.size() }
+            new model_mesh { 0, 0, 0, vertices.size(), ix.size() }
         }, 
         {} ,
         box
