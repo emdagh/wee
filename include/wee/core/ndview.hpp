@@ -2,12 +2,12 @@
 
 #include <array>
 
-namespace {
+namespace wee {
 
     template <typename T, size_t N>
     class ndview {
         typedef std::array<ptrdiff_t, N> shape_t;
-        T _data;
+        T* _data;
         shape_t _shape;
         shape_t _strides;
     protected:
@@ -52,8 +52,8 @@ namespace {
         typedef shape_t shape_type;
 
         template <typename S>
-        ndview(S&& data, const std::array<ptrdiff_t, N>& shape) 
-        : _data(std::forward<S>(data))
+        ndview(S* data, const std::array<ptrdiff_t, N>& shape) 
+        : _data(data) //std::forward<S>(data))
         , _shape(shape) {
             compute_strides();
         }
@@ -68,7 +68,7 @@ namespace {
 
             iterate(axis, depth, [&](const shape_type& s) {
                 size_t idx = std::inner_product(s.begin(), s.end(), this->strides().begin(), 0);
-                *d_iter++ = _data[idx];
+                *d_iter++ = _data->at(idx);
             });
         }
         
@@ -94,7 +94,7 @@ namespace {
 
         template <typename... Ts>
         value_type& operator () (Ts... args) {
-            return _data[linearize(args...)];//compute_index(args...)];
+            return _data->at(linearize(args...));//compute_index(args...)];
         }
 
         template <typename... Ts>

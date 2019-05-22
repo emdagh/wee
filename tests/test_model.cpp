@@ -215,7 +215,7 @@ void demo1() {
 
 }
 
-#include "vox.hpp"
+#include <engine/vox.hpp>
 size_t index_of_voxel(const vox::voxel& v, const std::array<int, 3>& dim) {
     return v.z + dim[2] * (v.y + dim[1] * v.x); // row major linearize, just like the wee::linearize for ndarrays
 }
@@ -225,7 +225,7 @@ std::vector<int> demo2() {
         throw file_not_found("file not found");
     }
     binary_reader rd(ifs);
-    [[maybe_unused]] vox::vox* v = vox::vox_reader::read(rd);
+    [[maybe_unused]] vox* v = vox_reader::read(rd);
 
 
     int w, h, d;
@@ -267,7 +267,7 @@ std::vector<int> demo2() {
     return res;
 }
 
-#include "ndview.hpp"
+#include <core/ndview.hpp>
 
 
 /**
@@ -287,7 +287,6 @@ struct game : public applet {
     std::unordered_map<std::string, shader_program*> _shaders;
     std::vector<model*> _models;
     std::vector<int> _voxels;
-
     void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad, float offset) {
         /**
          * dim=0 -> x/y plane (back to front) depth = z
@@ -327,46 +326,42 @@ struct game : public applet {
                 break;
         }
     }
+    void zero_vec(std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
+        typedef ndview<std::vector<int>, 2> ndview2i;
 
-    model* vox_to_mesh(const vox::vox& v) {
+        int h = b.x - a.x + 1; // x = row
+        int w = b.y - a.y + 1;
+
+        for(int r: range(h)) {
+            for(int c: range(w)) {
+                int row = r + a.x;
+                int col = c + a.y;
+
+                int i = col + row * ncols;
+                d[i] = 0;
+            }
+        }
+    }
+    model* vox_to_mesh(const wee::vox* v_in) {
+        using wee::range;
         typedef ndview<std::vector<int>, 3> ndview3i;
         /**
          * first, convert all chunks to a structured 3-D array;
          */
-        vox::size len = v.get_size();
-        std::vector<int> data(len.z * len.y * len.x, 0);
-        for(const auto* ptr: v.chunks) {
+        const vox::size* len = vox::get<vox::size>(v_in);
+        DEBUG_VALUE_OF(len->x);
+        DEBUG_VALUE_OF(len->y);
+        DEBUG_VALUE_OF(len->z);
+        std::vector<int> data(len->x * len->y * len->z, 0);
+        ndview3i view(&data, { len->x, len->y, len->z });
+        for(const auto* ptr: v_in->chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
                 for(const auto& v: a->voxels) {
-                    data[index_of_voxel(v, {len.x, len.y, len.z})] = v.i;
+                    data[view.linearize(v.x, v.y, v.z)] = v.i;
                 }
             }
         }
-        using wee::range;
-        //size_t nrows = len.y;
-        //size_t ncols = len.x;
         
-        DEBUG_VALUE_OF(len.x);
-        DEBUG_VALUE_OF(len.y);
-        DEBUG_VALUE_OF(len.z);
-
-        auto zero_vec = [] (std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
-
-            int h = b.x - a.x + 1; // x = row
-            int w = b.y - a.y + 1;
-
-            for(int r: range(h)) {
-                for(int c: range(w)) {
-                    int row = r + a.x;
-                    int col = c + a.y;
-
-                    int i = col + row * ncols;
-                    d[i] = 0;
-                }
-            }
-        };
-
-        ndview3i view(data, { len.z, len.y, len.x });// TODO: sanity check on magicavoxel coord system
         std::map<int, std::vector<std::tuple<int, int, coord, coord> > > coords_info;
         size_t num_vertices = 0;;
         for(auto dim: range(3)) {
@@ -384,19 +379,6 @@ struct game : public applet {
                         continue;
                     std::vector<int> bin;
                     std::transform(std::begin(plane), std::end(plane), std::back_inserter(bin), [&color] (int x) { return x == color ? 1 : 0; });
-                    //DEBUG_VALUE_OF(bin);
-                    /*
-                    DEBUG_VALUE_OF(dim);
-                    DEBUG_VALUE_OF(depth);
-                    DEBUG_VALUE_OF(color);
-                    DEBUG_VALUE_OF(aux);
-                    for(auto row: range(aux[1])) {
-                        for(auto col: range(aux[0])) {
-                            if(bin[col + row * aux[0]]) std::cout<< "#"; else std::cout <<  " ";
-
-                        }
-                        std::cout << std::endl;
-                    }*/
                     size_t is_empty = std::accumulate(bin.begin(), bin.end(), 0);
                     while(is_empty != 0) {
                         int area;
@@ -413,15 +395,13 @@ struct game : public applet {
             }
         }
         num_vertices *= 2;
-        //DEBUG_VALUE_OF(coords_info);
-        //DEBUG_VALUE_OF(num_vertices);
         std::vector<vertex_voxel> vertices;
         std::vector<uint32_t> indices(num_vertices * 6);
         vertices.resize(num_vertices);
 
         [[maybe_unused]] model* m = new model();
 
-        const vox::rgba* palette = vox::vox::get_rgba(v);
+        const vox::rgba* palette = vox::vox::get<vox::rgba>(v_in);
 
         num_vertices = 0;//, num_indices = 0;
         size_t num_indices = 0;
@@ -542,12 +522,12 @@ struct game : public applet {
         exit(-6);
 #endif
 
-        auto ifs = wee::open_ifstream("assets/monu10.vox");
+        auto ifs = wee::open_ifstream("assets/8x8x8.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
         binary_reader rd(ifs);
-        _voxel_mesh = vox_to_mesh(*vox::vox_reader::read(rd));
+        _voxel_mesh = vox_to_mesh(vox_reader::read(rd));
 
         try {
             {
@@ -625,7 +605,7 @@ struct game : public applet {
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::CornflowerBlue, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_x(90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_x(0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
