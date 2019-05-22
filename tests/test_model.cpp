@@ -23,6 +23,51 @@
 using namespace wee;
 using nlohmann::json;
 
+template <typename S, typename T>
+struct model_builder {
+    typedef S vertex_type;
+    typedef T index_type;
+
+    std::vector<vertex_type> _vertices;
+    std::vector<index_type> _indices;
+
+    void add_index(index_type i) {
+        _indices.push_back(i);
+    }
+
+    template <typename... Ts>
+    void add_indices(Ts... t) {
+        add_index(t...);
+    }
+    
+    void add_triangle(index_type i[3]) {
+        add_indices(i[0], i[1], i[2]);
+    }
+
+    void add_vertex(const vertex_type& t) {
+        _vertices.push_back(t);
+    }
+
+    template <typename B, typename C>
+    B* create_buffer(const std::vector<C>& src) {
+        B* dst = new B(sizeof(C) * src.size());
+        std::ostream os(res);
+        std::copy(src.begin(), src.end(), std::ostream_iterator<C>(os));
+        return dst;
+
+    }
+
+    model* build() {
+        model* res = new model();
+        {
+            create_buffer<vertex_buffer>(_vertices);
+            create_buffer<index_buffer>(_indices);
+        
+    }
+
+
+};
+
 
 typedef vertex<
     attributes::position,
