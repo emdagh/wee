@@ -23,6 +23,10 @@ namespace wee {
         }
 
         auto constexpr compute_index() const { return ptrdiff_t(0); }
+
+        ptrdiff_t constexpr compute_index_impl(const shape_t& idx) const {
+            return std::inner_product(_strides.begin(), _strides.end(), idx.begin(), 0);
+        }
         
         template <typename R, typename... Rs>
         ptrdiff_t constexpr compute_index(R first, Rs... rest) const {
@@ -43,8 +47,7 @@ namespace wee {
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
                 });
-                ptrdiff_t offset = std::inner_product(_strides.begin(), _strides.end(), idx.begin(), 0);
-                return offset;
+                return compute_index_impl(idx);
             }
         }
     public:
@@ -97,9 +100,27 @@ namespace wee {
             return _data->at(linearize(args...));//compute_index(args...)];
         }
 
+        size_t linearize(const shape_t& idx) {
+            return compute_index_impl(idx);
+        }
+
         template <typename... Ts>
         size_t linearize(Ts... args) {
             return compute_index(args...);
+        }
+
+        shape_t delinearize(size_t i) {
+            size_t idx = i;
+
+            shape_t out = { 0 };
+            for (auto i : range(N)) {
+                auto s = idx % _shape[ i ];
+                idx -= s;
+                idx /= _shape[ i ];
+                out[ i ] = s;
+            }
+            return out;
+
         }
 
         std::string to_string() const {

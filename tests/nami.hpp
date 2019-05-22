@@ -536,9 +536,9 @@ void basic_model::solve_for(const topology::shape& s) {
     wave_propagator<uint64_t> wp;
 
 
-    wp.on_progress += [] (const wave<uint64_t>& w) {
+    /*wp.on_progress += [] (const wave<uint64_t>& w) {
         DEBUG_VALUE_OF(w.progress());
-    };
+    };*/
 
     wp.on_done += [this] (const wave<uint64_t>& w) {
         std::vector<int> res;

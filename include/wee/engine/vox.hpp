@@ -120,9 +120,24 @@ namespace wee {
             int id;
             std::vector<char> data;
         };
+        typedef wee::factory<chunk, int> factory_t;
+        
         int version;
         std::vector<chunk*> chunks;
 
+        static void set_pack(vox* vx, int n) {
+        }
+
+        static void set_size(vox* vx, int x, int y, int z) {
+            size* dst = nullptr;
+            if(dst = const_cast<size*>(get<size>(const_cast<const vox*>(vx))); dst == nullptr) {
+                dst = new size();
+                vx->chunks.push_back(dst);
+            }
+            dst->x = x;
+            dst->y = y;
+            dst->z = z;
+        }
 
         template <typename T>
             static const T* get(const vox* v) {
@@ -168,7 +183,6 @@ namespace wee {
         using voxel = vox::voxel;
         using size  = vox::size;
 
-        typedef wee::factory<chunk, int> factory_t;
         typedef std::function<chunk*(chunk*, binary_reader&)> builder;
         static std::vector<voxel> read_voxels(binary_reader& reader) {
             std::vector<voxel> res;
@@ -201,7 +215,7 @@ namespace wee {
                 int num_children = reader.read_object<int>();
 
                 if(readers.count(chunk_id)) {
-                    *it++ = readers.at(chunk_id)(factory_t::instance().create(chunk_id), reader);
+                    *it++ = readers.at(chunk_id)(vox::factory_t::instance().create(chunk_id), reader);
                     if(num_children) {
                         throw std::runtime_error("nested chunks not supported!");
                     }
@@ -214,7 +228,6 @@ namespace wee {
             std::vector<chunk*> chunks;
 
             while (reader.good() && reader.peek() != EOF) {
-                //chunks.push_back(read_chunk(reader));
                 read_chunk(reader, std::back_inserter(chunks));
             }
             return chunks;
@@ -231,6 +244,16 @@ namespace wee {
             return new vox{version, read_chunks(reader)};
         }
 
+
+    };
+
+    struct vox_writer {
+        using chunk = vox::chunk;
+        using pack  = vox::pack;
+        using rgba  = vox::rgba;
+        using xyzi  = vox::xyzi;
+        using voxel = vox::voxel;
+        using size  = vox::size;
         static void write_chunk(const chunk* ptr, binary_writer& writer) {
             /**
              * TODO: create writers as we did for readers.
@@ -268,14 +291,13 @@ namespace wee {
                 throw std::runtime_error("unkown chunk!");
             }
         }
-
-        static void write(const vox& v, binary_writer& writer) {
+        static void write(const vox* v, binary_writer& writer) {
             writer.write(VOX_);
-            writer.write(v.version);
+            writer.write(v->version);
             writer.write(MAIN);
             writer.write(0);
 
-            for (const auto* ch : v.chunks) {
+            for (const auto* ch : v->chunks) {
                 write_chunk(ch, writer);
             }
         }

@@ -1,6 +1,7 @@
 #include <gfx/graphics_device.hpp>
 #include <gfx/shader.hpp>
 #include <gfx/model.hpp>
+#include <gfx/model_builder.hpp>
 #include <gfx/mesh_generator.hpp>
 #include <gfx/draw.hpp>
 #include <base/application.hpp>
@@ -9,13 +10,14 @@
 #include <engine/model_importer.hpp>
 #include <engine/assets.hpp>
 #include <engine/camera.hpp>
-#include <fstream>
+#include <engine/vox.hpp>
 #include <fstream>
 #include <cstring>
 #include <weegl.h>
 #include <nlohmann/json.hpp>
 #include <core/singleton.hpp>
 #include <core/binary_reader.hpp>
+#include <core/ndview.hpp>
 #include "wfc.hpp"
 #include "voxel.hpp"
 #include "nami.hpp"
@@ -23,51 +25,9 @@
 using namespace wee;
 using nlohmann::json;
 
-template <typename S, typename T>
-struct model_builder {
-    typedef S vertex_type;
-    typedef T index_type;
-
-    std::vector<vertex_type> _vertices;
-    std::vector<index_type> _indices;
-
-    void add_index(index_type i) {
-        _indices.push_back(i);
-    }
-
-    template <typename... Ts>
-    void add_indices(Ts... t) {
-        add_index(t...);
-    }
-    
-    void add_triangle(index_type i[3]) {
-        add_indices(i[0], i[1], i[2]);
-    }
-
-    void add_vertex(const vertex_type& t) {
-        _vertices.push_back(t);
-    }
-
-    template <typename B, typename C>
-    B* create_buffer(const std::vector<C>& src) {
-        B* dst = new B(sizeof(C) * src.size());
-        std::ostream os(res);
-        std::copy(src.begin(), src.end(), std::ostream_iterator<C>(os));
-        return dst;
-
-    }
-
-    model* build() {
-        model* res = new model();
-        {
-            create_buffer<vertex_buffer>(_vertices);
-            create_buffer<index_buffer>(_indices);
-        
-    }
-
-
-};
-
+typedef vertex<
+    attributes::position
+> vertex_p3;
 
 typedef vertex<
     attributes::position,
@@ -204,7 +164,6 @@ struct input : wee::singleton<input> {
         {'d', false}
     };
 };
-
 void demo1() {
     /**
      * this demonstrates the most basic of outputs: the console.
@@ -259,80 +218,13 @@ void demo1() {
     }
 
 }
-
-#include <engine/vox.hpp>
 size_t index_of_voxel(const vox::voxel& v, const std::array<int, 3>& dim) {
     return v.z + dim[2] * (v.y + dim[1] * v.x); // row major linearize, just like the wee::linearize for ndarrays
 }
-std::vector<int> demo2() {
-    auto ifs = wee::open_ifstream("assets/8x8x8.vox");
-    if(!ifs.is_open()) {
-        throw file_not_found("file not found");
-    }
-    binary_reader rd(ifs);
-    [[maybe_unused]] vox* v = vox_reader::read(rd);
 
 
-    int w, h, d;
-
-    for(const auto* ptr: v->chunks) {
-        if(const auto* a = dynamic_cast<const vox::size*>(ptr); a != nullptr) {
-            //DEBUG_VALUE_OF(*a);
-            w = a->x;
-            h = a->y;
-            d = a->z;
-        }
-    }
-    size_t example_len = w * h * d;;
-    std::vector<int> example(example_len, 0);
-
-    for(const auto* ptr: v->chunks) {
-        if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
-            for(const auto& v: a->voxels) {
-                example[index_of_voxel(v, { w, h, d})] = v.i;
-            }
-        }
-    }
-
-    static int OUT_D = 4;
-    static int OUT_H = 4;
-    static int OUT_W = 4;
-
-    std::vector<int> res;
-
-    nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
-    nami::basic_model test(ts, 3);
-    test.on_done += [&res] (const std::vector<int>& a) {
-        res = a;
-    };
-
-    test.add_example(&example[0], { d, h, w });
-    test.solve_for({OUT_D, OUT_H, OUT_W});
-
-    return res;
-}
-
-#include <core/ndview.hpp>
-
-
-/**
- * ary = planes
- * std::transform(ary.begin(), ary.end(), vertices.begin(), [] ( 
- */
-
-struct game : public applet {
-    model* _model;
-    model* _voxel_mesh;
-    texture_sampler _sampler;
-    float _time = 0.0f;
-    camera _camera;
-
-    aabb_renderer* _renderer;
-
-    std::unordered_map<std::string, shader_program*> _shaders;
-    std::vector<model*> _models;
-    std::vector<int> _voxels;
-    void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad, float offset) {
+struct meshify {
+    static void calculate_coords(int dim, int depth, const coord& a, const coord& b, std::array<vec3f, 4>& quad, float offset) {
         /**
          * dim=0 -> x/y plane (back to front) depth = z
          * dim=1 -> x/z plane (top to bottom) depth = y
@@ -371,8 +263,8 @@ struct game : public applet {
                 break;
         }
     }
-    void zero_vec(std::vector<int>& d, int nrows, int ncols, const coord& a, const coord& b) {
-        typedef ndview<std::vector<int>, 2> ndview2i;
+    template <typename T>
+    static void zero_vec(std::vector<T>& d, int nrows, int ncols, const coord& a, const coord& b) {
 
         int h = b.x - a.x + 1; // x = row
         int w = b.y - a.y + 1;
@@ -383,20 +275,17 @@ struct game : public applet {
                 int col = c + a.y;
 
                 int i = col + row * ncols;
-                d[i] = 0;
+                d[i] = static_cast<T>(0);
             }
         }
     }
-    model* vox_to_mesh(const wee::vox* v_in) {
+    static model* vox_to_mesh(const wee::vox* v_in) {
         using wee::range;
         typedef ndview<std::vector<int>, 3> ndview3i;
         /**
          * first, convert all chunks to a structured 3-D array;
          */
         const vox::size* len = vox::get<vox::size>(v_in);
-        DEBUG_VALUE_OF(len->x);
-        DEBUG_VALUE_OF(len->y);
-        DEBUG_VALUE_OF(len->z);
         std::vector<int> data(len->x * len->y * len->z, 0);
         ndview3i view(&data, { len->x, len->y, len->z });
         for(const auto* ptr: v_in->chunks) {
@@ -408,7 +297,6 @@ struct game : public applet {
         }
         
         std::map<int, std::vector<std::tuple<int, int, coord, coord> > > coords_info;
-        size_t num_vertices = 0;;
         for(auto dim: range(3)) {
             for(auto depth: range(view.shape()[dim])) {
                 std::vector<int> plane, colors;
@@ -431,7 +319,6 @@ struct game : public applet {
                         max_submatrix(bin, aux[1], aux[0], 0, &area, &coord_min, &coord_max);
                         if(area >= 1) {
                             coords_info[color].push_back(std::make_tuple(dim, depth, coord_min, coord_max));
-                            num_vertices += 4;
                         }
                         zero_vec(bin, aux[1], aux[0], coord_min, coord_max);
                         is_empty = std::accumulate(bin.begin(), bin.end(), 0);
@@ -439,140 +326,143 @@ struct game : public applet {
                 }
             }
         }
-        num_vertices *= 2;
-        std::vector<vertex_voxel> vertices;
-        std::vector<uint32_t> indices(num_vertices * 6);
-        vertices.resize(num_vertices);
-
-        [[maybe_unused]] model* m = new model();
-
         const vox::rgba* palette = vox::vox::get<vox::rgba>(v_in);
-
-        num_vertices = 0;//, num_indices = 0;
+        size_t num_vertices = 0;//, num_indices = 0;
         size_t num_indices = 0;
+         model_builder<vertex_voxel, uint32_t> builder;
+#define _USE_BUILDER
+
         for(const auto& [color, coords] : coords_info) {
             DEBUG_VALUE_OF(color);
-            model_mesh* mesh = new model_mesh();
-            mesh->base_vertex = num_vertices;
-            mesh->base_index  = num_indices; 
-
+            builder
+                .material(color)
+                .base_vertex(num_vertices)
+                .base_index(num_indices);
 
             for(const auto& coord: coords) {
                 /**
                  * we should emit two primitives per plane: one for the front-face, and one for the
                  * back-face. If we don't do this, we'd have a mesh that is open on one side. 
                  */
-                [[maybe_unused]] std::array<vec3f, 4> backface_quad, frontface_quad;
-                calculate_coords(
-                    std::get<0>(coord), 
-                    std::get<1>(coord), 
-                    std::get<2>(coord),
-                    std::get<3>(coord),
-                    frontface_quad,
-                    -0.5f
-                );
-                calculate_coords(
-                    std::get<0>(coord), 
-                    std::get<1>(coord), 
-                    std::get<2>(coord),
-                    std::get<3>(coord),
-                    backface_quad,
-                    0.5f
-                );
-
-                vertices[num_vertices++]._position = backface_quad[0];
-                vertices[num_vertices++]._position = backface_quad[1];
-                vertices[num_vertices++]._position = backface_quad[2];
-                vertices[num_vertices++]._position = backface_quad[3];
-                
-                vertices[num_vertices++]._position = frontface_quad[0];
-                vertices[num_vertices++]._position = frontface_quad[1];
-                vertices[num_vertices++]._position = frontface_quad[2];
-                vertices[num_vertices++]._position = frontface_quad[3];
-
-                vertices[num_vertices - 8]._color = palette->colors[color];
-                vertices[num_vertices - 7]._color = palette->colors[color];
-                vertices[num_vertices - 6]._color = palette->colors[color];
-                vertices[num_vertices - 5]._color = palette->colors[color];
-                vertices[num_vertices - 4]._color = palette->colors[color];
-                vertices[num_vertices - 3]._color = palette->colors[color];
-                vertices[num_vertices - 2]._color = palette->colors[color];
-                vertices[num_vertices - 1]._color = palette->colors[color];
-
-                vec3f normal = std::get<0>(coord) == 0 
-                    ? vec3f::right() 
-                    : std::get<0>(coord)== 1 
-                        ? vec3f::up() 
-                        : vec3f::forward();
-                
-                vertices[num_vertices - 8]._normal = normal;
-                vertices[num_vertices - 7]._normal = normal;
-                vertices[num_vertices - 6]._normal = normal;
-                vertices[num_vertices - 5]._normal = normal;
-                vertices[num_vertices - 4]._normal = normal;
-                vertices[num_vertices - 3]._normal = normal;
-                vertices[num_vertices - 2]._normal = normal;
-                vertices[num_vertices - 1]._normal = normal;
-
-
-                indices[num_indices++] = num_vertices - 8;
-                indices[num_indices++] = num_vertices - 7;
-                indices[num_indices++] = num_vertices - 6;
-                indices[num_indices++] = num_vertices - 5;
-                indices[num_indices++] = num_vertices - 4;
-                indices[num_indices++] = num_vertices - 3;
-                indices[num_indices++] = num_vertices - 2;
-                indices[num_indices++] = num_vertices - 1;
+                for(auto face : range(2)) {
+                    std::array<vec3f, 4> quad_face; 
+                    calculate_coords(std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), quad_face, (((face & 1) == 1) ? 0.5f : -0.5f));
+                    for(auto ii : range(4)) {
+                        vertex_voxel v0;
+                        v0._position = quad_face[ii];
+                        v0._color    = palette->colors[color];
+                        v0._normal   = std::get<0>(coord) == 0 ? vec3f::right() : std::get<0>(coord)== 1 ? vec3f::up() : vec3f::forward();
+                        builder
+                            .add_vertex(v0)
+                            .add_index(num_indices++);
+                        num_vertices++;
+                    }
+                }
             }
-            mesh->num_vertices = num_vertices - mesh->base_vertex;
-            mesh->num_indices  = (num_vertices * 6) - mesh->base_index;
-            m->_meshes.push_back(mesh);
         }
-        {
-            vertex_buffer* vb = new vertex_buffer(sizeof(vertex_voxel) * vertices.size()); 
-            std::ostream os(vb);
-            os.write(reinterpret_cast<char*>(&vertices[0]), sizeof(vertex_voxel) * vertices.size());
-            m->_vertices    = vb;
-        }
-       
-        {
-            index_buffer* ib = new index_buffer(sizeof(uint32_t) * indices.size());
-            std::ostream os(ib);
-            os.write(reinterpret_cast<char*>(&indices[0]), sizeof(uint32_t) * indices.size());
-            m->_indices     = ib;
-        }
-        
-        return m;
+        return builder.build();
     }
+};
+std::vector<int> demo2() {
+    typedef ndview<std::vector<int>, 3> ndview3i;
+    /**
+     * 1.) Load content
+     */
+    auto ifs = wee::open_ifstream("assets/8x8x8.vox");
+    if(!ifs.is_open()) {
+        throw file_not_found("file not found");
+    }
+    binary_reader rd(ifs);
+    vox* vx = vox_reader::read(rd);
+    /**
+     * 2.) regularize to grid.
+     */
+    auto* len = vox::get<vox::size>(vx);
+    size_t example_len = len->x * len->y * len->z; 
+    std::vector<int> example(example_len, 0);
+    ndview3i view(&example, { len->x, len->y, len->z });
+    for(const auto* ptr: vx->chunks) {
+        if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
+            for(const auto& v: a->voxels) {
+                example[view.linearize(v.x, v.y, v.z)] = v.i;
+            }
+        }
+    }
+    /**
+     * 3.) Apply WFC
+     */
+
+    static int OUT_D = 4;
+    static int OUT_H = 4;
+    static int OUT_W = 4;
+
+    std::vector<int> res;
+
+    nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
+    nami::basic_model test(ts, 3);
+    test.on_done += [&res] (const std::vector<int>& a) {
+        res = a;
+    };
+
+    test.add_example(&example[0], { len->x, len->y, len->z });
+    test.solve_for({OUT_D, OUT_H, OUT_W});
+    /**
+     * 4.) Convert back to magicavoxel
+     */
+    vox* vx_res = new vox();
+    vx_res->version = 150;
+    
+    vox::set_size(vx_res, OUT_W, OUT_H, OUT_D);
+    vox::set_pack(vx_res, 1);
+
+    vox::xyzi* data = new vox::xyzi();
+
+    ndview3i view_res(&res, {OUT_W, OUT_H, OUT_D});
+
+    for(auto i: range(OUT_W * OUT_H * OUT_D)) {
+        auto coord = view_res.delinearize(i);
+        vox::voxel voxl;
+        voxl.x = coord[0];
+        voxl.y = coord[1];
+        voxl.z = coord[2];
+        voxl.i = res[i];
+        data->voxels.push_back(voxl);
+
+        //DEBUG_VALUE_OF(coord);
+    }
+    vx_res->chunks.push_back(data);
+    //binary_writer writer(std::cout);
+    //vox_writer::write(vx_res, writer);
+    /**
+     * 5.) Convert voxels to mesh
+     */
+    //[[maybe_unused]] model* m = meshify::vox_to_mesh(vx_res);
+
+    return res;
+}
+
+struct game : public applet {
+    model* _model;
+    model* _voxel_mesh;
+    texture_sampler _sampler;
+    float _time = 0.0f;
+    camera _camera;
+
+    aabb_renderer* _renderer;
+
+    std::unordered_map<std::string, shader_program*> _shaders;
+    std::vector<model*> _models;
+    std::vector<int> _voxels;
 
     int load_content() {
-#if 0
-        std::vector<int> test(4 * 3 * 2);
-        std::iota(test.begin(), test.end(), 0);
-        ndview<std::vector<int>, 3> view(test, { 4, 3, 2 });
-        for(int dim : range(3)) {
-            /**
-             * dim=0 -> y/z plane (left to right)
-             * dim=1 -> x/y plane (back to front)
-             * dim=2 -> x/z plane (top to bottom)
-             */
-            for(auto depth: range(view.shape()[dim])) {
-                std::vector<int> plane;
-                std::array<ptrdiff_t, 2> aux;
-                view.slice(dim, depth, aux, std::back_inserter(plane));
-                DEBUG_VALUE_OF(aux);
-                DEBUG_VALUE_OF(plane);
-            }
-        }
-        exit(-6);
-#endif
-
-        auto ifs = wee::open_ifstream("assets/8x8x8.vox");
+        demo1();
+        demo2();
+        auto ifs = wee::open_ifstream("assets/monu10.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
         binary_reader rd(ifs);
-        _voxel_mesh = vox_to_mesh(vox_reader::read(rd));
+        _voxel_mesh = meshify::vox_to_mesh(vox_reader::read(rd));
 
         try {
             {
@@ -650,7 +540,7 @@ struct game : public applet {
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::CornflowerBlue, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_x(0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
