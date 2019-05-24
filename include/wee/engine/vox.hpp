@@ -113,7 +113,7 @@ namespace wee {
             std::vector<voxel> voxels;
         };
         struct rgba : chunk {
-            int colors[256];
+            unsigned int colors[256];
         };
 
         struct unknown : chunk {
@@ -125,8 +125,25 @@ namespace wee {
         int version;
         std::vector<chunk*> chunks;
 
-        static void set_pack(vox* vx, int n) {
+        static void set_palette(vox* vx, const unsigned int colors[256]) {
+            rgba* dst = nullptr;
+            if(dst = const_cast<rgba*>(get<rgba>(const_cast<const vox*>(vx))); dst == nullptr) {
+                dst = new rgba();
+                vx->chunks.push_back(dst);
+            }
+            std::copy(&colors[0], &colors[255], &dst->colors[0]);
         }
+
+        static void set_pack(vox* vx, int n) {
+
+            pack* dst = nullptr;
+            if(dst = const_cast<pack*>(get<pack>(const_cast<const vox*>(vx))); dst == nullptr) {
+                dst = new pack();
+                vx->chunks.push_back(dst);
+            }
+            dst->num_models = n;
+        }
+
 
         static void set_size(vox* vx, int x, int y, int z) {
             size* dst = nullptr;

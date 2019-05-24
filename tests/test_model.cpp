@@ -327,6 +327,7 @@ struct meshify {
             }
         }
         const vox::rgba* palette = vox::vox::get<vox::rgba>(v_in);
+
         size_t num_vertices = 0;//, num_indices = 0;
         size_t num_indices = 0;
          model_builder<vertex_voxel, uint32_t> builder;
@@ -363,12 +364,12 @@ struct meshify {
         return builder.build();
     }
 };
-std::vector<int> demo2() {
+model* demo2() {
     typedef ndview<std::vector<int>, 3> ndview3i;
     /**
      * 1.) Load content
      */
-    auto ifs = wee::open_ifstream("assets/8x8x8.vox");
+    auto ifs = wee::open_ifstream("assets/test_01.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -388,13 +389,14 @@ std::vector<int> demo2() {
             }
         }
     }
+    std::reverse(example.begin(), example.end());
     /**
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 4;
-    static int OUT_H = 4;
-    static int OUT_W = 4;
+    static int OUT_D = 12;
+    static int OUT_H = 13;
+    static int OUT_W = 114;
 
     std::vector<int> res;
 
@@ -404,8 +406,24 @@ std::vector<int> demo2() {
         res = a;
     };
 
-    test.add_example(&example[0], { len->x, len->y, len->z });
+    test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
     test.solve_for({OUT_D, OUT_H, OUT_W});
+
+    std::map<int, char> tiles = {
+        { 0, '.' },
+        { 1, '#' },
+        { 2, '2' },
+        { 3, '~' }
+    };
+    
+    for(int y=0; y < OUT_H; y++) {
+        for(int x=0; x < OUT_W; x++) {
+            auto t = res[x + y * OUT_W];
+            std::cout << tiles[test.tiles().tile(t)]; 
+        }
+        std::cout << std::endl;
+    }
+    
     /**
      * 4.) Convert back to magicavoxel
      */
@@ -414,6 +432,7 @@ std::vector<int> demo2() {
     
     vox::set_size(vx_res, OUT_W, OUT_H, OUT_D);
     vox::set_pack(vx_res, 1);
+    vox::set_palette(vx_res, vox::get<vox::rgba>(vx)->colors);
 
     vox::xyzi* data = new vox::xyzi();
 
@@ -425,10 +444,8 @@ std::vector<int> demo2() {
         voxl.x = coord[0];
         voxl.y = coord[1];
         voxl.z = coord[2];
-        voxl.i = res[i];
+        voxl.i = test.tiles().tile(res[i]);
         data->voxels.push_back(voxl);
-
-        //DEBUG_VALUE_OF(coord);
     }
     vx_res->chunks.push_back(data);
     //binary_writer writer(std::cout);
@@ -436,9 +453,7 @@ std::vector<int> demo2() {
     /**
      * 5.) Convert voxels to mesh
      */
-    //[[maybe_unused]] model* m = meshify::vox_to_mesh(vx_res);
-
-    return res;
+    return meshify::vox_to_mesh(vx_res);
 }
 
 struct game : public applet {
@@ -456,13 +471,14 @@ struct game : public applet {
 
     int load_content() {
         demo1();
-        demo2();
-        auto ifs = wee::open_ifstream("assets/monu10.vox");
+        _voxel_mesh = demo2();
+        /*auto ifs = wee::open_ifstream("assets/monu10.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
         binary_reader rd(ifs);
         _voxel_mesh = meshify::vox_to_mesh(vox_reader::read(rd));
+        */
 
         try {
             {
@@ -501,8 +517,8 @@ struct game : public applet {
             //_model = mesh_generator::ico_sphere(1.0f, 0);
             _model = _models[0];
 
-            _camera.set_position(0, 10, 10);
-            _camera.lookat(0, 0, 0);
+            _camera.set_position(25, 50, 50);
+            _camera.lookat(25, 0, 0);
             _camera.set_viewport(640, 480);
 
             _renderer = new aabb_renderer;
@@ -516,7 +532,7 @@ struct game : public applet {
 
     int update(int dt) { 
         //_time += static_cast<float>(dt) * 0.001f;
-#if 1 
+#if 0 
         static float kSensitivity = 0.01f;
         _camera.set_rotation(
             (input::instance().mouse_x) * kSensitivity, 
@@ -530,7 +546,7 @@ struct game : public applet {
         if(input::instance().keydown['d']) _camera.strafe( 1.0f);
 #else
         
-        _camera.lookat(0, 0, 0);
+        //_camera.lookat(0, 0, 0);
 #endif
         return 0; 
     }
@@ -538,9 +554,10 @@ struct game : public applet {
     int draw(graphics_device* dev) {
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
-        dev->clear(SDL_ColorPresetEXT::CornflowerBlue, clear_options::kClearAll, 1.0f, 0); 
+        dev->clear(SDL_ColorPresetEXT::IndianRed, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        //mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         

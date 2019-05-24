@@ -24,31 +24,111 @@ template <typename T>
 float entropyof(const T& t) {
     return 1.0f - 1.0f / static_cast<float>(popcount(t));
 }
-    template <typename S>
-    size_t array_product(const S& a) {
-        return std::accumulate(std::begin(a), std::end(a), 1,
-                               std::multiplies<int>());
-    }
+template <typename S>
+size_t array_product(const S& a) {
+    return std::accumulate(std::begin(a), std::end(a), 1,
+                           std::multiplies<int>());
+}
 
-struct tileset {
+enum class tile_symmetry : uint8_t {
+    /**
+     * no symmetry
+     */
+    F = 0,
+    /*
+     * fully symmetric
+     */
+    X, 
+    /**
+     * reflectable on y-axis
+     */
+    T, 
+    /**
+     * reflectable on x-axis and y-axis
+     */
+    I, 
+    /**
+     * reflectable on one diagonal
+     */
+    L, 
+    /**
+     * reflectable on two diagonals
+     */
+    slash, 
+    /**
+     * reflectable on other diagonal
+     */
+    Q, 
+    /**
+     * rotatable by 180 degrees
+     */
+    N, 
+    /**
+     * reflectable on x-axis
+     */
+    E
+};
 
-    struct tile_info {
-        int id;
-        // rotation
-        // reflection
-        float frequency;
-    };
+struct tile_rotation {
+    int     cw;
+    bool    reflect_x;
 
+    constexpr static const tile_rotation identity() { return tile_rotation { 0, false }; }
+};
+
+class tileset {
     typedef int tile_type;
     std::vector<tile_type> _data;
     std::unordered_map<tile_type, size_t> _index;
     std::vector<size_t> _frequency;
-
+    //std::vector<tile_rotation> _rotations;
+public:
     size_t size() const  {
         return _data.size();
     }
 
-    size_t push(const tile_type& t) {
+    size_t push(const tile_type& t, const tile_rotation&) { 
+        
+        return push_impl(t);
+
+        /*std::function<int(int)> a, b;
+        int cardinality;
+
+        if(sym == 'L') { 
+            cardinality = 4; 
+            a = [] (int i) { return (i + 1) % 4; };
+            b = [] (int i) { return ((i % 2) == 0) ? i + 1 : i - 1; };
+        } else if (sym == 'T') {
+            cardinality = 4;
+            a = [] (int i) { return (i + 1) % 4; };
+            b = [] (int i) { return ((i % 2) == 0) ? i : 4 - 1; };
+        } else if(sym == 'I') {
+            cardinality = 2;
+            a = [] (int i) { return 1 - i; };
+            b = [] (int i) { return i; };
+        } else if(sym == '/') {
+            cardinality = 2;
+            a = [] (int i) { return 1 - i; };
+            b = [] (int i) { return 1 - i; };
+        } else {
+            cardinality = 1;
+            a = [] (int i) { return i; };
+            b = [] (int i) { return i; };
+        }
+
+        for([[maybe_unused]] auto i: range(cardinality)) {
+            DEBUG_VALUE_OF(t);
+            DEBUG_VALUE_OF(a(t));
+            DEBUG_VALUE_OF(a(a(t)));
+            DEBUG_VALUE_OF(a(a(a(t))));
+            DEBUG_VALUE_OF(b(t));
+            DEBUG_VALUE_OF(b(a(t)));
+            DEBUG_VALUE_OF(b(a(a(t))));
+            DEBUG_VALUE_OF(b(a(a(a(t)))));
+        }*/
+    }
+
+    size_t push_impl(const tile_type& t) {
         if(_index.count(t) == 0) {
             _index[t] = _data.size();
             _data.push_back(t);
@@ -77,11 +157,9 @@ struct tileset {
 
     static tileset from_example(const tile_type* data, size_t len) {
         std::vector<tile_type> t(data, data + len);
-        //std::sort(t.begin(), t.end());
-        //t.erase(std::unique(t.begin(), t.end()), t.end());
         tileset res;
         for(const auto& it: t) {
-            res.push(it);
+            res.push(it, tile_rotation::identity());
         }
         return res;
     }
@@ -93,12 +171,10 @@ struct topology {
     using directions = std::valarray<int>;
     shape _shape;
     std::vector<bool> _periodic;
-    /*
-     * TODO: poorly named. This member holds both directions of the axes
-     */
     directions _neighbor;
 
-    topology() {}
+    topology() {
+    }
 
     topology(const shape& s, bool isPeriodic = false) 
         : _shape(s)
@@ -165,8 +241,7 @@ struct wave {
 
     float progress() const {
         int num_collapsed =
-            std::count_if(_coeff.begin(), _coeff.end(),
-                          [](const T& i) { return popcount(i) == 1; });
+            std::count_if(_coeff.begin(), _coeff.end(), [](const T& i) { return popcount(i) == 1; });
         return static_cast<float>(num_collapsed) / _coeff.size();
     }
 
@@ -181,7 +256,6 @@ struct wave {
 
     bool did_collapse() const {
         for(auto i : range(_coeff.size())) {
-        //for(size_t i = 0; i < _coeff.size(); i++) {
             if(!collapsed_at(i)) {
                 return false;
             }
@@ -234,6 +308,8 @@ struct basic_model {
 
     basic_model(const tileset& ts, size_t);
 
+    const tileset& tiles() const { return _ts; }
+
     /**
      * return the effective domain of this model
      */
@@ -261,11 +337,9 @@ struct basic_model {
         std::copy(f.begin(), f.end(), it);
     }
 
-    void add_adjacency(const std::vector<int>& from, 
-            const std::vector<int>& to, 
-            const topology::directions& d);
-    void add_adjacency(int a, int b, const topology::directions& d);
-    void add_adjacency(int a, int b, size_t i);
+    void add_adjacency(const std::vector<int>& from, const std::vector<int>& to, const topology::directions& d, const tile_rotation& = tile_rotation::identity());
+    void add_adjacency(int a, int b, const topology::directions& d, const tile_rotation& = tile_rotation::identity() );
+    void add_adjacency(int a, int b, size_t i,const tile_rotation& = tile_rotation::identity() );
     //void weights_from_example(const int* data, size_t len);
     void add_example(const int* data, const topology::shape& shape);
     void solve_for(const topology::shape&);
@@ -357,23 +431,18 @@ struct wave_propagator {
             auto cur_avail = _wave->avail(cur_bitmask);
 
             for(size_t i=0; i < topo.num_neighbors(); i++) { 
-                //size_t start = i * kNumDimensions;
-                //std::valarray<int> d = _neighbors[std::slice(start, kNumDimensions, 1)];
                 auto d = topo.neighbor(i);
                 size_t other_i;
                 if(!topo.try_move(cur_coords, d, &other_i)) {
                     continue;
                 }
-                //auto other_coords = cur_coords + d;
-                //if(!is_valid(other_coords, _output_shape)) 
-                //    continue;
-                
-                //size_t other_i = linearize(other_coords, _output_shape);
                
                 auto opts = 0;
                 for(auto ct: cur_avail) {
-                    //opts |= _adjacency[ct * kNumNeighbors + i];
-                    opts |= adjacency.at(ct * topo.num_neighbors() + i);
+                    auto idx = ct * topo.num_neighbors() + i;
+                    if(adjacency.count(idx)) {
+                        opts |= adjacency.at(ct * topo.num_neighbors() + i);
+                    }
                 }
                 /**
                  * this next line is important! This prevents the selection of tiles that have 0 neighbors 
@@ -437,82 +506,74 @@ basic_model::basic_model(const tileset& ts, size_t n)
 
 void basic_model::add_adjacency(const std::vector<int>& from, 
         const std::vector<int>& to, 
-        const topology::directions& d) 
+        const topology::directions& d,
+        const tile_rotation& r) 
 {
     assert(_topo.num_neighbors() == d.size());
     for(auto a : from) { 
         for(auto b : to) {
-            add_adjacency(a, b, d);
+            add_adjacency(a, b, d, r);
         }
     }
 }
-void basic_model::add_adjacency(int a, int b, size_t i) {
+void basic_model::add_adjacency(int a, int b, size_t i, const tile_rotation& r) {
     //size_t num_neighbors = _index.size();
+    size_t idx = i + r.cw;
     size_t y = _ts.tile_to_index(a);
-    _adjacency[y *_topo.num_neighbors() + i] |= bitmaskof<uint64_t>(_ts.tile_to_index(b)); 
-}
 
-void basic_model::add_adjacency(int a, int b, const topology::directions& d) {
+    _adjacency[y *_topo.num_neighbors() + idx] |= bitmaskof<uint64_t>(_ts.tile_to_index(b) + r.cw); 
+}
+/**
+ * goal: generalized lookup of cartesian coordinates to array subscript for direction only
+ *
+ * bit of a reach here, but: we know the topology information that we require here
+ * based on the size of the direction. The size() of the direction
+ * will be the number of dimensions in the target topology.
+ *
+ * challenge: find the index into the adjacency table based on the cardinal direction
+ * provided by @param d.
+ * 
+ * 2D:
+ * DEBUG_VALUE_OF((int)linearize({0, 1}, s) ); // -1,  0 --> +1 = 0, 1
+ * DEBUG_VALUE_OF((int)linearize({1, 0}, s) ); //  0, -1 --> +1 = 1, 0
+ * DEBUG_VALUE_OF((int)linearize({1, 2}, s) ); //  0,  1 --> +1 = 1, 2
+ * DEBUG_VALUE_OF((int)linearize({2, 1}, s) ); //  1,  0 --> +1 = 2, 1
+ * 
+ * we attempt to map the input quadrant 
+ *
+ * +-----------+
+ * | x | a | x |
+ * +---+---+---+
+ * | b | x | c |
+ * +---+---+---+
+ * | x | d | x |
+ * +---+---+---+
+ *
+ * to a n+1 topology.
+ *
+ * +-----------+
+ * | 0 | 1 | 2 |
+ * +---+---+---+
+ * | 3 | 4 | 5 |
+ * +---+---+---+
+ * | 6 | 7 | 8 |
+ * +---+---+---+
+ *
+ * check if this is generalizeable to 3D...
+ * 
+ * turns out that it isn't. 2D maps linearly, i.e.: with increments of 2, 
+ * 3D has increments of 4, 6, 2, 1, 1, 2 and 6.
+ *
+ * In the end, the option was chosen to create a mapping from the tilespace 
+ * indices to linear-sequential indices. (_index)
+ *
+ */
+void basic_model::add_adjacency(int a, int b, const topology::directions& d, const tile_rotation& r) {
     assert(_topo.num_neighbors() == d.size());
-    /**
-     * goal: generalized lookup of cartesian coordinates to array subscript for direction only
-     *
-     * bit of a reach here, but: we know the topology information that we require here
-     * based on the size of the direction. The size() of the direction
-     * will be the number of dimensions in the target topology.
-     *
-     * challenge: find the index into the adjacency table based on the cardinal direction
-     * provided by @param d.
-     * 
-     * 2D:
-     * DEBUG_VALUE_OF((int)linearize({0, 1}, s) ); // -1,  0 --> +1 = 0, 1
-     * DEBUG_VALUE_OF((int)linearize({1, 0}, s) ); //  0, -1 --> +1 = 1, 0
-     * DEBUG_VALUE_OF((int)linearize({1, 2}, s) ); //  0,  1 --> +1 = 1, 2
-     * DEBUG_VALUE_OF((int)linearize({2, 1}, s) ); //  1,  0 --> +1 = 2, 1
-     * 
-     * we attempt to map the input quadrant 
-     *
-     * +-----------+
-     * | x | a | x |
-     * +---+---+---+
-     * | b | x | c |
-     * +---+---+---+
-     * | x | d | x |
-     * +---+---+---+
-     *
-     * to a n+1 topology.
-     *
-     * +-----------+
-     * | 0 | 1 | 2 |
-     * +---+---+---+
-     * | 3 | 4 | 5 |
-     * +---+---+---+
-     * | 6 | 7 | 8 |
-     * +---+---+---+
-     *
-     * check if this is generalizeable to 3D...
-     * 
-     * turns out that it isn't. 2D maps linearly, i.e.: with increments of 2, 
-     * 3D has increments of 4, 6, 2, 1, 1, 2 and 6.
-     *
-     * In the end, the option was chosen to create a mapping from the tilespace 
-     * indices to linear-sequential indices.
-     *
-     */
     topology::shape s(3, d.size());
-    auto dt = topology::directions(d + 1);
-    add_adjacency(a, b, _index[linearize(dt, s)]);
+    auto dt = topology::directions(d + 1); // offset towards "center" of matrix
+    add_adjacency(a, b, _index[linearize(dt, s)], r);
 }
-
-/*
-void basic_model::weights_from_example(const int* data, size_t len) {
-    std::multiset<int> temp(data, data + len);
-    for(auto it = temp.begin(); it != temp.end(); it = temp.upper_bound(*it)) {
-        size_t tile_index = _ts.tile_to_index(*it);
-        _weights[tile_index] = temp.count(*it);
-    }
-}*/
-
 
 void basic_model::add_example(const int* data, const topology::shape& shape) {
     assert(_topo.num_dimensions() == shape.size());

@@ -176,12 +176,7 @@ class alignas(16) model {
                 size_t start = i * kNumDimensions;
                 std::valarray<int> d = _neighbors[std::slice(start, kNumDimensions, 1)];
 
-#if 1
                 auto other_coords = cur_coords + d;
-#else
-
-                std::valarray<int> other_coords = (cur_coords + d) % _output_shape;
-#endif
 
                 if(!is_valid(other_coords, _output_shape)) 
                     continue;
@@ -235,9 +230,6 @@ class alignas(16) model {
                 size_t start = z * kNumDimensions;
                 std::valarray<int> n = _neighbors[std::slice(start, kNumDimensions, 1)];
                 std::valarray<int> p = coord + n;
-#if 0 
-                p = (p % in_shape + in_shape) % in_shape; // remainder != modulus
-#endif
                 
                 if(is_valid(p, in_shape)) {
                     int other = in_map[linearize(p, in_shape)];
