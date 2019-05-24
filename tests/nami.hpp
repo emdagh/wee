@@ -453,7 +453,6 @@ struct wave_propagator {
                 auto any_possible = _wave->at(other_i) & opts;
                 if(!any_possible) {
                     //reset(&_initial[0], _initial.size());
-                    exit(2);
                     return;
                 }
                 //!

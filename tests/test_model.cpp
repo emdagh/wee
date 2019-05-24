@@ -369,7 +369,8 @@ model* demo2() {
     /**
      * 1.) Load content
      */
-    auto ifs = wee::open_ifstream("assets/test_01.vox");
+    //auto ifs = wee::open_ifstream("assets/test_01.vox");
+    auto ifs = wee::open_ifstream("assets/unique.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -409,21 +410,24 @@ model* demo2() {
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
     test.solve_for({OUT_D, OUT_H, OUT_W});
 
-    std::map<int, char> tiles = {
-        { 0, '.' },
-        { 1, '#' },
-        { 2, '2' },
-        { 3, '~' }
-    };
-    
-    for(int y=0; y < OUT_H; y++) {
-        for(int x=0; x < OUT_W; x++) {
-            auto t = res[x + y * OUT_W];
-            std::cout << tiles[test.tiles().tile(t)]; 
+    DEBUG_VALUE_OF(example);
+
+#if 0 
+    ndview3i res_view(&res, { OUT_W, OUT_H, OUT_D });
+
+    for(auto depth: range(res_view.shape()[2])) {
+        std::vector<int> plane;
+        std::array<ptrdiff_t, 2> aux;
+        res_view.slice(2, depth, aux, std::back_inserter(plane));
+        for(auto y: range(aux[1])) {
+            for(auto x: range(aux[0])) {
+                auto t = plane[x + y * OUT_W];
+                std::cout << t;
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
     }
-    
+#endif
     /**
      * 4.) Convert back to magicavoxel
      */
@@ -470,15 +474,17 @@ struct game : public applet {
     std::vector<int> _voxels;
 
     int load_content() {
-        demo1();
-        _voxel_mesh = demo2();
-        /*auto ifs = wee::open_ifstream("assets/monu10.vox");
+        //demo1();
+#if 0
+        //_voxel_mesh = demo2();
+#else
+        auto ifs = wee::open_ifstream("assets/unique.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
         binary_reader rd(ifs);
         _voxel_mesh = meshify::vox_to_mesh(vox_reader::read(rd));
-        */
+#endif
 
         try {
             {
@@ -517,8 +523,8 @@ struct game : public applet {
             //_model = mesh_generator::ico_sphere(1.0f, 0);
             _model = _models[0];
 
-            _camera.set_position(25, 50, 50);
-            _camera.lookat(25, 0, 0);
+            _camera.set_position(5, 0, 5);
+            _camera.lookat(5, 0, 0);
             _camera.set_viewport(640, 480);
 
             _renderer = new aabb_renderer;
@@ -563,7 +569,7 @@ struct game : public applet {
         
             shader_program* _program = _shaders["@voxel_shader"];
         {
-            //glPolygonMode( GL_BACK, GL_LINE );
+            glPolygonMode( GL_BACK, GL_LINE );
             glUseProgram(_program->_handle);
             _program->set_uniform<uniform4x4f>("wvp", mat4::mul(world, mat4::mul(view, projection)));
             _renderer->draw(_model->_aabb);
