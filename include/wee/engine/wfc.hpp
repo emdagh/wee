@@ -28,7 +28,7 @@ using wee::range;
 namespace wee {
 
 template <typename T, size_t kNumDimensions = 2>
-class alignas(16) model {
+class alignas(16) wfc_model {
 
     size_t _len;
     wee::random _random;// = { 77408982 };// = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
@@ -196,7 +196,7 @@ class alignas(16) model {
                 auto any_possible = _coefficients[other_i] & opts;
                 if(!any_possible) {
                     //reset(&_initial[0], _initial.size());
-                    return;
+                    exit(0);
                 }
                 
                 if(_coefficients[other_i] != any_possible) {
@@ -254,7 +254,7 @@ class alignas(16) model {
     }
 public:
 
-    model(const T* in_map, const std::valarray<int>& in_size, T* out_map, const std::valarray<int>& out_size) 
+    wfc_model(const T* in_map, const std::valarray<int>& in_size, T* out_map, const std::valarray<int>& out_size) 
     {
         assert(in_size.size() == out_size.size());
         _len = array_product(out_size);

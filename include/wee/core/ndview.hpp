@@ -15,7 +15,7 @@ namespace wee {
             ptrdiff_t dsize = 1;
             static_assert(N > 0);
             for(auto j : range(N)) {
-                auto i = j;//N - j - 1;
+                auto i = N - j - 1;
                 _strides[i] = _shape[i] != 1 ? dsize : 0;
                 dsize *= _shape[i];
             }
@@ -66,12 +66,10 @@ namespace wee {
 
         template <typename OutputIt>
         void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
-            //std::array<ptrdiff_t, N-1> aux;
             for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = _shape[i];
 
             iterate(axis, depth, [&](const shape_type& s) {
-                size_t idx = std::inner_product(s.begin(), s.end(), this->strides().begin(), 0);
-                *d_iter++ = _data->at(idx);
+                *d_iter++ = _data->at(linearize(s));
             });
         }
         
@@ -83,9 +81,9 @@ namespace wee {
                 unary_op(idx);
                 size_t j;
                 for(j=0; j < N; j++) {
-                    if(j == d) 
+                    auto i = N - j - 1;
+                    if(i == d) 
                         continue;
-                    auto i = j;//N - j - 1;
                     idx[i]++;
                     if(idx[i] < _shape[i]) 
                         break;
@@ -100,20 +98,21 @@ namespace wee {
             return _data->at(linearize(args...));//compute_index(args...)];
         }
 
-        size_t linearize(const shape_t& idx) {
+        size_t linearize(const shape_t& idx) const {
             return compute_index_impl(idx);
         }
 
         template <typename... Ts>
-        size_t linearize(Ts... args) {
+        size_t linearize(Ts... args) const {
             return compute_index(args...);
         }
 
-        shape_t delinearize(size_t i) {
+        shape_t delinearize(size_t i) const {
             size_t idx = i;
 
             shape_t out = { 0 };
-            for (auto i : range(N)) {
+            for (auto j : range(N)) {
+                auto i = N - j - 1;
                 auto s = idx % _shape[ i ];
                 idx -= s;
                 idx /= _shape[ i ];

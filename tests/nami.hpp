@@ -30,6 +30,16 @@ size_t array_product(const S& a) {
                            std::multiplies<int>());
 }
 
+template <typename T>
+struct wave_propagator;
+
+template <typename T>
+struct constraint {
+    virtual ~constraint() = default;
+    virtual void init(const wave_propagator<T>&) = 0;
+    virtual void check(const wave_propagator<T>&) = 0;
+};
+
 enum class tile_symmetry : uint8_t {
     /**
      * no symmetry
@@ -83,6 +93,15 @@ class tileset {
     std::vector<size_t> _frequency;
     //std::vector<tile_rotation> _rotations;
 public:
+
+    tileset() {
+        push(0, tile_rotation::identity());
+    }
+
+    void set_frequency(tile_type t, size_t f) {
+        _frequency[tile_to_index(t)] = f;
+    }
+
     size_t size() const  {
         return _data.size();
     }
@@ -130,6 +149,7 @@ public:
 
     size_t push_impl(const tile_type& t) {
         if(_index.count(t) == 0) {
+            DEBUG_VALUE_OF(t);
             _index[t] = _data.size();
             _data.push_back(t);
             _frequency.push_back(0);
@@ -166,9 +186,9 @@ public:
 };
 
 struct topology {
-    using coordinates = std::valarray<int>;
-    using shape= std::valarray<int>;
-    using directions = std::valarray<int>;
+    using coordinates   = std::valarray<int>;
+    using shape         = std::valarray<int>;
+    using directions    = std::valarray<int>;
     shape _shape;
     std::vector<bool> _periodic;
     directions _neighbor;
@@ -324,9 +344,11 @@ struct basic_model {
     template <typename OutputIt>
     void weights(OutputIt it, bool normalize = false) {
         std::vector<float> f;
-        for(auto i: range(_ts.size())) {
-            f.push_back(_ts.frequency_at(i));
+        for([[maybe_unused]] auto i: range(_ts.size())) {
+            //f.push_back(1.0f);
+            f.push_back(_ts.frequency_of(_ts.tile(i)));
         }
+        DEBUG_VALUE_OF(f);
         if(normalize) {
             float t = std::inner_product(f.begin(), f.end(), f.begin(), 0.0f);
             float reciprocal = 1.0f / t;
@@ -372,7 +394,8 @@ struct wave_propagator {
     cb_t on_done;
 
     wave_propagator() { //size_t len) : _len(len) {
-        //_randgen.reset(3211800525); // non-square grid fail for 4x3 case (demo 1)
+        
+        //_randgen.reset(wee::randgen((uint32_t){}, (uint32_t)78612512));
         DEBUG_VALUE_OF(_randgen.seed());
     }
 
@@ -396,7 +419,8 @@ struct wave_propagator {
     bool collapse(wave<T>* _wave, size_t i, const std::vector<float>& weights) { 
         //auto i = at.x + at.y * _size.x;
         
-        std::map<int, float> w; 
+        std::unordered_map<int, float> w;
+        //std::map<int, float> w; 
         float total_weight = 0.0f;
         auto avail = _wave->avail_at(i);//(_coefficients[i]);
         for(auto t: avail) {
@@ -441,14 +465,14 @@ struct wave_propagator {
                 for(auto ct: cur_avail) {
                     auto idx = ct * topo.num_neighbors() + i;
                     if(adjacency.count(idx)) {
-                        opts |= adjacency.at(ct * topo.num_neighbors() + i);
+                        opts |= adjacency.at(idx);//ct * topo.num_neighbors() + i);
                     }
                 }
                 /**
                  * this next line is important! This prevents the selection of tiles that have 0 neighbors 
                  */
-                if(!opts) 
-                    continue;
+                //if(!opts) 
+                //    continue;
                 
                 auto any_possible = _wave->at(other_i) & opts;
                 if(!any_possible) {
@@ -588,6 +612,7 @@ void basic_model::add_example(const int* data, const topology::shape& shape) {
             }
         }
     }
+    DEBUG_VALUE_OF(_adjacency);
 }
 
 

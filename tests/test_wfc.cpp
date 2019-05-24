@@ -638,7 +638,7 @@ struct game : public wee::applet {
     int32_t _example_width;
     int32_t _example_height;
 
-    model<int>* _model;
+    wfc_model<int>* _model;
         
     std::vector<std::vector<int> > maps;
     //type* out_map = new type[kOutputSize];
@@ -696,7 +696,7 @@ struct game : public wee::applet {
         DEBUG_VALUE_OF(_out_map);
 
         _in_map = maps[0];
-        _model = new model<int>(&_in_map[0], 
+        _model = new wfc_model<int>(&_in_map[0], 
             { _example_height, _example_width },
             &_out_map[0],
             { kOutputDimension.y, kOutputDimension.x }

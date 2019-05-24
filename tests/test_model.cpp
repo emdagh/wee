@@ -41,6 +41,7 @@ typedef vertex<
     attributes::primary_color
 > vertex_voxel;
 
+typedef wee::basic_vec2<int> coord;
 /**
  * TODO: this should be generalizable to higher dimensions. However, for now; we can keep it at 2-D
  *
@@ -53,7 +54,6 @@ typedef vertex<
  * @param_out - top-left coordinate of submatrix
  * @param_out - bottom-right coordinate of submatrix
  */
-typedef wee::basic_vec2<int> coord;
 template <typename T>
 void max_submatrix(const std::vector<T>& a, int nrows, int ncols, const T& skipval, int* d_max_area, coord* d_min, coord* d_max) {
     std::vector<T> w(a.size(), 0);
@@ -164,6 +164,74 @@ struct input : wee::singleton<input> {
         {'d', false}
     };
 };
+void demo3() {
+    /**
+     * this demonstrates the most basic of outputs: the console.
+     */
+
+    std::unordered_map<int, const char*> tile_colors = {
+        { 110, GREEN },
+        { 111, YELLOW },
+        { 112, BLUE },
+        { 1, RED },
+        { 0, BLACK }
+    };
+
+    std::unordered_map<int, char> tiles = {
+        { 110, '+' },
+        { 111, '|' },
+        { 112, '-' },
+        { 1, '#' },
+        { 0, ' ' }
+    };
+#if 1
+    std::vector<int> example = {
+        110, 110, 110, 110,
+        110, 110, 110, 110,
+        110, 110, 110, 110,
+        110, 111, 111, 110,
+        111, 112, 112, 111,
+        112, 112, 112, 112,
+        112, 112, 112, 112
+    };
+#else
+    std::vector<int> example = {
+        110, 112, 112, 110,
+        111,   1,   1, 111,
+        111,   1,   1, 111,
+        111,   1,   1, 111,
+        111,   1,   1, 111,
+        111,   1,   1, 111,
+        110, 112, 112, 110
+    };
+#endif
+    std::vector<int> res;
+
+    auto ts = nami::tileset::from_example(&example[0], example.size());
+    auto test = nami::basic_model(ts, 2);
+
+    auto copy_coeff = [&res] (const std::vector<int>& w) {
+        res = w;
+    };
+
+    test.on_update += copy_coeff;
+    test.on_done   += copy_coeff;
+    
+    test.add_example(&example[0], { 7, 4 });
+    static const int OUT_W =8;
+    static const int OUT_H =8;
+    test.solve_for({OUT_H, OUT_W});
+
+
+    for(int y=0; y < OUT_H; y++) {
+        for(int x=0; x < OUT_W; x++) {
+            auto t = res[x + y * OUT_W];
+            std::cout << tile_colors[t] << tiles[t]; 
+        }
+        std::cout << std::endl;
+    }
+
+}
 void demo1() {
     /**
      * this demonstrates the most basic of outputs: the console.
@@ -178,7 +246,8 @@ void demo1() {
     std::unordered_map<int, char> tiles = {
         { 110, '#' },
         { 111, '.' },
-        { 112, '~' }
+        { 112, '~' },
+        { 0, ' ' }
     };
 
     std::vector<int> example = {
@@ -230,9 +299,9 @@ struct meshify {
          * dim=1 -> x/z plane (top to bottom) depth = y
          * dim=2 -> y/z plane (left to right) depth = x
          */
-        static const int XY = 0;
+        static const int XY = 2;
         static const int XZ = 1;
-        static const int YZ = 2;
+        static const int YZ = 0;
 
         float x0 = static_cast<float>(a.x) - 0.5f;
         float x1 = static_cast<float>(b.x) + 0.5f;
@@ -286,23 +355,26 @@ struct meshify {
          * first, convert all chunks to a structured 3-D array;
          */
         const vox::size* len = vox::get<vox::size>(v_in);
+        DEBUG_VALUE_OF(len->x);
+        DEBUG_VALUE_OF(len->y);
+        DEBUG_VALUE_OF(len->z);
         std::vector<int> data(len->x * len->y * len->z, 0);
         ndview3i view(&data, { len->x, len->y, len->z });
         for(const auto* ptr: v_in->chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
                 for(const auto& v: a->voxels) {
-                    data[view.linearize(v.x, v.y, v.z)] = v.i;
+                    size_t idx = view.linearize(v.y, v.x, v.z);
+                    data[idx] = v.i;
                 }
             }
         }
-        
+
         std::map<int, std::vector<std::tuple<int, int, coord, coord> > > coords_info;
         for(auto dim: range(3)) {
             for(auto depth: range(view.shape()[dim])) {
                 std::vector<int> plane, colors;
                 std::array<ptrdiff_t, 2> aux;
                 view.slice(dim, depth, aux, std::back_inserter(plane));
-                
                 colors = plane;
                 std::sort(colors.begin(), colors.end());
                 auto last = std::unique(colors.begin(), colors.end());
@@ -316,11 +388,11 @@ struct meshify {
                     while(is_empty != 0) {
                         int area;
                         coord coord_min, coord_max;
-                        max_submatrix(bin, aux[1], aux[0], 0, &area, &coord_min, &coord_max);
-                        if(area >= 1) {
+                        max_submatrix(bin, aux[0], aux[1], 0, &area, &coord_min, &coord_max);
+                        if(area > 0) {
                             coords_info[color].push_back(std::make_tuple(dim, depth, coord_min, coord_max));
                         }
-                        zero_vec(bin, aux[1], aux[0], coord_min, coord_max);
+                        zero_vec(bin, aux[0], aux[1], coord_min, coord_max);
                         is_empty = std::accumulate(bin.begin(), bin.end(), 0);
                     }
                 }
@@ -351,7 +423,7 @@ struct meshify {
                     for(auto ii : range(4)) {
                         vertex_voxel v0;
                         v0._position = quad_face[ii];
-                        v0._color    = palette->colors[color];
+                        v0._color    = palette->colors[color - 1];
                         v0._normal   = std::get<0>(coord) == 0 ? vec3f::right() : std::get<0>(coord)== 1 ? vec3f::up() : vec3f::forward();
                         builder
                             .add_vertex(v0)
@@ -369,8 +441,8 @@ model* demo2() {
     /**
      * 1.) Load content
      */
-    //auto ifs = wee::open_ifstream("assets/test_01.vox");
-    auto ifs = wee::open_ifstream("assets/unique.vox");
+    auto ifs = wee::open_ifstream("assets/test_01.vox");
+    //auto ifs = wee::open_ifstream("assets/test_02.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -382,20 +454,27 @@ model* demo2() {
     auto* len = vox::get<vox::size>(vx);
     size_t example_len = len->x * len->y * len->z; 
     std::vector<int> example(example_len, 0);
-    ndview3i view(&example, { len->x, len->y, len->z });
+    ndview3i view(&example, { len->y, len->x, len->z });
+    DEBUG_VALUE_OF(len->x);
+    DEBUG_VALUE_OF(len->y);
+    DEBUG_VALUE_OF(len->z);
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
-                example[view.linearize(v.x, v.y, v.z)] = v.i;
+                size_t idx = view.linearize(v.y, v.x, v.z);
+                DEBUG_VALUE_OF(idx);
+                example[idx] = v.i;
             }
         }
     }
-    std::reverse(example.begin(), example.end());
+    DEBUG_VALUE_OF(example);
+    exit(0);
+    //std::reverse(example.begin(), example.end());
     /**
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 12;
+    static int OUT_D = 1;
     static int OUT_H = 13;
     static int OUT_W = 114;
 
@@ -410,22 +489,23 @@ model* demo2() {
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
     test.solve_for({OUT_D, OUT_H, OUT_W});
 
-    DEBUG_VALUE_OF(example);
 
-#if 0 
-    ndview3i res_view(&res, { OUT_W, OUT_H, OUT_D });
+#if 1
+    ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
 
-    for(auto depth: range(res_view.shape()[2])) {
+    for(auto depth: range(res_view.shape()[0])) {
         std::vector<int> plane;
         std::array<ptrdiff_t, 2> aux;
-        res_view.slice(2, depth, aux, std::back_inserter(plane));
-        for(auto y: range(aux[1])) {
-            for(auto x: range(aux[0])) {
-                auto t = plane[x + y * OUT_W];
-                std::cout << t;
+        res_view.slice(0, depth, aux, std::back_inserter(plane));
+        for(auto y: range(aux[0])) {
+            for(auto x: range(aux[1])) {
+                int t = plane[x + y * OUT_W];
+                char c = t == 1 ? '#' : t == 2 ? '~' : '.';
+                std::cout << c;
             }
             std::cout << std::endl;
         }
+        std::cout << std::endl;
     }
 #endif
     /**
@@ -440,14 +520,14 @@ model* demo2() {
 
     vox::xyzi* data = new vox::xyzi();
 
-    ndview3i view_res(&res, {OUT_W, OUT_H, OUT_D});
+    ndview3i view_res(&res, {OUT_D, OUT_H, OUT_W});
 
     for(auto i: range(OUT_W * OUT_H * OUT_D)) {
         auto coord = view_res.delinearize(i);
         vox::voxel voxl;
-        voxl.x = coord[0];
+        voxl.x = coord[2];
         voxl.y = coord[1];
-        voxl.z = coord[2];
+        voxl.z = coord[0];
         voxl.i = test.tiles().tile(res[i]);
         data->voxels.push_back(voxl);
     }
@@ -474,11 +554,41 @@ struct game : public applet {
     std::vector<int> _voxels;
 
     int load_content() {
-        //demo1();
-#if 0
-        //_voxel_mesh = demo2();
+// DIMENSION ORDERING IS SLOWEST CHANGING --> FASTEST CHANGING (i.e. in D3: SLICES --> ROWS --> COLUMNS)
+#if 0 
+#define N1 2 
+#define N2 3 
+#define N3 4 
+
+        [[maybe_unused]] static const int DIM = 0;
+        std::vector<int> test(N1 * N2 * N3);
+        std::iota(test.begin(), test.end(), 0);
+        ndview<std::vector<int>, 3> view(&test, { N1, N2, N3 });
+        DEBUG_VALUE_OF(view(1,1,1));
+        for(auto depth: range(view.shape()[DIM])) {
+            std::vector<int> plane;
+            std::array<ptrdiff_t, 2> aux;
+            view.slice(DIM, depth, aux, std::back_inserter(plane));
+            for(auto y: range(aux[0])) {
+                for(auto x: range(aux[1])) {
+                    auto t = plane[x + y * aux[1]];
+                    std::cout << t << ", ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
 #else
-        auto ifs = wee::open_ifstream("assets/unique.vox");
+#endif
+
+
+        //demo1();
+        demo3();
+        //exit(-1);
+#if 1
+        _voxel_mesh = demo2();
+#else
+        auto ifs = wee::open_ifstream("assets/monu10.vox");
         if(!ifs.is_open()) {
             throw file_not_found("file not found");
         }
@@ -501,6 +611,7 @@ struct game : public applet {
                     _shaders[node["name"]]->compile(source.c_str());
                 }
             }
+#if 0
             {
                 auto is = open_ifstream("assets/models.json");
                 json j = json::parse(is);
@@ -509,19 +620,13 @@ struct game : public applet {
                 for(auto& node: j["models"]) {
                     std::string nodePath = node["path"];
                     std::string fullPath = basePath + "/" + nodePath;
-#if 1
                     DEBUG_VALUE_OF(fullPath);
                     auto _ = open_ifstream(fullPath);
                     _models.push_back(import_model(_));
-#else
-                    auto resource_path = get_resource_path(basePath) + nodePath;
-                    _models.push_back(import_model_from_file(resource_path));
-#endif
                 }
             }
-
-            //_model = mesh_generator::ico_sphere(1.0f, 0);
             _model = _models[0];
+#endif
 
             _camera.set_position(5, 0, 5);
             _camera.lookat(5, 0, 0);
@@ -538,7 +643,7 @@ struct game : public applet {
 
     int update(int dt) { 
         //_time += static_cast<float>(dt) * 0.001f;
-#if 0 
+#if 1 
         static float kSensitivity = 0.01f;
         _camera.set_rotation(
             (input::instance().mouse_x) * kSensitivity, 
@@ -562,17 +667,16 @@ struct game : public applet {
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::IndianRed, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         //mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
             shader_program* _program = _shaders["@voxel_shader"];
         {
-            glPolygonMode( GL_BACK, GL_LINE );
+            //glPolygonMode( GL_BACK, GL_LINE );
             glUseProgram(_program->_handle);
             _program->set_uniform<uniform4x4f>("wvp", mat4::mul(world, mat4::mul(view, projection)));
-            _renderer->draw(_model->_aabb);
             install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
             GLint prev;
             glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev);
@@ -585,6 +689,8 @@ struct game : public applet {
             glBindBuffer(GL_ARRAY_BUFFER, prev);
         }
 
+
+#if 0 
         glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
         _program = _shaders["@default_model"];
@@ -595,9 +701,7 @@ struct game : public applet {
         //_program->set_uniform<uniform_sampler>("base_sampler", _sampler);
 
         install_vertex_attributes<vertex_p3_n3_t2, vertex_attribute_installer>();
-#if 0 
         
-#else  
         glPointSize(4.0f);
         GLint prev;
         glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev);
