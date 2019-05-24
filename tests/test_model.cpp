@@ -500,7 +500,7 @@ model* demo2() {
         for(auto y: range(aux[0])) {
             for(auto x: range(aux[1])) {
                 int t = plane[x + y * OUT_W];
-                char c = t == 1 ? '#' : t == 2 ? '~' : '.';
+                char c = t == 2 ? '#' : t == 3 ? '.' : '~';
                 std::cout << c;
             }
             std::cout << std::endl;
