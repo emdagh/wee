@@ -359,15 +359,17 @@ struct meshify {
         DEBUG_VALUE_OF(len->y);
         DEBUG_VALUE_OF(len->z);
         std::vector<int> data(len->x * len->y * len->z, 0);
-        ndview3i view(&data, { len->x, len->y, len->z });
+        ndview3i view(&data, { len->z, len->y, len->x });
         for(const auto* ptr: v_in->chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
                 for(const auto& v: a->voxels) {
-                    size_t idx = view.linearize(v.y, v.x, v.z);
+                    size_t idx = view.linearize(v.z, v.y, v.x);
                     data[idx] = v.i;
                 }
             }
         }
+
+        //DEBUG_VALUE_OF(data);
 
         std::map<int, std::vector<std::tuple<int, int, coord, coord> > > coords_info;
         for(auto dim: range(3)) {
@@ -436,6 +438,35 @@ struct meshify {
         return builder.build();
     }
 };
+
+
+template <typename T, size_t N>
+void print_ndview(const ndview<T, N>& view) {
+    for(auto dim: range(view.shape().size())) {
+        //DEBUG_VALUE_OF(dim);
+
+        for(auto depth: range(view.shape()[dim])) {
+            //DEBUG_VALUE_OF(depth);
+            std::vector<int> plane;
+            std::array<ptrdiff_t, 2> aux;
+            view.slice(dim, depth, aux, std::back_inserter(plane));
+            //DEBUG_VALUE_OF(aux);
+            for(auto y: range(aux[0])) {
+                for(auto x: range(aux[1])) {
+                    int t = plane[x + y * aux[1]];
+                    std::cout << t << ",";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+}
+/*template <typename T>
+void print_ndview<T, 2>(const ndview<T, 2>& view) {
+}*/
+
 model* demo2() {
     typedef ndview<std::vector<int>, 3> ndview3i;
     /**
@@ -455,26 +486,23 @@ model* demo2() {
     size_t example_len = len->x * len->y * len->z; 
     std::vector<int> example(example_len, 0);
     ndview3i view(&example, { len->y, len->x, len->z });
-    DEBUG_VALUE_OF(len->x);
-    DEBUG_VALUE_OF(len->y);
-    DEBUG_VALUE_OF(len->z);
+    DEBUG_VALUE_OF(view.shape());
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
                 size_t idx = view.linearize(v.y, v.x, v.z);
-                DEBUG_VALUE_OF(idx);
                 example[idx] = v.i;
             }
         }
     }
-    DEBUG_VALUE_OF(example);
-    exit(0);
+
+
     //std::reverse(example.begin(), example.end());
     /**
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 1;
+    static int OUT_D = 2;
     static int OUT_H = 13;
     static int OUT_W = 114;
 
@@ -484,19 +512,44 @@ model* demo2() {
     nami::basic_model test(ts, 3);
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
+        for(auto x: a) {
+            std::cout << x;;
+        }
+
+        ndview3i res_view(&res, { OUT_H, OUT_W, OUT_D });
+
+        for(auto depth: range(res_view.shape()[2])) {
+            std::vector<int> plane;
+            std::array<ptrdiff_t, 2> aux;
+            res_view.slice(2, depth, aux, std::back_inserter(plane));
+            DEBUG_VALUE_OF(aux);
+            for(auto y: range(aux[0])) {
+                for(auto x: range(aux[1])) {
+                    int t = plane[x + y * aux[1]];
+                    char c = t == 2 ? '#' : t == 3 ? '.' : '~';
+                    std::cout << c;
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+
     };
 
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
     test.solve_for({OUT_D, OUT_H, OUT_W});
 
 
-#if 1
+
+
+#if 0
     ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
 
     for(auto depth: range(res_view.shape()[0])) {
         std::vector<int> plane;
         std::array<ptrdiff_t, 2> aux;
         res_view.slice(0, depth, aux, std::back_inserter(plane));
+        DEBUG_VALUE_OF(aux);
         for(auto y: range(aux[0])) {
             for(auto x: range(aux[1])) {
                 int t = plane[x + y * OUT_W];
@@ -564,7 +617,6 @@ struct game : public applet {
         std::vector<int> test(N1 * N2 * N3);
         std::iota(test.begin(), test.end(), 0);
         ndview<std::vector<int>, 3> view(&test, { N1, N2, N3 });
-        DEBUG_VALUE_OF(view(1,1,1));
         for(auto depth: range(view.shape()[DIM])) {
             std::vector<int> plane;
             std::array<ptrdiff_t, 2> aux;
@@ -583,7 +635,7 @@ struct game : public applet {
 
 
         //demo1();
-        demo3();
+        //demo3();
         //exit(-1);
 #if 1
         _voxel_mesh = demo2();
