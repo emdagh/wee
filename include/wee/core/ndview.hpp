@@ -4,6 +4,7 @@
 
 namespace wee {
 
+
     template <typename T, size_t N>
     class ndview {
         typedef std::array<ptrdiff_t, N> shape_t;
@@ -61,8 +62,8 @@ namespace wee {
             compute_strides();
         }
 
-        const shape_type& strides() const { return _strides; }
-        const shape_type& shape() const { return _shape; }
+        constexpr const shape_type& strides() const { return _strides; }
+        constexpr const shape_type& shape() const { return _shape; }
 
         template <typename OutputIt>
         void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
@@ -92,6 +93,19 @@ namespace wee {
                 if(j == N) break;
             }
         }
+        
+        template <size_t S, size_t I=0, typename E, typename... Args>
+        void recursive_for(E&& e, Args... args) {
+            if constexpr (I == S) {
+                for(auto i=0; i < shape()[I]; i++) {
+                    e(std::array<ptrdiff_t, N>({args..., i}));
+                }
+            } else {
+                for(auto i=0; i < shape()[I]; i++) {
+                    recursive_for<S, I + 1>(e, args..., i);
+                }
+            }
+        }
 
         template <typename... Ts>
         value_type& operator () (Ts... args) {
@@ -106,7 +120,9 @@ namespace wee {
         size_t linearize(Ts... args) const {
             return compute_index(args...);
         }
-
+        /**
+         * https://stackoverflow.com/questions/46782444/how-to-convert-a-linear-index-to-subscripts-with-support-for-negative-strides
+         */
         shape_t delinearize(size_t i) const {
             size_t idx = i;
 
@@ -141,6 +157,49 @@ namespace wee {
             return ss.str();
         }
     };
+    /**
+    template <typename T, typename... Ts>
+    class ndfunction {
+        T _fun;
+        std::tuple<Ts...> _args;
+        size_t _maxdim;
+
+
+    public:
+        auto maxdim(Ts... args) { 
+            return std::max(std::initializer_list<typename std::common_type<Ts...>::type >{args...}, [] (auto a, auto b) { return a < b ? a : b; });
+        }
+        ndfunction(T&& fun, Ts... args) 
+            : _fun(fun)
+            , _args(args...)
+        {
+
+            [[maybe_unused]] auto broadcast_shape = [this] (const auto& val) {
+                auto offset = this->maxdim() - val.maxdim();
+                for(auto i: range(val.maxdim())) {
+                    if(this->shape[offset + i] == 1) {
+                        this->shape[offset + i] = val.shape[i];
+                    } else {
+                        if(val.shape[i] != this->shape[offset + i] && val.shape[i] != 1) {
+                            throw std::runtime_error("broadcast error");
+                        }
+                    }
+                }
+                return true;
+            };
+            //std::for_each(broadcast_shape, args...);
+        }
+
+        template <size_t... I, typename... Args>
+        auto access_impl(std::index_sequence<I...>, Args... idx) const {
+            return _fun(std::get<I>(_args)(idx...)...);
+        }
+
+        template <typename... Args>
+        auto operator () (Args... args) const {
+            return access_impl(std::make_index_sequence<sizeof...(Args)>(), args...);
+        }
+    };*/
 
     template <typename T, size_t N>
     std::ostream& operator << (std::ostream& os, const ndview<T, N>& n) {
