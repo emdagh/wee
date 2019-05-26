@@ -471,8 +471,8 @@ struct wave_propagator {
                 /**
                  * this next line is important! This prevents the selection of tiles that have 0 neighbors 
                  */
-                //if(!opts) 
-                //    continue;
+                if(!opts) 
+                    continue;
                 
                 auto any_possible = _wave->at(other_i) & opts;
                 if(!any_possible) {

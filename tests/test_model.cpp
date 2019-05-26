@@ -472,8 +472,8 @@ model* demo2() {
     /**
      * 1.) Load content
      */
-    auto ifs = wee::open_ifstream("assets/test_01.vox");
-    //auto ifs = wee::open_ifstream("assets/test_02.vox");
+    //auto ifs = wee::open_ifstream("assets/test_01.vox");
+    auto ifs = wee::open_ifstream("assets/test_02.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -502,13 +502,14 @@ model* demo2() {
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 2;
+    static int OUT_D = 5;
     static int OUT_H = 13;
     static int OUT_W = 114;
 
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
+    ts.set_frequency(0, 100);
     nami::basic_model test(ts, 3);
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
@@ -516,12 +517,12 @@ model* demo2() {
             std::cout << x;;
         }
 
-        ndview3i res_view(&res, { OUT_H, OUT_W, OUT_D });
+        ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
 
-        for(auto depth: range(res_view.shape()[2])) {
+        for(auto depth: range(res_view.shape()[0])) {
             std::vector<int> plane;
             std::array<ptrdiff_t, 2> aux;
-            res_view.slice(2, depth, aux, std::back_inserter(plane));
+            res_view.slice(0, depth, aux, std::back_inserter(plane));
             DEBUG_VALUE_OF(aux);
             for(auto y: range(aux[0])) {
                 for(auto x: range(aux[1])) {
