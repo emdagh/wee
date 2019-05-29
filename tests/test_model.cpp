@@ -18,13 +18,33 @@
 #include <core/singleton.hpp>
 #include <core/binary_reader.hpp>
 #include <core/ndview.hpp>
-#include "wfc.hpp"
 #include "voxel.hpp"
 #include "nami.hpp"
 
 using namespace wee;
 using nlohmann::json;
+using namespace nami;
 
+template <typename T, size_t N>
+struct border_constraint : public basic_constraint<T, N> {
+    size_t _axis;
+    T _tile;
+
+    border_constraint(size_t axis, T tile) : _axis(axis), _tile(tile)  {
+    }
+
+    void init(wave<T>& wave, const topology<N>& topo, std::vector<size_t>* res) {
+        std::array<ptrdiff_t, N> ary = { 0 };
+        std::copy(std::begin(topo._shape), std::end(topo._shape), ary.begin());
+        ndindexer<N> ix(ary);
+
+        ix.iterate(_axis, 0, [&](auto... coord) {
+            auto idx = ix.linearize(coord...);
+            wave._coeff[idx] = nami::bitmaskof<T>(_tile);
+            res->push_back(idx);
+        });
+    }
+};
 typedef vertex<
     attributes::position
 > vertex_p3;
@@ -208,7 +228,7 @@ void demo3() {
     std::vector<int> res;
 
     auto ts = nami::tileset::from_example(&example[0], example.size());
-    auto test = nami::basic_model(ts, 2);
+    auto test = nami::basic_model<uint64_t, 2>(ts, 2);
 
     auto copy_coeff = [&res] (const std::vector<int>& w) {
         res = w;
@@ -263,7 +283,7 @@ void demo1() {
     std::vector<int> res;
 
     auto ts = nami::tileset::from_example(&example[0], example.size());
-    auto test = nami::basic_model(ts, 2);
+    auto test = nami::basic_model<uint64_t, 2>(ts, 2);
 
     auto copy_coeff = [&res] (const std::vector<int>& w) {
         res = w;
@@ -473,7 +493,8 @@ model* demo2() {
      * 1.) Load content
      */
     //auto ifs = wee::open_ifstream("assets/test_01.vox");
-    auto ifs = wee::open_ifstream("assets/test_02.vox");
+    //auto ifs = wee::open_ifstream("assets/test_02.vox");
+    auto ifs = wee::open_ifstream("assets/test_09.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -485,12 +506,12 @@ model* demo2() {
     auto* len = vox::get<vox::size>(vx);
     size_t example_len = len->x * len->y * len->z; 
     std::vector<int> example(example_len, 0);
-    ndview3i view(&example, { len->y, len->x, len->z });
+    ndview3i view(&example, { len->y, len->z, len->x });
     DEBUG_VALUE_OF(view.shape());
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
-                size_t idx = view.linearize(v.y, v.x, v.z);
+                size_t idx = view.linearize(v.y, v.z, v.x);
                 example[idx] = v.i;
             }
         }
@@ -503,14 +524,14 @@ model* demo2() {
      */
 
     static int OUT_D = 5;
-    static int OUT_H = 13;
-    static int OUT_W = 114;
+    static int OUT_H = 14;
+    static int OUT_W = 14;
 
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
     ts.set_frequency(0, 100);
-    nami::basic_model test(ts, 3);
+    nami::basic_model<uint64_t, 3> test(ts, 3);
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
         for(auto x: a) {
@@ -527,8 +548,8 @@ model* demo2() {
             for(auto y: range(aux[0])) {
                 for(auto x: range(aux[1])) {
                     int t = plane[x + y * aux[1]];
-                    char c = t == 2 ? '#' : t == 3 ? '.' : '~';
-                    std::cout << c;
+                    //char c = t == 5 ? '#' : t == 3 ? '.' : '~';
+                    std::cout << t;
                 }
                 std::cout << std::endl;
             }
@@ -536,6 +557,10 @@ model* demo2() {
         }
 
     };
+
+    test.add_constraint(new border_constraint<uint64_t, 3>(1, 1));
+    test.ban(1);
+
 
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
     test.solve_for({OUT_D, OUT_H, OUT_W});
@@ -721,7 +746,7 @@ struct game : public applet {
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::IndianRed, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         //mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);

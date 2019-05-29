@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wee.hpp>
 #include <bitset>
 #include <array>
 

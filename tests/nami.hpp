@@ -8,9 +8,21 @@
 
 namespace nami {
 
+    template <size_t N>
+    struct topology;
+    template <typename T>
+    struct wave;
+
+    template <typename T, size_t N>
+    struct basic_constraint {
+        virtual ~basic_constraint() = default;
+        virtual void init(wave<T>&, const topology<N>&, std::vector<size_t>*) = 0;
+    };
+
     using wee::range;
     using wee::random;
-
+    using wee::popcount;
+    using wee::ctz;
 template <typename T>
 constexpr static int indexof(const T& t) {
     return ctz(t);
@@ -24,20 +36,21 @@ template <typename T>
 float entropyof(const T& t) {
     return 1.0f - 1.0f / static_cast<float>(popcount(t));
 }
+
 template <typename S>
 size_t array_product(const S& a) {
     return std::accumulate(std::begin(a), std::end(a), 1,
                            std::multiplies<int>());
 }
 
-template <typename T>
+template <typename T, size_t N>
 struct wave_propagator;
 
-template <typename T>
+template <typename T, size_t N>
 struct constraint {
     virtual ~constraint() = default;
-    virtual void init(const wave_propagator<T>&) = 0;
-    virtual void check(const wave_propagator<T>&) = 0;
+    virtual void init(const wave_propagator<T, N>&) = 0;
+    virtual void check(const wave_propagator<T, N>&) = 0;
 };
 
 enum class tile_symmetry : uint8_t {
@@ -184,7 +197,7 @@ public:
         return res;
     }
 };
-
+template <size_t N>
 struct topology {
     using coordinates   = std::valarray<int>;
     using shape         = std::valarray<int>;
@@ -215,9 +228,9 @@ struct topology {
 
     }
 
-    size_t index_of(const coordinates& c) const { return linearize(c, _shape); }
+    size_t index_of(const coordinates& c) const { return wee::linearize(c, _shape); }
 
-    coordinates coordinates_of(size_t i) const { return delinearize<int>(i, _shape); }
+    coordinates coordinates_of(size_t i) const { return wee::delinearize<int>(i, _shape); }
 
     static bool is_valid(const coordinates& c, const shape& s) {
         for (auto i : range(s.size())) {
@@ -310,18 +323,20 @@ struct wave {
  * whatever. The risk to be mitigated is that 2D and 3D examples (adjacencies) get mixed.
  * Also, templates open the option to statically initialize the adjacency list.
  */
-
+template <typename T, size_t N>
 struct basic_model {
     typedef std::unordered_map<size_t, uint64_t> adjacency_list_type;
     adjacency_list_type _adjacency;
     tileset _ts;
     std::unordered_map<int, int> _index;
-    topology _topo;
-    uint64_t _banned;
+    topology<N> _topo;
+    T _banned;
 
     typedef wee::event_handler<void(const std::vector<int>&)> cb_t;
     cb_t on_done;
     cb_t on_update;
+
+    std::vector<basic_constraint<T, N>*> _constraints;
     
     //std::vector<float> _weights;
     
@@ -330,16 +345,21 @@ struct basic_model {
 
     const tileset& tiles() const { return _ts; }
 
+    void add_constraint(basic_constraint<T,N>* c) { _constraints.push_back(c); }
+
     /**
      * return the effective domain of this model
      */
-    uint64_t domain() const {
+    T domain() const {
         uint64_t res = 0;
         for(auto i : range(_ts.size())) {
-            res |= bitmaskof<uint64_t>(i);
+            res |= bitmaskof<uint64_t>(_ts.tile_to_index(_ts.tile(i))); // <???
         }
         return res & ~_banned;
     }
+
+    void ban(T t) { _banned |= bitmaskof<T>(t); }
+
 
     template <typename OutputIt>
     void weights(OutputIt it, bool normalize = false) {
@@ -359,17 +379,18 @@ struct basic_model {
         std::copy(f.begin(), f.end(), it);
     }
 
-    void add_adjacency(const std::vector<int>& from, const std::vector<int>& to, const topology::directions& d, const tile_rotation& = tile_rotation::identity());
-    void add_adjacency(int a, int b, const topology::directions& d, const tile_rotation& = tile_rotation::identity() );
+    void add_adjacency(const std::vector<int>& from, const std::vector<int>& to, const typename topology<N>::directions& d, const tile_rotation& = tile_rotation::identity());
+    void add_adjacency(int a, int b, const typename topology<N>::directions& d, const tile_rotation& = tile_rotation::identity() );
     void add_adjacency(int a, int b, size_t i,const tile_rotation& = tile_rotation::identity() );
     //void weights_from_example(const int* data, size_t len);
-    void add_example(const int* data, const topology::shape& shape);
-    void solve_for(const topology::shape&);
+    void add_example(const int* data, const typename topology<N>::shape& shape);
+    void solve_for(const typename topology<N>::shape&);
 };
 
 /**
  * TODO 2019-05-15: create adjacency list struct
  */
+#if 0
 struct adjacency_list {
     topology _topo;
     std::unordered_map<int, int> _index;
@@ -382,8 +403,8 @@ struct adjacency_list {
         }
     }
 };
-
-template <typename T>
+#endif
+template <typename T, size_t N>
 struct wave_propagator {
     
     wee::random _randgen;
@@ -441,7 +462,7 @@ struct wave_propagator {
         return false;
     }
 
-    void propagate(wave<T>* _wave, size_t at, const topology& topo, const basic_model::adjacency_list_type& adjacency) { 
+    void propagate(wave<T>* _wave, size_t at, const topology<N>& topo, const typename basic_model<T,N>::adjacency_list_type& adjacency) { 
         std::vector<size_t> open = { at };
 
         while(!open.empty()) {
@@ -492,7 +513,7 @@ struct wave_propagator {
         }
     }
 
-    void step(wave<T>* _wave, const topology& topo, const auto& weights, const basic_model::adjacency_list_type& adjacency) {
+    void step(wave<T>* _wave, const topology<N>& topo, const auto& weights, const typename basic_model<T, N>::adjacency_list_type& adjacency) {
         size_t i = min_entropy(_wave);
         if(collapse(_wave, i, weights)) {
             propagate(_wave, i, topo, adjacency);
@@ -501,11 +522,19 @@ struct wave_propagator {
     }
 
     
-    void run(basic_model* m, const topology::shape& s) {
-        topology topo {s};
+    void run(basic_model<T,N>* m, const typename topology<N>::shape& s) {
+        topology<N> topo {s};
         std::vector<float> weights;
         m->weights(std::back_inserter(weights));
         wave<T> current(array_product(s), m->domain());
+
+        for(auto* c: m->_constraints) {
+            std::vector<size_t> affected;
+            c->init(current, s, &affected);
+            for(auto i: affected) {
+                propagate(&current, i, topo, m->_adjacency);
+            }
+        }
 
         while(!current.did_collapse()) {
             step(&current, topo, weights, m->_adjacency);
@@ -514,22 +543,24 @@ struct wave_propagator {
     }
 };
 
-basic_model::basic_model(const tileset& ts, size_t n) 
+template <typename T, size_t N>
+basic_model<T,N>::basic_model(const tileset& ts, size_t n) 
     : _ts(ts)
     , _banned(0)
 {
     if(_ts.size() == 0) {
         throw std::runtime_error("tileset is empty!");
     }
-    _topo = topology(topology::shape(3, n)); 
+    _topo = topology<N>(typename topology<N>::shape(3, n)); 
     for(auto n: range(n << 1)) {
         _index.insert({_topo.index_of(_topo.neighbor(n) + 1), n});
     }
 }
 
-void basic_model::add_adjacency(const std::vector<int>& from, 
+template <typename T, size_t N>
+void basic_model<T,N>::add_adjacency(const std::vector<int>& from, 
         const std::vector<int>& to, 
-        const topology::directions& d,
+        const typename topology<N>::directions& d,
         const tile_rotation& r) 
 {
     assert(_topo.num_neighbors() == d.size());
@@ -539,7 +570,8 @@ void basic_model::add_adjacency(const std::vector<int>& from,
         }
     }
 }
-void basic_model::add_adjacency(int a, int b, size_t i, const tile_rotation& r) {
+template <typename T, size_t N>
+void basic_model<T,N>::add_adjacency(int a, int b, size_t i, const tile_rotation& r) {
     //size_t num_neighbors = _index.size();
     size_t idx = i + r.cw;
     size_t y = _ts.tile_to_index(a);
@@ -591,16 +623,18 @@ void basic_model::add_adjacency(int a, int b, size_t i, const tile_rotation& r) 
  * indices to linear-sequential indices. (_index)
  *
  */
-void basic_model::add_adjacency(int a, int b, const topology::directions& d, const tile_rotation& r) {
+template <typename T, size_t N>
+void basic_model<T,N>::add_adjacency(int a, int b, const typename topology<N>::directions& d, const tile_rotation& r) {
     assert(_topo.num_neighbors() == d.size());
-    topology::shape s(3, d.size());
-    auto dt = topology::directions(d + 1); // offset towards "center" of matrix
+    typename topology<N>::shape s(3, d.size());
+    auto dt = typename topology<N>::directions(d + 1); // offset towards "center" of matrix
     add_adjacency(a, b, _index[linearize(dt, s)], r);
 }
 
-void basic_model::add_example(const int* data, const topology::shape& shape) {
+template <typename T, size_t N>
+void basic_model<T,N>::add_example(const int* data, const typename topology<N>::shape& shape) {
     assert(_topo.num_dimensions() == shape.size());
-    topology local(shape);    
+    topology<N> local(shape);    
     size_t len = array_product(shape);
     for(auto i: range(len)) {
         auto sample_coord = local.coordinates_of(i);//delinearize<int>(i, shape);
@@ -616,9 +650,11 @@ void basic_model::add_example(const int* data, const topology::shape& shape) {
 }
 
 
-void basic_model::solve_for(const topology::shape& s) {
+
+template <typename T, size_t N>
+void basic_model<T,N>::solve_for(const typename topology<N>::shape& s) {
     assert(_topo.num_dimensions() == s.size());
-    wave_propagator<uint64_t> wp;
+    wave_propagator<T, N> wp;
 
 
     /*wp.on_progress += [] (const wave<uint64_t>& w) {
