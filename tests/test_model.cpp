@@ -22,6 +22,30 @@
 #include "voxel.hpp"
 #include "nami.hpp"
 
+
+template <size_t N, typename T> 
+struct border_constraint : public nami::basic_constraint<N, T> {
+    size_t _axis;
+    T _tileid;
+    border_constraint(size_t axis, T tileid) : _axis(axis), _tileid(tileid) {
+    }
+
+    virtual ~border_constraint() {
+    }
+
+    virtual void init(const nami::wave_propagator<N, T>& prop, const nami::topology<N>& topo, std::vector<size_t>* res) const {
+        topo.indexer().iterate(_axis, 0 /*topo.indexer().shape()[_axis] - 1*/, [&] (auto... coord) { 
+            auto idx = topo.index_of({coord...});
+            prop.collapse_to(idx, nami::bitmaskof<T>(_tileid));
+            res->push_back(idx);
+        }); 
+
+    }
+
+    virtual void check(const nami::wave_propagator<N,T>&, const nami::topology<N>& topo, std::vector<size_t>*) const {
+    }
+};
+
 using namespace wee;
 using nlohmann::json;
 
@@ -208,7 +232,7 @@ void demo3() {
     std::vector<int> res;
 
     auto ts = nami::tileset::from_example(&example[0], example.size());
-    auto test = nami::basic_model(ts, 2);
+    auto test = nami::basic_model<2, uint64_t>(ts);
 
     auto copy_coeff = [&res] (const std::vector<int>& w) {
         res = w;
@@ -263,7 +287,7 @@ void demo1() {
     std::vector<int> res;
 
     auto ts = nami::tileset::from_example(&example[0], example.size());
-    auto test = nami::basic_model(ts, 2);
+    auto test = nami::basic_model<2, uint64_t>(ts);
 
     auto copy_coeff = [&res] (const std::vector<int>& w) {
         res = w;
@@ -407,8 +431,14 @@ struct meshify {
          model_builder<vertex_voxel, uint32_t> builder;
 #define _USE_BUILDER
 
+        /*std::vector<int> keys;
+        for(auto it=coords_info.begin(); it != coords_info.end(); it++) {
+            keys.push_back(it->first);
+        }
+        DEBUG_VALUE_OF(keys);
+        */
+
         for(const auto& [color, coords] : coords_info) {
-            DEBUG_VALUE_OF(color);
             builder
                 .material(color)
                 .base_vertex(num_vertices)
@@ -425,7 +455,7 @@ struct meshify {
                     for(auto ii : range(4)) {
                         vertex_voxel v0;
                         v0._position = quad_face[ii];
-                        v0._color    = palette->colors[color - 1];
+                        v0._color    = palette->colors[color-1];
                         v0._normal   = std::get<0>(coord) == 0 ? vec3f::right() : std::get<0>(coord)== 1 ? vec3f::up() : vec3f::forward();
                         builder
                             .add_vertex(v0)
@@ -468,12 +498,18 @@ void print_ndview<T, 2>(const ndview<T, 2>& view) {
 }*/
 
 model* demo2() {
-    typedef ndview<std::vector<int>, 3> ndview3i;
+    constexpr const int ND = 3;
+    typedef ndindexer<ND> indexer;
     /**
      * 1.) Load content
      */
-    //auto ifs = wee::open_ifstream("assets/test_01.vox");
-    auto ifs = wee::open_ifstream("assets/test_02.vox");
+    //auto ifs = wee::open_ifstream("assets/test_01.vox"); // 1 illustrates the z-axis issue quite well
+    auto ifs = wee::open_ifstream("assets/test_02.vox"); 
+    //auto ifs = wee::open_ifstream("assets/test_03.vox"); 
+    //auto ifs = wee::open_ifstream("assets/test_04.vox");
+    //auto ifs = wee::open_ifstream("assets/test_05.vox");
+    //auto ifs = wee::open_ifstream("assets/test_06.vox");
+    //auto ifs = wee::open_ifstream("assets/test_07.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -485,83 +521,102 @@ model* demo2() {
     auto* len = vox::get<vox::size>(vx);
     size_t example_len = len->x * len->y * len->z; 
     std::vector<int> example(example_len, 0);
-    ndview3i view(&example, { len->y, len->x, len->z });
+    ndindexer<3> view({ len->z, len->y, len->x });
+    //ndindex3 view({ len->y, len->x, len->z });
+    //ndindex3 view({ len->x, len->z, len->y });
     DEBUG_VALUE_OF(view.shape());
+
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
-                size_t idx = view.linearize(v.y, v.x, v.z);
+                size_t idx = view.linearize(v.z, v.y, v.x);
+                //DEBUG_VALUE_OF(idx);
                 example[idx] = v.i;
             }
         }
     }
-
-
-    //std::reverse(example.begin(), example.end());
     /**
      * 3.) Apply WFC
      */
-
-    static int OUT_D = 5;
-    static int OUT_H = 13;
-    static int OUT_W = 114;
+    static int OUT_D = 13;
+    static int OUT_H = 16;
+    static int OUT_W = 16;
 
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
-    ts.set_frequency(0, 100);
-    nami::basic_model test(ts, 3);
+    nami::basic_model<ND, uint64_t> test(ts);
+    
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
-        for(auto x: a) {
-            std::cout << x;;
-        }
-
-        ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
+        DEBUG_VALUE_OF(a);
+#if 0 
+        ndview<std::vector<int>, 2> res_view(&res, { OUT_H, OUT_W });
 
         for(auto depth: range(res_view.shape()[0])) {
             std::vector<int> plane;
-            std::array<ptrdiff_t, 2> aux;
+            std::array<ptrdiff_t, 1> aux;
             res_view.slice(0, depth, aux, std::back_inserter(plane));
             DEBUG_VALUE_OF(aux);
             for(auto y: range(aux[0])) {
                 for(auto x: range(aux[1])) {
-                    int t = plane[x + y * aux[1]];
-                    char c = t == 2 ? '#' : t == 3 ? '.' : '~';
-                    std::cout << c;
+                    std::cout << plane[x + y * aux[1]];
                 }
                 std::cout << std::endl;
             }
             std::cout << std::endl;
         }
-
+#endif
     };
-
+    DEBUG_VALUE_OF(ts.tiles());
+    DEBUG_VALUE_OF(ts._index);
+#if 1 
+    DEBUG_VALUE_OF(test._adjacency);
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
+    DEBUG_VALUE_OF(test._adjacency);
+#else
+    DEBUG_VALUE_OF(test._adjacency);
+#if 0
+    test.add_adjacency(1, 2, 0);
+    test.add_adjacency(1, 0, 1);
+    test.add_adjacency(2, 2, 0);
+    
+    test.add_adjacency(2, 0, 0);
+    test.add_adjacency(2, 0, 1);
+    test.add_adjacency(2, 0, 2);
+    test.add_adjacency(2, 0, 3);
+    
+    test.add_adjacency(2, 3, 0);
+    test.add_adjacency(2, 3, 1);
+    test.add_adjacency(2, 3, 2);
+    test.add_adjacency(2, 3, 3);
+    
+    test.add_adjacency(2, 4, 0);
+    test.add_adjacency(2, 4, 1);
+    test.add_adjacency(2, 4, 2);
+    test.add_adjacency(2, 4, 3);
+
+    /*test.add_adjacency(1, 2, 2);
+    test.add_adjacency(1, 2, 3);
+    test.add_adjacency(1, 2, 4);
+    test.add_adjacency(1, 2, 5);
+    test.add_adjacency(1, 2, 6);*/
+    DEBUG_VALUE_OF(test._adjacency);
+#else
+    test.add_adjacency(1, 2, 0);
+    test.add_adjacency(1, 0, 0);
+    //test.add_adjacency(2, 0, 1);
+    //test.add_adjacency(2, 0, 2);
+    //test.add_adjacency(2, 0, 3);
+    //test.add_adjacency(2, 0, 4);
+    //test.add_adjacency(2, 0, 5);
+    test.add_adjacency(0, 0, 3);
+#endif
+#endif
+    //test.add_constraint(new border_constraint<ND, uint64_t>(0, 1)); // constrain zmax to tile 1 
+    //test.ban(1);
     test.solve_for({OUT_D, OUT_H, OUT_W});
 
-
-
-
-#if 0
-    ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
-
-    for(auto depth: range(res_view.shape()[0])) {
-        std::vector<int> plane;
-        std::array<ptrdiff_t, 2> aux;
-        res_view.slice(0, depth, aux, std::back_inserter(plane));
-        DEBUG_VALUE_OF(aux);
-        for(auto y: range(aux[0])) {
-            for(auto x: range(aux[1])) {
-                int t = plane[x + y * OUT_W];
-                char c = t == 2 ? '#' : t == 3 ? '.' : '~';
-                std::cout << c;
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-    }
-#endif
     /**
      * 4.) Convert back to magicavoxel
      */
@@ -574,17 +629,27 @@ model* demo2() {
 
     vox::xyzi* data = new vox::xyzi();
 
-    ndview3i view_res(&res, {OUT_D, OUT_H, OUT_W});
+    indexer view_res({OUT_D, OUT_H, OUT_W});
+    
 
-    for(auto i: range(OUT_W * OUT_H * OUT_D)) {
-        auto coord = view_res.delinearize(i);
+
+    view_res.iterate_all([&] (const auto... x) {
+        std::array<int, sizeof...(x)> coord = { static_cast<int>(x)... };
+        int i = view_res.linearize(x...);
         vox::voxel voxl;
-        voxl.x = coord[2];
-        voxl.y = coord[1];
-        voxl.z = coord[0];
+        if constexpr(sizeof...(x) == 3) {
+            voxl.x = coord[2];
+            voxl.y = coord[1];
+            voxl.z = coord[0];
+        } else {
+            voxl.y = coord[1];
+            voxl.x = coord[0];
+        }
         voxl.i = test.tiles().tile(res[i]);
         data->voxels.push_back(voxl);
-    }
+
+    });
+
     vx_res->chunks.push_back(data);
     //binary_writer writer(std::cout);
     //vox_writer::write(vx_res, writer);
@@ -592,6 +657,11 @@ model* demo2() {
      * 5.) Convert voxels to mesh
      */
     return meshify::vox_to_mesh(vx_res);
+}
+
+void demo4() {
+    using namespace nami;
+    tileset ts;
 }
 
 struct game : public applet {
@@ -635,11 +705,12 @@ struct game : public applet {
 #else
 #endif
 
-
-        //demo1();
+        //demo4();
+        //exit(0);
+        ////demo1();
+        //exit(1);
         //demo3();
-        //exit(-1);
-#if 1
+#if 1 
         _voxel_mesh = demo2();
 #else
         auto ifs = wee::open_ifstream("assets/monu10.vox");
@@ -682,8 +753,8 @@ struct game : public applet {
             _model = _models[0];
 #endif
 
-            _camera.set_position(5, 0, 5);
-            _camera.lookat(5, 0, 0);
+            _camera.set_position(5, 5, 5);
+            _camera.lookat(0, 0, 0);
             _camera.set_viewport(640, 480);
 
             _renderer = new aabb_renderer;
@@ -721,8 +792,8 @@ struct game : public applet {
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::IndianRed, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
-        //mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        //mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-90.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera.get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
@@ -807,9 +878,124 @@ struct game : public applet {
     }
 };
 
+#include <core/tuple.hpp>
+
+template <typename T, size_t... Is>
+static auto make_tuple(std::index_sequence<Is...>) {
+    return std::make_tuple(T(Is)...);
+}
+
+template <typename T, size_t... Is>
+struct qview { 
+    static const size_t N = sizeof...(Is);
+    //typedef std::array<ptrdiff_t, N> shape_t; 
+    using shape_t = decltype(make_tuple<ptrdiff_t>(std::make_index_sequence<N>()));
+
+    T _data;
+
+    shape_t _shape = { Is... };
+    shape_t _stride = __compute_strides();
+
+
+    constexpr auto __compute_strides() {
+        return std::apply([] (auto&&... pack) {
+            constexpr ptrdiff_t len = sizeof...(pack);
+            auto foo = std::array<ptrdiff_t, len> { (pack)... };
+            DEBUG_VALUE_OF(foo);
+            auto n = 1;
+            [[maybe_unused]] auto i = len;
+            std::array<ptrdiff_t, len> ary = { (pack == 1 ? 0 : (n *= pack))... };
+            //std::array<ptrdiff_t, len> ary = { (pack == 1 ? (i--) * 0 : (n *= pack) / (i--))... };
+            DEBUG_VALUE_OF(ary);
+            return tuple_reverse(wee::make_tuple(ary));
+        }, tuple_reverse(_shape));
+    }
+    auto __compute_offset() const { return static_cast<ptrdiff_t>(0); }
+
+    template <typename First, typename... Rest>
+    auto __compute_offset(First first, Rest... rest) const {
+        std::array<ptrdiff_t, sizeof...(Rest) + 1> idx {{
+            first, rest...
+        }};
+        return std::inner_product(_stride.begin(), _stride.end(), idx.begin(), 0);
+    }
+public:
+    typedef typename std::remove_pointer<T>::type::value_type value_type;
+public:
+
+    template <typename C>
+    qview(C&& c) : _data(std::forward<T>(c)) {
+    }
+
+    constexpr shape_t shape() const { return _shape; }
+    constexpr shape_t strides() const { return _stride; }
+
+    template <typename... Idx>
+    value_type& operator () (Idx... idx) {
+        return _data[__compute_offset(idx...)];
+    }
+
+    template <typename... Args>
+    size_t linearize(Args... args) {
+        return __compute_offset(args...);
+    }
+
+    const T& data() const { return _data; }
+
+    auto drop() {
+        auto tup = head(wee::make_tuple(shape()));
+        DEBUG_VALUE_OF(tup);
+        
+        std::apply([&] (const auto&&... ts) {
+            return qview<T, ts...>(_data);
+        }, tup);
+
+        //DEBUG_VALUE_OF(nview);
+    }
+
+};
+
+
+template <typename T>
+void ndprint(const T& t) {
+
+    auto print_func = [] (const auto&... e) {
+        auto tup    = std::make_tuple(e...);        
+        const auto& view   = std::get<0>(tup);
+        auto coords = tail(tup);
+        DEBUG_VALUE_OF(std::apply([&] (auto&&... args) { return view.linearize(args...); }, coords));
+    };
+
+    recursive_for<2>(print_func, t);
+
+}
+
 
 
 int main(int, char**) {
+#if 0 
+    //typedef qview<std::vector<int>*, 4, 3, 2> ndview3i;
+    //std::vector<int> data(24);
+    //ndview3i view(&data);
+
+    wee::ndindexer<3> test({ 4, 4, 1 });
+    ndprint(test);
+    //
+    DEBUG_VALUE_OF(test.shape());
+        test.iterate(2, test.shape()[2] - 1, [&] (const auto...x) { 
+            auto idx = test.linearize(x...);//index_of(coord);
+            DEBUG_VALUE_OF(idx);
+            //prop.collapse_to(idx, nami::bitmaskof<T>(_tileid));
+            //res->push_back(idx);
+            //prop._coeff[idx] = _tileid;
+        }); 
+
+    //DEBUG_VALUE_OF(view.strides());
+    //DEBUG_VALUE_OF(test.strides());
+
+    exit(1);
+#endif
+
     DEBUG_METHOD();
     applet* let = new game;
     application app(let);
