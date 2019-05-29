@@ -494,7 +494,9 @@ model* demo2() {
      */
     //auto ifs = wee::open_ifstream("assets/test_01.vox");
     //auto ifs = wee::open_ifstream("assets/test_02.vox");
-    auto ifs = wee::open_ifstream("assets/test_09.vox");
+    //auto ifs = wee::open_ifstream("assets/test_09.vox");
+    //
+    auto ifs = wee::open_ifstream("assets/test_10.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -507,11 +509,14 @@ model* demo2() {
     size_t example_len = len->x * len->y * len->z; 
     std::vector<int> example(example_len, 0);
     ndview3i view(&example, { len->y, len->z, len->x });
+    
     DEBUG_VALUE_OF(view.shape());
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
+                DEBUG_VALUE_OF(v);
                 size_t idx = view.linearize(v.y, v.z, v.x);
+                DEBUG_VALUE_OF(idx);
                 example[idx] = v.i;
             }
         }
@@ -523,51 +528,36 @@ model* demo2() {
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 5;
-    static int OUT_H = 14;
-    static int OUT_W = 14;
+    static int OUT_D = 25;
+    static int OUT_H = 17;
+    static int OUT_W = 25;
 
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
-    ts.set_frequency(0, 100);
+    //ts.set_frequency(0, 700);
+    //ts._frequency[6] = 600;
+    //ts._frequency[7] = 600;
+
+    //ts.set_frequency(7, 1000);
+    //ts.set_frequency(7, 500);
     nami::basic_model<uint64_t, 3> test(ts, 3);
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
-        for(auto x: a) {
-            std::cout << x;;
-        }
-
-        ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
-
-        for(auto depth: range(res_view.shape()[0])) {
-            std::vector<int> plane;
-            std::array<ptrdiff_t, 2> aux;
-            res_view.slice(0, depth, aux, std::back_inserter(plane));
-            DEBUG_VALUE_OF(aux);
-            for(auto y: range(aux[0])) {
-                for(auto x: range(aux[1])) {
-                    int t = plane[x + y * aux[1]];
-                    //char c = t == 5 ? '#' : t == 3 ? '.' : '~';
-                    std::cout << t;
-                }
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-        }
-
     };
 
     test.add_constraint(new border_constraint<uint64_t, 3>(1, 1));
+    
+    /**
+     * we need to add corner constraints.
+     */
+
     test.ban(1);
 
 
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
-    test.solve_for({OUT_W, OUT_H, OUT_D});
-
-
-
-
+    test.solve_for({OUT_D, OUT_H, OUT_W});
+    DEBUG_VALUE_OF(ts._index);
 #if 0
     ndview3i res_view(&res, { OUT_D, OUT_H, OUT_W });
 
@@ -601,13 +591,15 @@ model* demo2() {
 
     ndview3i view_res(&res, {OUT_D, OUT_H, OUT_W});
 
+    DEBUG_VALUE_OF(res);
+
     for(auto i: range(OUT_W * OUT_H * OUT_D)) {
         auto coord = view_res.delinearize(i);
         vox::voxel voxl;
         voxl.x = coord[2];
         voxl.y = coord[1];
         voxl.z = coord[0];
-        voxl.i = test.tiles().tile(res[i]);
+        voxl.i = ts.tile(ts.tile_to_index(res[i]));
         data->voxels.push_back(voxl);
     }
     vx_res->chunks.push_back(data);
@@ -835,10 +827,14 @@ struct game : public applet {
 
 
 int main(int, char**) {
+#if 0 
+#else
+
     DEBUG_METHOD();
     applet* let = new game;
     application app(let);
     app.set_mouse_position(320, 240);
     ((game*)let)->set_callbacks(&app);
     return app.start();
+#endif
 }

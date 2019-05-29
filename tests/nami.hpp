@@ -99,7 +99,7 @@ struct tile_rotation {
     constexpr static const tile_rotation identity() { return tile_rotation { 0, false }; }
 };
 
-class tileset {
+struct tileset {
     typedef int tile_type;
     std::vector<tile_type> _data;
     std::unordered_map<tile_type, size_t> _index;
@@ -407,7 +407,7 @@ struct adjacency_list {
 template <typename T, size_t N>
 struct wave_propagator {
     
-    wee::random _randgen;
+    wee::random _randgen;// = { 58385623 };
     size_t _len;
 
     typedef wee::event_handler<void(const wave<T>&)> cb_t;
