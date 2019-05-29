@@ -494,9 +494,9 @@ model* demo2() {
      */
     //auto ifs = wee::open_ifstream("assets/test_01.vox");
     //auto ifs = wee::open_ifstream("assets/test_02.vox");
-    //auto ifs = wee::open_ifstream("assets/test_09.vox");
-    //
-    auto ifs = wee::open_ifstream("assets/test_10.vox");
+    auto ifs = wee::open_ifstream("assets/test_09.vox");
+    
+    //auto ifs = wee::open_ifstream("assets/test_10.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
     }
@@ -535,9 +535,9 @@ model* demo2() {
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
-    //ts.set_frequency(0, 700);
-    //ts._frequency[6] = 600;
-    //ts._frequency[7] = 600;
+    ts.set_frequency(0, 700);
+    ts._frequency[6] = 600;
+    ts._frequency[7] = 600;
 
     //ts.set_frequency(7, 1000);
     //ts.set_frequency(7, 500);

@@ -8,19 +8,16 @@
 
 namespace wee {
 
+    template <typename T, size_t... Is>
+    constexpr auto array_product_impl(const T& t, std::index_sequence<Is...>) {
+        return ((1 * t[Is] * 1),...);
+    }
 
-    /*template <size_t S, size_t I=0, typename E, typename... Args>
-    void recursive_for(E&& e, Args... args) {
-        if constexpr (I == S) {
-            for(auto i=0; i < shape()[I]; i++) {
-                e(std::array<ptrdiff_t, N>({args..., i}));
-            }
-        } else {
-            for(auto i=0; i < shape()[I]; i++) {
-                recursive_for<S, I + 1>(e, args..., i);
-            }
-        }
-    }*/
+    template <typename T, size_t N>
+    constexpr auto array_product(const T& t) {
+        return array_product_impl(t, std::make_index_sequence<N>{});
+    }
+
 
     template <size_t N, size_t I = 0, typename E, typename... Ts>
     constexpr auto recursive_for(E&& f, const Ts&... args) {
@@ -99,6 +96,7 @@ namespace wee {
 
         constexpr const shape_type& strides() const { return _strides; }
         constexpr const shape_type& shape() const { return _shape; }
+        constexpr const size_t length() const { return array_sum(_shape); }
 
         template <typename UnaryOperation>
         void iterate_all(UnaryOperation&& op) const {
