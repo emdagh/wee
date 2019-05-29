@@ -563,7 +563,7 @@ model* demo2() {
 
 
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
-    test.solve_for({OUT_D, OUT_H, OUT_W});
+    test.solve_for({OUT_W, OUT_H, OUT_D});
 
 
 
