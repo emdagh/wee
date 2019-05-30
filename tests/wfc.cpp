@@ -3,6 +3,7 @@
 #include <sstream>
 #include <numeric>
 #include <vector>
+#include <functional>
 #include <core/range.hpp>
 #include <core/ndview.hpp>
 #include <core/bits.hpp>
@@ -14,6 +15,8 @@
 #include <unordered_map>
 
 using namespace wee;
+
+template <typename T, size_t N> struct basic_model;
 
 /** helper functions */
 template <typename T, size_t N, size_t... Is>
@@ -71,8 +74,10 @@ constexpr auto make_direction_index() {
     return res;
 }
 
+
+
 template <size_t N>
-using direction_index = std::array<size_t, N * (N << 1)>;//= build();
+using direction_index = std::array<ptrdiff_t, N * (N << 1)>;//= build();
 
 
 template <size_t N>
@@ -161,7 +166,7 @@ struct adjacency_list {
      * add an adjacency in a specified direction
      */
 
-    void add(size_t i_a, size_t i_b, size_t d) {
+    void add(size_t i_a, size_t i_b, size_t d, bool do_inverse = false) {
         _data[i_a * N + d] |= to_bitmask(i_b);
     }
 
@@ -185,13 +190,23 @@ struct adjacency_list {
 };
 
 template <typename T>
-
 struct wave {
     std::vector<T> _data;
     wee::random _rand;
 
-    void pop(size_t i, T t) {
-        _data[i] &= ~t;
+    wave(size_t n, T t) : _data(n, t)
+    {
+
+    }
+
+    void pop(size_t i, T t) { _data[i] &= ~t; }
+
+    void reset(T t) { std::fill(_data.begin(), _data.end(), t); }
+    
+    size_t length() const { return _data.size(); }
+
+    bool collapsed_at(size_t i) const {
+        return is_collapsed(_data[i]);
     }
 
     bool is_collapsed(T t) const { return popcount(t) == 1; }
@@ -203,7 +218,7 @@ struct wave {
             if (is_collapsed(i)) 
                 continue;
 
-            float h = entropyof(i) - _rand.next<float>(0.0f, 1.0f) / 1000.0f;
+            float h = entropy_of(i) - _rand.next<float>(0.0f, 1.0f) / 1000.0f;
             if (h < min_h) {
                 min_h = h;
                 ret = i;
@@ -221,63 +236,192 @@ struct tileset {
     std::unordered_map<T, size_t> _names;
     std::vector<float> _frequency;
 
-    size_t index_for_tile(T t) const { return _data[_names[t]]; }
+    T tile(size_t i) const { return _data[i]; }
+    size_t to_index(T t) const { return _data.at(_names.at(t)); }
     void set_frequency(T t, float f) { _frequency[_names[t]] = f; }
+    const std::vector<float> frequencies() const { return _frequency; }
+    size_t length() const { return _data.size(); }
+    
+    template <typename InputIt, typename OutputIt>
+    void make_weights(InputIt first, InputIt last, OutputIt d_first) const {
+        std::multiset<typename InputIt::value_type> temp(first, last);
+        for(auto it = temp.begin(); it != temp.end(); it = temp.upper_bound(*it)) {
+            auto ti = to_index(*it);
+            *(d_first + ti) = temp.count(*it);
+        }
+    }
+    
+    template <typename OutputIt>
+    void weights(OutputIt d_first) const {
+        make_weights(_data.begin(), _data.end(), d_first);
+    }
 };
 
 template <typename T, size_t N>
 struct wave_propagator {
     static const size_t kNumNeighbors = N << 1;
 
+    typedef std::function<void(const wave_propagator<T,N>&)> callback_type;
     typedef typename topology<N>::value_type coordinate_type;
 
+    wee::random _rnd;
     topology<N> _topo;
+    wave<T>* _wave = nullptr;
+    callback_type on_update;
 
+    explicit wave_propagator(wave<T>* w) : _wave(w) {
+    }
 
-    void propagate(size_t at, const wave<T>& w, const adjacency_list<T, N>& adj) const {
+    void propagate(size_t at, const adjacency_list<T, N>* adj) const {
         std::vector<T> open = { at };
         while(!open.empty()) {
-            for(auto i: range(kNumNeighbors)) {
-                coordinate_type from = _topo.to_coordinate(i);
-                size_t j;
-                if(!_topo.try_move(from, i, &j)) {
+            T cell = open.back();
+            open.pop_back();
 
+            for(auto i: range(kNumNeighbors)) {
+                size_t j;
+                if(!_topo.try_move(cell, i, &j)) {
+                
                 }
             }
         }
 
     }
 
-    void collapse(const wave<T>& w, const std::vector<float>& weights) const {
+    void collapse(size_t i, const std::vector<float>& weights) const {
+        std::unordered_map<int, float> weights;
+        float total_weight = 0.f;
+        auto options = avail(_wave->_data[i]);
+        for(auto t: avail) {
+            w.insert(std::pair(t, weights[t]));
+            total_weight += weights[t];
+        }
+        float random = _rnd.next<float>(0.f, 1.0f) * total_weight;
 
+        for(const auto& [key, val]: w) {
+            random -= val;
+            if(random < 0) {
+                _wave->collapse(i, to_bitmask<T>(key));
+                return true;
+            }
+        }
+        return false;
     }
+
+    bool is_done() const {
+        for(auto i: range(_wave->length())) {
+            if(!_wave->collapsed_at(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*void run(const basic_model<T,N>* model) {
+    }*/
     
+};
+
+template <typename T, size_t N, typename R = std::vector<size_t> >
+struct basic_constraint {
+    virtual ~basic_constraint() = default;
+    virtual void init(const wave_propagator<T, N>&, R*) = 0;
+    virtual void check(const wave_propagator<T, N>&, R*) = 0;
 };
 
 template <typename T, size_t N>
 struct basic_model {
     typedef typename topology<N>::value_type shape_type;
    
+    std::vector<basic_constraint<T, N>* > _constraints;
+    adjacency_list<T,N>* _adjacencies;
+    tileset<T>* _tileset;
+    T _banned;
 
+    void add_constraint(basic_constraint<T,N>* ptr) { _constraints.push_back(ptr); }
+
+    void ban(T t) { _banned |= index_of(_tileset->to_index(t)); }
+
+    T domain() const {
+        T res = 0;
+        for(auto i : range(_tileset->length())) {
+            res |= to_bitmask(_tileset->to_index(_tileset->tile(i)));
+        }
+        return res;
+    }
 
     //template <typename OutputIt>
     void solve(const shape_type& d_shape) {
-        wave_propagator<T, N> prop;
-        prop.run(this);
+        auto len = std::accumulate(d_shape.begin(), d_shape.end(), 1, std::multiplies<int>());
+        wave<T> wv(len, domain());
+        /**
+         * apply all constraints to the new wave
+         */
+        wave_propagator<T, N> prop(&wv);
+        for(auto* ptr : _constraints) {
+            std::vector<size_t> res;
+            ptr->init(prop, &res);
+            for(auto i: res) {
+                prop.propagate(i, _adjacencies);
+            }
+        }
+        /**
+         * register a callback lambda that will check all constraints 
+         * whenever a collapse cycle has finished.
+         */
+        prop.on_update = [this] (const wave_propagator<T,N>& p) {
+            for(auto* ptr : _constraints) {
+                std::vector<size_t> res;
+                ptr->check(p, &res);
+                for(auto i: res) {
+                    p.propagate(i, _adjacencies);
+                }
+            }
+        };
+        /**
+         * here we run the wave function collapse algorithm
+         */
+        std::vector<float> weights(_tileset->length());
+        _tileset->weights(weights.begin());
+
+        while(!prop.is_done()) {
+            size_t i = wv.min_entropy_index();
+            prop.collapse(i, _tileset->frequencies());
+            prop.propagate(i, _adjacencies);
+        }
     }
 };
 
+template <typename T, size_t N>
+struct border_constraint;
+
+
+template <typename T, size_t N>
+struct corner_constraint {
+    static const size_t kNumCorners = 1 << N;
+    typedef typename std::array<T, kNumCorners> corners_type;
+    typedef typename topology<N>::value_type shape_type;
+    corners_type _corners = { 0 };
+
+    corner_constraint(size_t axis, const corners_type& corners) { 
+    }
+
+    static corners_type make_corners(const shape_type& shape) {
+        ndindexer<N> ix(shape);
+        //for(auto dim : range(N)) {
+        //    std::array<ptrdiff_t, N-1> aux; 
+        //}
+    }
+        
+};
+
 int main(int argc, char** argv) {
-    DEBUG_VALUE_OF(topology<1>::sides);
-    DEBUG_VALUE_OF(topology<2>::sides);
-    DEBUG_VALUE_OF(topology<3>::sides);
     [[maybe_unused]] int tiles[] = { 101, 102, 203 };
     std::unordered_map<int, char> index = { { 101, 'x' }, { 102, '.' }, {103,'-'} };
     std::vector<int> example = { 101, 101 };
-    wave<uint64_t> w;
     adjacency_list<uint64_t, 3> a(3);
     a.add_example(example.begin(), example.end(), topology<3> { { 3,3,3} }); 
-    wave_propagator<uint64_t, 3> wp;
-    wp.propagate(0, w, a);
+    basic_model<uint64_t, 3> model;
+    model.solve({15,15,15});
     return 0;
 }
