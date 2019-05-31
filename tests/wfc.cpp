@@ -341,9 +341,7 @@ struct wave_propagator {
                 if(m == 0) {
                     continue;
                 }
-                auto any = _wave->_data[other] & m;//_wave->any_possible(other, m);
-                auto test = _wave->any_possible(other, m);
-                assert(test == any);
+                auto any = _wave->any_possible(other, m);
                 if(!any) {
                     exit(1);
                     return;
@@ -496,7 +494,7 @@ struct corner_constraint {
 
 void make_demo() {
     static const size_t ND = 2;
-    static const std::array<ptrdiff_t, ND> d_shape = { 3, 3 };
+    static const std::array<ptrdiff_t, ND> d_shape = { 13, 133 };
 
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
