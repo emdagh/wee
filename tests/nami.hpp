@@ -478,7 +478,7 @@ struct wave_propagator {
             for(size_t i=0; i < topo.num_neighbors(); i++) { 
                 auto d = topo.neighbor(i);
                 size_t other_i;
-                if(!topo.try_move(cur_coords, d, &other_i)) {
+                if(!topo.try_move(cur_i, d, &other_i)) {
                     continue;
                 }
                

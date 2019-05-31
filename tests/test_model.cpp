@@ -653,9 +653,9 @@ struct game : public applet {
 #endif
 
 
-        //demo1();
+        demo1();
         //demo3();
-        //exit(-1);
+        exit(-1);
 #if 1
         _voxel_mesh = demo2();
 #else

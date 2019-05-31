@@ -254,7 +254,7 @@ struct wave {
         return ret;
     }
 
-    bool any_possible(size_t i, T t) const { return _data[i] & t; }
+    T any_possible(size_t i, T t) const { return _data[i] & t; }
     bool is_same(size_t i, T t) const { return _data[i] == t; }
 };
 template <typename T>
@@ -275,6 +275,8 @@ struct tileset {
         }
         return res;
     }
+
+    tileset() { push(0); }
 
     T to_tile(size_t i) const { return _data[i]; }
     size_t to_index(T t) const { return _names.at(t); }//_data.at(_names.at(t)); }
@@ -325,27 +327,31 @@ struct wave_propagator {
     void propagate(size_t at, const adjacency_list<T, N>& adj) const {
         std::vector<T> open = { at };
         while(!open.empty()) {
-            T cell = open.back();
+            T self = open.back();
             open.pop_back();
             for(auto d: range(kNumNeighbors)) {
-                size_t j;
-                if(!_topo.try_move(cell, d, &j)) {
+                size_t other;
+                if(!_topo.try_move(self, d, &other)) {
                     continue;
                 }
-                size_t m = 0;
-                for(auto a : _wave->avail_at(cell)) {
+                T m = 0;
+                for(auto a : _wave->avail_at(self)) {
                     wee::push_bits(m, adj.at(a, d));
                 }
                 if(m == 0) {
                     continue;
                 }
-                if(!_wave->any_possible(j, m)) {
+                auto any = _wave->_data[other] & m;//_wave->any_possible(other, m);
+                auto test = _wave->any_possible(other, m);
+                assert(test == any);
+                if(!any) {
+                    exit(1);
                     return;
                 }
-                if(!_wave->is_same(j, m)) {
-                    open.push_back(j);
+                if(!_wave->is_same(other, any)) {
+                   open.push_back(other);
                 }
-                _wave->collapse(j, m);
+                _wave->collapse(other, any);
             }
         }
     }
@@ -490,7 +496,7 @@ struct corner_constraint {
 
 void make_demo() {
     static const size_t ND = 2;
-    static const std::array<ptrdiff_t, ND> d_shape = { 5, 5 };
+    static const std::array<ptrdiff_t, ND> d_shape = { 3, 3 };
 
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
