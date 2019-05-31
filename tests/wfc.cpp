@@ -537,7 +537,6 @@ void make_demo() {
         std::forward<tileset<uint64_t> >(ts), 
         std::forward<adjacency_list<uint64_t, ND> >(a)
     );
-
     std::vector<uint64_t> res;
 
     model.solve(topology<ND>(d_shape), std::back_inserter(res));
