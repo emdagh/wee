@@ -209,11 +209,11 @@ struct adjacency_list {
 template <typename T>
 struct wave {
     std::vector<T> _data;
-    wee::random _rand;
+    wee::random _rand = { 235414704 };
 
     wave(size_t n, T t) : _data(n, t)
     {
-
+        DEBUG_VALUE_OF(_rand.seed());
     }
 
     const auto& data() const { return _data; }
@@ -234,7 +234,27 @@ struct wave {
         return is_collapsed(_data[i]);
     }
 
-    void collapse(size_t i, T t) { _data.at(i) = t; }
+    bool collapse(size_t i, const std::vector<float>& weights) {
+        std::unordered_map<int, float> w;
+        float total_weight = 0.f;
+        auto options = _wave->avail_at(i);//_wave->_data[i]);
+        for(auto t: options) {
+            w.insert(std::pair(t, weights[t]));
+            total_weight += weights[t];
+        }
+        float random = _rand.next<float>(0.f, 1.0f) * total_weight;
+
+        for(const auto& [key, val]: w) {
+            random -= val;
+            if(random < 0) {
+                collapse_at(i, to_bitmask<T>(key));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void collapse_at(size_t i, T t) { _data.at(i) = t; }
 
     bool is_collapsed(T t) const { return popcount(t) == 1; }
 
@@ -318,10 +338,15 @@ struct wave_propagator {
 
     wave<T>* _wave = nullptr;
     topology<N> _topo;
-    wee::random _rnd;
+    //wee::random _rnd;
     callback_type on_update;
 
     explicit wave_propagator(wave<T>* w, const topology<N>& topo) : _wave(w), _topo(topo) {
+    }
+
+    void step(const std::vector<float> weights, const adjacency_list<T,N>& adj) {
+        size_t i = _wave->collapse(i, weights);
+        propagate(i, adj);
     }
 
     void propagate(size_t at, const adjacency_list<T, N>& adj) const {
@@ -349,30 +374,11 @@ struct wave_propagator {
                 if(!_wave->is_same(other, any)) {
                    open.push_back(other);
                 }
-                _wave->collapse(other, any);
+                _wave->collapse_at(other, any);
             }
         }
     }
 
-    bool collapse(size_t i, const std::vector<float>& weights) {
-        std::unordered_map<int, float> w;
-        float total_weight = 0.f;
-        auto options = _wave->avail_at(i);//_wave->_data[i]);
-        for(auto t: options) {
-            w.insert(std::pair(t, weights[t]));
-            total_weight += weights[t];
-        }
-        float random = _rnd.next<float>(0.f, 1.0f) * total_weight;
-
-        for(const auto& [key, val]: w) {
-            random -= val;
-            if(random < 0) {
-                _wave->collapse(i, to_bitmask<T>(key));
-                return true;
-            }
-        }
-        return false;
-    }
 
     bool is_done() const {
         for(auto i: range(_wave->length())) {
@@ -459,9 +465,7 @@ struct basic_model {
         _tileset.weights(weights.begin());
 
         while(!prop.is_done()) {
-            size_t i = wv.min_entropy_index();
-            prop.collapse(i, _tileset.frequencies());
-            prop.propagate(i, _adjacencies);
+            prop.step();
         }
         /**
          * copy result in tile id format
@@ -494,7 +498,7 @@ struct corner_constraint {
 
 void make_demo() {
     static const size_t ND = 2;
-    static const std::array<ptrdiff_t, ND> d_shape = { 13, 133 };
+    static const std::array<ptrdiff_t, ND> d_shape = { 2, 3 };
 
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
