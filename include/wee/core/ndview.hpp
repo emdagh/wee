@@ -151,6 +151,14 @@ namespace wee {
             return out;
 
         }
+        template <typename InputIt, typename OutputIt>
+        void gslice(InputIt it, size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
+            for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
+
+            iterate(axis, depth, [&](auto... s) {
+                *d_iter++ = it[linearize(s...)];
+            });
+        }
 
     };
 

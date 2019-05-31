@@ -170,13 +170,10 @@ struct adjacency_list {
     adjacency_list(size_t n) {
         _data.resize(n * kNumNeighbors);
     }
-    /**
-     * add an adjacency in a specified direction
-     */
-
+    
     void add(size_t i_a, size_t i_b, size_t d, bool do_inverse = false) {
         //_data[i_a * N + d] |= to_bitmask(i_b);
-        _data[index_for_neighbor(i_a, d)] = to_bitmask(i_b);
+        wee::push_bits(_data[index_for_neighbor(i_a, d)], to_bitmask(i_b));
     }
 
     T at(size_t i, size_t d) const  {
@@ -184,36 +181,26 @@ struct adjacency_list {
     }
 
     size_t index_for_neighbor(size_t i, size_t d) const {
-        return i * N + d;
+        return i * kNumNeighbors + d;
     }
 
     template<typename InputIt>
     void add_example(InputIt first, const tileset<T>& ts, const topology<N>& topo) {
+        
+        size_t n = array_product(topo.shape());
 
         ndindexer<N> ix(topo.shape());
-        ix.iterate_all([&] (auto... e ) {
-            size_t idx = ix.linearize(e...);
+        for(auto idx : range(n)) {
+            auto coord = ix.delinearize(idx);
+            DEBUG_VALUE_OF(coord);
             for(auto d: range(kNumNeighbors)) {
                 size_t j;
                 if(topo.try_move(idx, d, &j)) {
                     add(ts.to_index(first[idx]), ts.to_index(first[j]), d, false);
                 }
             }
-        });
-
-        //InputIt begin = first;
-        //
-
-        /*while(first++ != last) {
-            size_t a = std::distance(first, last);
-            for(auto i: range(kNumNeighbors)) {
-                size_t b;
-                if(topo.try_move(a, i, &b)) {
-                    DEBUG_VALUE_OF(first[5]);
-                    add(static_cast<size_t>(*(begin + a)), static_cast<size_t>(*(begin + b)), i);
-                }
-            }
-        }*/
+        }
+        DEBUG_VALUE_OF(_data);
     }
 
 
@@ -228,6 +215,8 @@ struct wave {
     {
 
     }
+
+    const auto& data() const { return _data; }
 
     auto avail_at(size_t i) const { 
         std::vector<T> res;
@@ -252,11 +241,11 @@ struct wave {
     size_t min_entropy_index() {
         size_t ret = 0;
         float min_h = std::numeric_limits<float>::infinity();
-        for (T i : _data) {
-            if (is_collapsed(i)) 
+        for (auto i : range(_data.size())) {
+            if (is_collapsed(_data[i])) 
                 continue;
 
-            float h = entropy_of(i) - _rand.next<float>(0.0f, 1.0f) / 1000.0f;
+            float h = entropy_of(_data[i]) - _rand.next<float>(0.0f, 1.0f) / 1000.0f;
             if (h < min_h) {
                 min_h = h;
                 ret = i;
@@ -287,7 +276,7 @@ struct tileset {
         return res;
     }
 
-    T tile(size_t i) const { return _data[i]; }
+    T to_tile(size_t i) const { return _data[i]; }
     size_t to_index(T t) const { return _names.at(t); }//_data.at(_names.at(t)); }
     void set_frequency(T t, float f) { _frequency[_names[t]] = f; }
     const std::vector<float> frequencies() const { return _frequency; }
@@ -425,14 +414,15 @@ struct basic_model {
         T res = 0;
         for(auto i : range(_tileset.length())) {
             //res |= to_bitmask(_tileset.to_index(_tileset.tile(i)));
-            wee::push_bits(res, to_bitmask(_tileset.to_index(_tileset.tile(i))));
+            wee::push_bits(res, to_bitmask(_tileset.to_index(_tileset.to_tile(i))));
         }
         return res;
     }
 
-    //template <typename OutputIt>
-    void solve(const topology<N>& topo) {
+    template <typename OutputIt>
+    void solve(const topology<N>& topo, OutputIt d_it) {
         auto len = topo.length();
+        DEBUG_VALUE_OF(len);
         wave<T> wv(len, domain());
         /**
          * apply all constraints to the new wave
@@ -469,6 +459,12 @@ struct basic_model {
             prop.collapse(i, _tileset.frequencies());
             prop.propagate(i, _adjacencies);
         }
+        /**
+         * copy result in tile id format
+         */
+        std::transform(wv.data().begin(), wv.data().end(), d_it, [&] (const T& t) {
+            return _tileset.to_tile(to_index(t));
+        });
     }
 };
 template <typename T, size_t N>
@@ -493,6 +489,9 @@ struct corner_constraint {
 };
 
 void make_demo() {
+    static const size_t ND = 2;
+    static const std::array<ptrdiff_t, ND> d_shape = { 5, 5 };
+
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
         { 111, YELLOW },
@@ -517,16 +516,27 @@ void make_demo() {
     };
 
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
-    adjacency_list<uint64_t, 3> a(3);
+    adjacency_list<uint64_t, ND> a(ts.length());
     /**
      * TODO: this will also require the tileset to function properly
      */
-    a.add_example(example.begin(), ts, topology<3> { { 3,3,3} }); 
-    basic_model<uint64_t, 3> model(
+    a.add_example(example.begin(), ts, topology<ND> { { 7, 4 } }); 
+    basic_model<uint64_t, ND> model(
         std::forward<tileset<uint64_t> >(ts), 
-        std::forward<adjacency_list<uint64_t, 3> >(a)
+        std::forward<adjacency_list<uint64_t, ND> >(a)
     );
-    model.solve(topology<3>({15,15,15}));
+
+    std::vector<uint64_t> res;
+
+    model.solve(topology<ND>(d_shape), std::back_inserter(res));
+
+    for(auto r: range(d_shape[0])) {
+        for(auto c: range(d_shape[1])) {
+            std::cout << tiles.at(res[r * d_shape[0] + c]);
+        }
+        std::cout << std::endl;
+    }
+    DEBUG_VALUE_OF(res);
 }
 
 int main(int argc, char** argv) {
