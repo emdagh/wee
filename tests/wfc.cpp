@@ -234,10 +234,12 @@ struct wave {
         return is_collapsed(_data[i]);
     }
 
-    bool collapse(size_t i, const std::vector<float>& weights) {
+    size_t collapse(const std::vector<float>& weights) {
+        size_t i = min_entropy_index();
+
         std::unordered_map<int, float> w;
         float total_weight = 0.f;
-        auto options = _wave->avail_at(i);//_wave->_data[i]);
+        auto options = avail_at(i);//_wave->_data[i]);
         for(auto t: options) {
             w.insert(std::pair(t, weights[t]));
             total_weight += weights[t];
@@ -248,10 +250,10 @@ struct wave {
             random -= val;
             if(random < 0) {
                 collapse_at(i, to_bitmask<T>(key));
-                return true;
+                return i;
             }
         }
-        return false;
+        throw std::runtime_error("wave could not collapse any further...");
     }
 
     void collapse_at(size_t i, T t) { _data.at(i) = t; }
@@ -345,7 +347,7 @@ struct wave_propagator {
     }
 
     void step(const std::vector<float> weights, const adjacency_list<T,N>& adj) {
-        size_t i = _wave->collapse(i, weights);
+        size_t i = _wave->collapse(weights);
         propagate(i, adj);
     }
 
@@ -465,7 +467,7 @@ struct basic_model {
         _tileset.weights(weights.begin());
 
         while(!prop.is_done()) {
-            prop.step();
+            prop.step(_tileset.frequencies(), _adjacencies);
         }
         /**
          * copy result in tile id format
