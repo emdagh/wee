@@ -298,7 +298,9 @@ struct tileset {
         return res;
     }
 
-    tileset() { push(0); }
+    tileset() { 
+        push(0); 
+    }
 
     T to_tile(size_t i) const { return _data[i]; }
     size_t to_index(T t) const { return _names.at(t); }//_data.at(_names.at(t)); }
@@ -500,7 +502,7 @@ struct corner_constraint {
 
 void make_demo() {
     static const size_t ND = 2;
-    static const std::array<ptrdiff_t, ND> d_shape = { 2, 3 };
+    static const std::array<ptrdiff_t, ND> d_shape = { 13, 133 };
 
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
@@ -542,11 +544,10 @@ void make_demo() {
 
     for(auto r: range(d_shape[0])) {
         for(auto c: range(d_shape[1])) {
-            std::cout << tiles.at(res[r * d_shape[0] + c]);
+            std::cout << tiles.at(res[r * d_shape[1] + c]);
         }
         std::cout << std::endl;
     }
-    DEBUG_VALUE_OF(res);
 }
 
 int main(int argc, char** argv) {
