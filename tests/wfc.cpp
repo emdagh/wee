@@ -91,7 +91,10 @@ struct topology {
     explicit topology(const value_type& t) : _shape(t) {
     }
 
-    size_t length() const { return array_product<value_type, N>(shape()); }
+    size_t length() const { 
+        //return array_product<value_type, N>(shape()); 
+        return array_product(_shape);
+    }
 
     const value_type& shape() const { return _shape; }
 
