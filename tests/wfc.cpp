@@ -10,6 +10,7 @@
 #include <core/random.hpp>
 #include <core/array.hpp>
 #include <core/logstream.hpp>
+#include <engine/vox.hpp>
 
 #include <stack>
 #include <unordered_map>
@@ -547,6 +548,10 @@ void make_demo() {
         }
         std::cout << std::endl;
     }
+}
+
+void make_demo2() {
+
 }
 
 int main(int argc, char** argv) {
