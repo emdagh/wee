@@ -1,4 +1,3 @@
-#include <prettyprint.hpp>
 #include <wee.hpp>
 #include <sstream>
 #include <numeric>
@@ -13,9 +12,10 @@
 #include <engine/vox.hpp>
 #include <engine/assets.hpp>
 
+
 #include <stack>
 #include <unordered_map>
-
+#include <prettyprint.hpp>
 using namespace wee;
 
 template <typename T, size_t N> struct basic_model;
@@ -68,9 +68,9 @@ template <typename T>
 void trace(T* ptr, size_t start, size_t n, size_t stride, T val) {
     for(size_t i=0; i < n; i+=stride)  ptr[start + i] = val; 
 }
-template <size_t N, const size_t M = N * (N<<1)>
-constexpr auto make_direction_index() {
-    //static const size_t M = N * (N << 1);
+template <size_t N> //, const size_t M = N * (N<<1)>
+constexpr std::array<ptrdiff_t, N * (N<<1)>  make_direction_index() {
+    const size_t M = N * (N << 1);
     std::array<ptrdiff_t, M> res;
     trace<ptrdiff_t>(&res[0], 0,     M >> 1, N + 1,  1);
     trace<ptrdiff_t>(&res[0], N * N, M >> 1, N + 1, -1);
@@ -211,7 +211,7 @@ struct adjacency_list {
 template <typename T>
 struct wave {
     std::vector<T> _data;
-    wee::random _rand = { 235414704 };
+    wee::random _rand;
 
     wave(size_t n, T t) : _data(n, t)
     {
@@ -350,6 +350,8 @@ struct wave_propagator {
     explicit wave_propagator(wave<T>* w, const topology<N>& topo) : _wave(w), _topo(topo) {
     }
 
+    const topology<N>& topo() const { return _topo; }
+
     void step(const std::vector<float> weights, const adjacency_list<T,N>& adj) {
         size_t i = _wave->collapse(weights);
         propagate(i, adj);
@@ -482,7 +484,25 @@ struct basic_model {
     }
 };
 template <typename T, size_t N>
-struct border_constraint;
+struct border_constraint {
+    size_t _axis;
+    T _tile;
+    virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
+        const auto& topo = prop.topo();
+        std::array<ptrdiff_t, N> ary = { 0 };
+        std::copy(std::begin(topo._shape), std::end(topo._shape), ary.begin());
+        ndindexer<N> ix(ary);
+
+        ix.iterate(_axis, 0, [&](auto... coord) {
+            auto idx = ix.linearize(coord...);
+            prop.wave().collapse_to(idx, _tile);
+            res->push_back(idx);
+        });
+
+    }
+    virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
+};
 template <typename T, size_t N>
 struct corner_constraint {
     static const size_t kNumCorners = 1 << N;
@@ -492,6 +512,10 @@ struct corner_constraint {
 
     corner_constraint(size_t axis, const corners_type& corners) { 
     }
+    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
+    virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
 
     static corners_type make_corners(const shape_type& shape) {
         ndindexer<N> ix(shape);
@@ -500,6 +524,17 @@ struct corner_constraint {
         //}
     }
         
+};
+
+template <typename T, size_t N>
+struct fixed_tile_constraint : public basic_constraint<T, N> {
+
+    typename topology<N>::shape_type _coord;
+
+    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
+    virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
 };
 
 void make_demo() {
@@ -570,10 +605,9 @@ void make_demo2() {
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
-                DEBUG_VALUE_OF(v);
                 size_t idx = ix.linearize(v.y, v.z, v.x);
-                DEBUG_VALUE_OF(idx);
                 example[idx] = v.i;
+                DEBUG_VALUE_OF(idx);
             }
         }
     }

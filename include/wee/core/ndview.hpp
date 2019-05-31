@@ -46,9 +46,9 @@ namespace wee {
 
         auto constexpr compute_index() const { return ptrdiff_t(0); }
 
-        ptrdiff_t constexpr compute_index_impl(const shape_t& idx) const {
+        /*ptrdiff_t constexpr compute_index_impl(const shape_t& idx) const {
             return std::inner_product(_strides.begin(), _strides.end(), idx.begin(), 0);
-        }
+        }*/
         
         template <typename R, typename... Rs>
         ptrdiff_t constexpr compute_index(R first, Rs... rest) const {
@@ -69,7 +69,7 @@ namespace wee {
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
                 });
-                return inner_product(_strides, first, rest...);//compute_index_impl(idx);
+                return wee::inner_product(_strides, first, rest...);
             }
         }
     public:
@@ -123,12 +123,6 @@ namespace wee {
                 if(j == N) break;
             }
         }
-
-
-
-        /*size_t linearize(const shape_t& idx) const {
-            return compute_index_impl(idx);
-        }*/
 
         template <typename... Ts>
         size_t linearize(Ts... args) const {
@@ -205,8 +199,7 @@ namespace wee {
             : _fun(fun)
             , _args(args...)
         {
-
-            [[maybe_unused]] auto broadcast_shape = [this] (const auto& val) {
+            auto broadcast_shape = [this] (const auto& val) {
                 auto offset = this->maxdim() - val.maxdim();
                 for(auto i: range(val.maxdim())) {
                     if(this->shape[offset + i] == 1) {
