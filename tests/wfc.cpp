@@ -11,6 +11,7 @@
 #include <core/array.hpp>
 #include <core/logstream.hpp>
 #include <engine/vox.hpp>
+#include <engine/assets.hpp>
 
 #include <stack>
 #include <unordered_map>
@@ -503,7 +504,7 @@ struct corner_constraint {
 
 void make_demo() {
     static const size_t ND = 2;
-    static const std::array<ptrdiff_t, ND> d_shape = { 13, 133 };
+    static const std::array<ptrdiff_t, ND> d_shape = { 8, 50 };
 
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
@@ -551,10 +552,35 @@ void make_demo() {
 }
 
 void make_demo2() {
-
+    auto ifs = wee::open_ifstream("assets/test_09.vox");
+    if(!ifs.is_open()) {
+        throw file_not_found("file not found");
+    }
+    binary_reader rd(ifs);
+    vox* vx = vox_reader::read(rd);
+    auto* extents = vox::get<vox::size>(vx);
+    std::array<ptrdiff_t, 3> vdim = {
+        extents->x,
+        extents->y, 
+        extents->z
+    };
+    size_t len = array_product(vdim);
+    std::vector<int> example(len, 0);
+    ndindexer<3> ix(vdim);//len->y, len->z, len->x });
+    for(const auto* ptr: vx->chunks) {
+        if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
+            for(const auto& v: a->voxels) {
+                DEBUG_VALUE_OF(v);
+                size_t idx = ix.linearize(v.y, v.z, v.x);
+                DEBUG_VALUE_OF(idx);
+                example[idx] = v.i;
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv) {
     make_demo();
+    make_demo2();
     return 0;
 }
