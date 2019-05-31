@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <core/array.hpp>
 #include <core/tuple.hpp>
 #include <core/range.hpp>
 #include <algorithm>
@@ -8,15 +9,6 @@
 
 namespace wee {
 
-    template <typename T, size_t... Is>
-    constexpr auto array_product_impl(const T& t, std::index_sequence<Is...>) {
-        return ((1 * t[Is] * 1),...);
-    }
-
-    template <typename T, size_t N>
-    constexpr auto array_product(const T& t) {
-        return array_product_impl(t, std::make_index_sequence<N>{});
-    }
 
 
     template <size_t N, size_t I = 0, typename E, typename... Ts>
@@ -67,17 +59,17 @@ namespace wee {
                 return compute_index(rest...);
             } 
             /**
-             * append 0 index for missing outer dimensions
+             * append 1 
              */
             else if constexpr (sizeof...(Rs) + 1 < N ) {
-                return compute_index(first, rest..., 0);
+                return compute_index(first, rest..., 1);
             } 
             else {
                 std::array<ptrdiff_t, sizeof...(Rs) + 1> idx({
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
                 });
-                return compute_index_impl(idx);
+                return inner_product(_strides, first, rest...);//compute_index_impl(idx);
             }
         }
     public:

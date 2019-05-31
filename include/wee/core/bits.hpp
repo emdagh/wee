@@ -76,6 +76,17 @@ namespace wee {
         std::copy( std::begin(bytes), std::end(bytes), begin_object ) ;
         return object ;
     }
+
+template <typename T>
+void pop_bits(T& d_bits, const T& mask) {
+    d_bits &= ~mask;
+}
+
+template <typename T>
+void push_bits(T& d_bits, const T& mask) {
+    d_bits |= mask;
+}
+
 }
 
 

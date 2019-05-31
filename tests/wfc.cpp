@@ -17,6 +17,7 @@
 using namespace wee;
 
 template <typename T, size_t N> struct basic_model;
+template <typename T> struct tileset;
 
 /** helper functions */
 template <typename T, size_t N, size_t... Is>
@@ -50,7 +51,8 @@ constexpr T to_index(T t) { return ctz(t); }
 template <typename T, typename Iter>
 void avail(T t, Iter it) {
     T tmp = t;
-    for (auto i : range(popcount(tmp))) {
+    size_t i=0, n=popcount(tmp);
+    while (i++ < n) { 
         *it++ = to_index(tmp);
         auto lb = tmp & -tmp;
         tmp ^= lb;
@@ -64,7 +66,6 @@ template <typename T>
 void trace(T* ptr, size_t start, size_t n, size_t stride, T val) {
     for(size_t i=0; i < n; i+=stride)  ptr[start + i] = val; 
 }
-
 template <size_t N, const size_t M = N * (N<<1)>
 constexpr auto make_direction_index() {
     //static const size_t M = N * (N << 1);
@@ -75,10 +76,8 @@ constexpr auto make_direction_index() {
 }
 
 
-
 template <size_t N>
 using direction_index = std::array<ptrdiff_t, N * (N << 1)>;//= build();
-
 
 template <size_t N>
 struct topology {
@@ -88,6 +87,13 @@ struct topology {
     typedef std::array<ptrdiff_t, N> value_type;
 
     value_type _shape { 0 };
+
+    explicit topology(const value_type& t) : _shape(t) {
+    }
+
+    size_t length() const { return array_product<value_type, N>(shape()); }
+
+    const value_type& shape() const { return _shape; }
 
     constexpr bool is_valid(const value_type& c) const {
 #if 0 // fast and ugly
@@ -150,7 +156,6 @@ struct topology {
 template <size_t N>
 std::array<ptrdiff_t, N * (N << 1)> topology<N>::sides = make_direction_index<N>();
 
-
 template <typename T, size_t N>
 struct adjacency_list {
     typedef typename topology<N>::value_type shape_type;
@@ -167,28 +172,50 @@ struct adjacency_list {
      */
 
     void add(size_t i_a, size_t i_b, size_t d, bool do_inverse = false) {
-        _data[i_a * N + d] |= to_bitmask(i_b);
+        //_data[i_a * N + d] |= to_bitmask(i_b);
+        _data[index_for_neighbor(i_a, d)] = to_bitmask(i_b);
     }
 
+    T at(size_t i, size_t d) const  {
+        return _data[index_for_neighbor(i, d)];
+    }
+
+    size_t index_for_neighbor(size_t i, size_t d) const {
+        return i * N + d;
+    }
 
     template<typename InputIt>
-    void add_example(InputIt first, InputIt last, const topology<N>& topo) {
-        InputIt begin = first;
-        while(first != last) {
-            size_t a = last - first;
+    void add_example(InputIt first, const tileset<T>& ts, const topology<N>& topo) {
+
+        ndindexer<N> ix(topo.shape());
+        ix.iterate_all([&] (auto... e ) {
+            size_t idx = ix.linearize(e...);
+            for(auto d: range(kNumNeighbors)) {
+                size_t j;
+                if(topo.try_move(idx, d, &j)) {
+                    add(ts.to_index(first[idx]), ts.to_index(first[j]), d, false);
+                }
+            }
+        });
+
+        //InputIt begin = first;
+        //
+
+        /*while(first++ != last) {
+            size_t a = std::distance(first, last);
             for(auto i: range(kNumNeighbors)) {
                 size_t b;
                 if(topo.try_move(a, i, &b)) {
+                    DEBUG_VALUE_OF(first[5]);
                     add(static_cast<size_t>(*(begin + a)), static_cast<size_t>(*(begin + b)), i);
                 }
             }
-        }
+        }*/
     }
 
 
     const T& operator [] (size_t i) const { return _data.at(i); }
 };
-
 template <typename T>
 struct wave {
     std::vector<T> _data;
@@ -199,15 +226,23 @@ struct wave {
 
     }
 
-    void pop(size_t i, T t) { _data[i] &= ~t; }
+    auto avail_at(size_t i) const { 
+        std::vector<T> res;
+        avail(_data[i], std::back_inserter(res)); 
+        return res;
+    }
+
+    void pop(size_t i, T t) { wee::pop_bits(_data[i], t); }
 
     void reset(T t) { std::fill(_data.begin(), _data.end(), t); }
     
     size_t length() const { return _data.size(); }
 
-    bool collapsed_at(size_t i) const {
+    bool is_collapsed_at(size_t i) const {
         return is_collapsed(_data[i]);
     }
+
+    void collapse(size_t i, T t) { _data.at(i) = t; }
 
     bool is_collapsed(T t) const { return popcount(t) == 1; }
 
@@ -227,17 +262,30 @@ struct wave {
         return ret;
     }
 
+    bool any_possible(size_t i, T t) const { return _data[i] & t; }
+    bool is_same(size_t i, T t) const { return _data[i] == t; }
 };
-
 template <typename T>
 struct tileset {
-
+    /**
+     * TODO: can we replace all this with a single std::unordered_multiset?
+     */
     std::vector<T> _data;
     std::unordered_map<T, size_t> _names;
     std::vector<float> _frequency;
 
+    template <typename Iter>
+    static tileset make_tileset(Iter first, Iter last) {
+        Iter ptr = first;
+        tileset res;
+        while(ptr != last) {
+            res.push(*ptr++);
+        }
+        return res;
+    }
+
     T tile(size_t i) const { return _data[i]; }
-    size_t to_index(T t) const { return _data.at(_names.at(t)); }
+    size_t to_index(T t) const { return _names.at(t); }//_data.at(_names.at(t)); }
     void set_frequency(T t, float f) { _frequency[_names[t]] = f; }
     const std::vector<float> frequencies() const { return _frequency; }
     size_t length() const { return _data.size(); }
@@ -251,12 +299,22 @@ struct tileset {
         }
     }
     
+    void push(T t) {
+        if(_names.count(t) == 0) {
+            _names.insert(std::make_pair(t, _data.size()));
+            _data.push_back(t);
+            _frequency.push_back(1);
+        } else {
+            size_t idx = to_index(t);
+            _frequency[idx]++;
+        }
+    }
+
     template <typename OutputIt>
     void weights(OutputIt d_first) const {
         make_weights(_data.begin(), _data.end(), d_first);
     }
 };
-
 template <typename T, size_t N>
 struct wave_propagator {
     static const size_t kNumNeighbors = N << 1;
@@ -264,35 +322,47 @@ struct wave_propagator {
     typedef std::function<void(const wave_propagator<T,N>&)> callback_type;
     typedef typename topology<N>::value_type coordinate_type;
 
-    wee::random _rnd;
-    topology<N> _topo;
     wave<T>* _wave = nullptr;
+    topology<N> _topo;
+    wee::random _rnd;
     callback_type on_update;
 
-    explicit wave_propagator(wave<T>* w) : _wave(w) {
+    explicit wave_propagator(wave<T>* w, const topology<N>& topo) : _wave(w), _topo(topo) {
     }
 
-    void propagate(size_t at, const adjacency_list<T, N>* adj) const {
+    void propagate(size_t at, const adjacency_list<T, N>& adj) const {
         std::vector<T> open = { at };
         while(!open.empty()) {
             T cell = open.back();
             open.pop_back();
-
-            for(auto i: range(kNumNeighbors)) {
+            for(auto d: range(kNumNeighbors)) {
                 size_t j;
-                if(!_topo.try_move(cell, i, &j)) {
-                
+                if(!_topo.try_move(cell, d, &j)) {
+                    continue;
                 }
+                size_t m = 0;
+                for(auto a : _wave->avail_at(cell)) {
+                    wee::push_bits(m, adj.at(a, d));
+                }
+                if(m == 0) {
+                    continue;
+                }
+                if(!_wave->any_possible(j, m)) {
+                    return;
+                }
+                if(!_wave->is_same(j, m)) {
+                    open.push_back(j);
+                }
+                _wave->collapse(j, m);
             }
         }
-
     }
 
-    void collapse(size_t i, const std::vector<float>& weights) const {
-        std::unordered_map<int, float> weights;
+    bool collapse(size_t i, const std::vector<float>& weights) {
+        std::unordered_map<int, float> w;
         float total_weight = 0.f;
-        auto options = avail(_wave->_data[i]);
-        for(auto t: avail) {
+        auto options = _wave->avail_at(i);//_wave->_data[i]);
+        for(auto t: options) {
             w.insert(std::pair(t, weights[t]));
             total_weight += weights[t];
         }
@@ -310,7 +380,7 @@ struct wave_propagator {
 
     bool is_done() const {
         for(auto i: range(_wave->length())) {
-            if(!_wave->collapsed_at(i)) {
+            if(!_wave->is_collapsed_at(i)) {
                 return false;
             }
         }
@@ -321,43 +391,50 @@ struct wave_propagator {
     }*/
     
 };
-
 template <typename T, size_t N, typename R = std::vector<size_t> >
 struct basic_constraint {
     virtual ~basic_constraint() = default;
     virtual void init(const wave_propagator<T, N>&, R*) = 0;
     virtual void check(const wave_propagator<T, N>&, R*) = 0;
 };
-
 template <typename T, size_t N>
 struct basic_model {
     typedef typename topology<N>::value_type shape_type;
+    typedef tileset<T> tileset_type;
+    typedef adjacency_list<T,N> adjacency_list_type;
    
     std::vector<basic_constraint<T, N>* > _constraints;
-    adjacency_list<T,N>* _adjacencies;
-    tileset<T>* _tileset;
+    tileset_type&& _tileset;
+    adjacency_list_type&& _adjacencies;
     T _banned;
+
+    basic_model(tileset_type&& ts, adjacency_list_type&& a) 
+    : _tileset(std::forward<tileset_type>(ts))
+    , _adjacencies(std::forward<adjacency_list_type>(a)) 
+    {
+    }
 
     void add_constraint(basic_constraint<T,N>* ptr) { _constraints.push_back(ptr); }
 
-    void ban(T t) { _banned |= index_of(_tileset->to_index(t)); }
+    void ban(T t) { _banned |= index_of(_tileset.to_index(t)); }
 
     T domain() const {
         T res = 0;
-        for(auto i : range(_tileset->length())) {
-            res |= to_bitmask(_tileset->to_index(_tileset->tile(i)));
+        for(auto i : range(_tileset.length())) {
+            //res |= to_bitmask(_tileset.to_index(_tileset.tile(i)));
+            wee::push_bits(res, to_bitmask(_tileset.to_index(_tileset.tile(i))));
         }
         return res;
     }
 
     //template <typename OutputIt>
-    void solve(const shape_type& d_shape) {
-        auto len = std::accumulate(d_shape.begin(), d_shape.end(), 1, std::multiplies<int>());
+    void solve(const topology<N>& topo) {
+        auto len = topo.length();
         wave<T> wv(len, domain());
         /**
          * apply all constraints to the new wave
          */
-        wave_propagator<T, N> prop(&wv);
+        wave_propagator<T, N> prop(&wv, topo);
         for(auto* ptr : _constraints) {
             std::vector<size_t> res;
             ptr->init(prop, &res);
@@ -381,21 +458,18 @@ struct basic_model {
         /**
          * here we run the wave function collapse algorithm
          */
-        std::vector<float> weights(_tileset->length());
-        _tileset->weights(weights.begin());
+        std::vector<float> weights(_tileset.length());
+        _tileset.weights(weights.begin());
 
         while(!prop.is_done()) {
             size_t i = wv.min_entropy_index();
-            prop.collapse(i, _tileset->frequencies());
+            prop.collapse(i, _tileset.frequencies());
             prop.propagate(i, _adjacencies);
         }
     }
 };
-
 template <typename T, size_t N>
 struct border_constraint;
-
-
 template <typename T, size_t N>
 struct corner_constraint {
     static const size_t kNumCorners = 1 << N;
@@ -415,13 +489,44 @@ struct corner_constraint {
         
 };
 
-int main(int argc, char** argv) {
-    [[maybe_unused]] int tiles[] = { 101, 102, 203 };
-    std::unordered_map<int, char> index = { { 101, 'x' }, { 102, '.' }, {103,'-'} };
-    std::vector<int> example = { 101, 101 };
+void make_demo() {
+    std::unordered_map<int, const char*> tile_colors = {
+        { 110, GREEN },
+        { 111, YELLOW },
+        { 112, BLUE }
+    };
+
+    std::unordered_map<int, char> tiles = {
+        { 110, '#' },
+        { 111, '.' },
+        { 112, '~' },
+        { 0, ' ' }
+    };
+
+    std::vector<int> example = {
+        110, 110, 110, 110,
+        110, 110, 110, 110,
+        110, 110, 110, 110,
+        110, 111, 111, 110,
+        111, 112, 112, 111,
+        112, 112, 112, 112,
+        112, 112, 112, 112
+    };
+
+    auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
     adjacency_list<uint64_t, 3> a(3);
-    a.add_example(example.begin(), example.end(), topology<3> { { 3,3,3} }); 
-    basic_model<uint64_t, 3> model;
-    model.solve({15,15,15});
+    /**
+     * TODO: this will also require the tileset to function properly
+     */
+    a.add_example(example.begin(), ts, topology<3> { { 3,3,3} }); 
+    basic_model<uint64_t, 3> model(
+        std::forward<tileset<uint64_t> >(ts), 
+        std::forward<adjacency_list<uint64_t, 3> >(a)
+    );
+    model.solve(topology<3>({15,15,15}));
+}
+
+int main(int argc, char** argv) {
+    make_demo();
     return 0;
 }
