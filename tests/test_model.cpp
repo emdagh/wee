@@ -528,14 +528,14 @@ model* demo2() {
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 25;
-    static int OUT_H = 17;
-    static int OUT_W = 25;
+    static int OUT_D = 35;
+    static int OUT_H = 19;
+    static int OUT_W = 35;
 
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
-    ts.set_frequency(0, 700);
+    ts.set_frequency(0, 3000);
     ts._frequency[6] = 600;
     ts._frequency[7] = 600;
 

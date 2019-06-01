@@ -376,6 +376,7 @@ struct wave_propagator {
                 }
                 auto any = _wave->any_possible(other, m);
                 if(!any) {
+                    DEBUG_LOG("no options left for neighbor tile");
                     exit(1);
                     return;
                 }
@@ -520,18 +521,17 @@ struct border_constraint : public basic_constraint<T,N> {
             auto neighbor = prop.topo().neighbor(_directions[i]);
             size_t axis = _directions[i] % N;
             int sum = array_sum(neighbor);
-            DEBUG_VALUE_OF(_directions[i]);
-            DEBUG_VALUE_OF(axis);
+            //DEBUG_VALUE_OF(_directions[i]);
+            //DEBUG_VALUE_OF(axis);
             auto is_signed = std::signbit(sum);
             auto slice = is_signed * (ix.shape()[axis] - 1);
-            DEBUG_VALUE_OF(slice);
+            //DEBUG_VALUE_OF(slice);
             ix.iterate_axis(axis, slice, [&] (auto idx) {
-                //auto idx = ix.linearize(coord...);
                 prop.limit(idx, _tile);
                 res->push_back(idx);
             });
 
-            DEBUG_VALUE_OF(prop._wave->_data);
+            //DEBUG_VALUE_OF(prop._wave->_data);
             
         }
 
@@ -576,9 +576,17 @@ struct corner_constraint {
 template <typename T, size_t N>
 struct fixed_tile_constraint : public basic_constraint<T, N> {
 
-    typename topology<N>::shape_type _coord;
+    typedef typename topology<N>::value_type coord_type;
 
-    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    T _tilemask;
+    coord_type _at;
+
+    fixed_tile_constraint(T tilemask, const coord_type& at) : _tilemask(tilemask), _at(at) {}
+
+    virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
+        size_t idx = prop.topo().to_index(_at);
+        prop.limit(idx, _tilemask);
+        res->push_back(idx);
     }
     virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
     }
@@ -586,7 +594,7 @@ struct fixed_tile_constraint : public basic_constraint<T, N> {
 
 void make_demo() {
     static const size_t ND = 2;
-    static const std::array<ptrdiff_t, ND> d_shape = { 8, 50 };
+    static const std::array<ptrdiff_t, ND> d_shape = { 15, 55 };
 
     std::unordered_map<int, const char*> tile_colors = {
         { 110, GREEN },
@@ -613,18 +621,14 @@ void make_demo() {
 
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
     adjacency_list<uint64_t, ND> a(ts.length());
-    /**
-     * TODO: this will also require the tileset to function properly
-     */
     a.add_example(example.begin(), ts, topology<ND> { { 7, 4 } }); 
-    basic_model<uint64_t, ND> model(
-        //std::forward<tileset<uint64_t> >(ts), 
-        //std::forward<adjacency_list<uint64_t, ND> >(a)
-        std::move(ts),
-        std::move(a)
-    );
+    basic_model<uint64_t, ND> model(std::move(ts), std::move(a));
     std::vector<uint64_t> res;
-    //model.add_constraint(new border_constraint<uint64_t, 2>(0, { 0 }));//{ 5 })); // direction index 5 = 0, -1, 0
+    /**
+     * 2D peninsula generator
+     */
+    model.add_constraint(new fixed_tile_constraint<uint64_t, 2>(to_bitmask(2), { 7, 23 }));
+    model.add_constraint(new border_constraint<uint64_t, 2>(to_bitmask(3), { 1, 2, 3 }));
 
     model.solve(topology<ND>(d_shape), std::back_inserter(res));
 
@@ -675,20 +679,24 @@ void make_demo2() {
 
 }
 
+template <typename T>
+void zero_vec(std::vector<T>& first, const std::array<T, 2>& size, const std::array<T, 2>& at, const std::array<T, 2>& sub_size) {
+    ndindexer<2> ix(size);
+    ix.submatrix(at, sub_size, [&] (auto i) {
+        first[i] = 0;
+    });
+}
+
 int main(int argc, char** argv) {
 #if 0
 
     ptrdiff_t rows = 6, cols = 6;
-    std::vector<int> src(rows * cols);
+    std::vector<ptrdiff_t> src(rows * cols);
     std::iota(src.begin(), src.end(), 0);
-    ndindexer<2> ix({rows,cols});
-    DEBUG_VALUE_OF(ix.strides());
-    std::vector<int> dst(3 * 3);
-    
-    ix.submatrix({1, 1}, { 3, 3 }, [&] (auto i) mutable {
-        src[i] = 0;
-        //[j++] = src[i];
-    });
+
+    zero_vec(src, { rows, cols }, { 2, 2 }, { 4, 4 });
+
+
 
     for(auto y: range(rows)) {
         for(auto x: range(cols)) {
