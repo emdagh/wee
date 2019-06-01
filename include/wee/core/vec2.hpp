@@ -118,6 +118,8 @@ namespace wee {
     };
 
     typedef basic_vec2<float> vec2f;
+    typedef basic_vec2<int32_t> vec2i;
+    typedef basic_vec2<uint32_t> vec2ui;
     typedef vec2f vec2;
 
     template <typename T>

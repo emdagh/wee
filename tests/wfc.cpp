@@ -607,13 +607,66 @@ void make_demo2() {
             for(const auto& v: a->voxels) {
                 size_t idx = ix.linearize(v.y, v.z, v.x);
                 example[idx] = v.i;
-                DEBUG_VALUE_OF(idx);
             }
         }
     }
 }
+template <typename T, size_t N, typename UnaryFunction>
+void gslice(T first, const std::array<T,N>& dims, const std::array<T,N>& strides, UnaryFunction&& fun) {
+    DEBUG_VALUE_OF(strides);
+    std::array<T,N> idx = { 0 };
+    while(1) {
+        (std::forward<UnaryFunction>(fun)(wee::inner_product(idx, strides, first)));
+        size_t j;
+        for(j=0; j < dims.size(); j++) {
+            size_t i = N - j - 1;
+            idx[i]++;
+            if(idx[i] < dims[i]) break;
+            idx[i] = 0;
+        }
+        if(j == dims.size()) break;
+    }
+
+}
+
+template <typename T, size_t N, typename InputIt, typename OutputIt>
+void submatrix(InputIt first, T start, const std::array<T,N>& dims, const std::array<T, N>& strides, OutputIt d_first) {
+    T idx = { 0 }; 
+    gslice(start, dims, strides, [&] (auto t) mutable { *d_first++ = first[t]; });
+}
 
 int main(int argc, char** argv) {
+#if 1
+
+    ptrdiff_t rows = 6, cols = 6;
+    std::vector<int> src(rows * cols);
+    std::iota(src.begin(), src.end(), 0);
+    ndindexer<2> ix({rows,cols});
+    DEBUG_VALUE_OF(ix.strides());
+    std::vector<int> dst(3 * 3);
+    
+    ix.submatrix({1, 1}, { 3, 3 }, [&] (auto i) mutable {
+        src[i] = 0;
+        //[j++] = src[i];
+    });
+
+    for(auto y: range(rows)) {
+        for(auto x: range(cols)) {
+            std::cout << std::setw(2) << src[y * cols + x]  << ",";
+        }
+        std::cout << std::endl;
+    }
+
+    //gslice(7, std::array<int, 2>{ 3, 3 }, std::array<int, 2>{6,1}, [] (auto t) { DEBUG_VALUE_OF(t); });
+    /*std::vector<int> src, dst;
+    src.resize(36);
+    std::iota(src.begin(), src.end(), 0);
+    submatrix(src.begin(), std::back_inserter(dst), 7, std::vector<int, 2>{ 3, 3 }, std::vector<int, 2>{ 6, 1 });*/
+
+
+    exit(0);
+#endif
+
     make_demo();
     make_demo2();
     return 0;

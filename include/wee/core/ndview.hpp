@@ -49,6 +49,11 @@ namespace wee {
         /*ptrdiff_t constexpr compute_index_impl(const shape_t& idx) const {
             return std::inner_product(_strides.begin(), _strides.end(), idx.begin(), 0);
         }*/
+
+        template <size_t... Is>
+        ptrdiff_t constexpr compute_index(const shape_t& s, std::index_sequence<Is...>) {
+            return compute_index(s[Is]...);
+        }
         
         template <typename R, typename... Rs>
         ptrdiff_t constexpr compute_index(R first, Rs... rest) const {
@@ -69,12 +74,12 @@ namespace wee {
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
                 });
-                return wee::inner_product(_strides, first, rest...);
+                return wee::inner_product(_strides, idx);//first, rest...);
             }
         }
     public:
         typedef shape_t shape_type;
-
+  
         ndindexer() 
             : _shape({0})
         {
@@ -94,7 +99,7 @@ namespace wee {
         void iterate_all(UnaryOperation&& op) const {
             for(auto axis: range(N)) {
                 for(auto depth: range(shape()[axis])) {
-                    iterate(axis, depth, std::forward<UnaryOperation>(op));
+                    iterate_axis(axis, depth, std::forward<UnaryOperation>(op));
                 }
             }
         }
@@ -105,7 +110,7 @@ namespace wee {
         }
         
         template <typename UnaryOperation>
-        void iterate(size_t d, size_t n, UnaryOperation&& unary_op) const {
+        void iterate_axis(size_t d, size_t n, UnaryOperation&& unary_op) const {
             shape_type idx = { 0 };
             idx[d] = n;
             while(1) {
@@ -128,6 +133,11 @@ namespace wee {
         size_t linearize(Ts... args) const {
             return compute_index(args...);
         }
+
+        template <size_t... Is>
+        size_t linearize(const shape_type& s, std::index_sequence<Is...>) {
+            return linearize(s[Is]...);
+        }
         /**
          * https://stackoverflow.com/questions/46782444/how-to-convert-a-linear-index-to-subscripts-with-support-for-negative-strides
          */
@@ -145,13 +155,48 @@ namespace wee {
             return out;
 
         }
-        template <typename InputIt, typename OutputIt>
+        /*template <typename InputIt, typename OutputIt>
         void gslice(InputIt it, size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
             for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
 
             iterate(axis, depth, [&](auto... s) {
                 *d_iter++ = it[linearize(s...)];
             });
+        }*/
+
+        /**
+         * returns the indices submatrix 
+         * @param - linear starting index 
+         * @param - extents of the submatrix
+         */
+        template <typename UnaryFunction>
+        void submatrix(ptrdiff_t start, const shape_type& dims, UnaryFunction&& fun) {
+            //DEBUG_VALUE_OF(strides);
+            std::array<ptrdiff_t, N> idx = { 0 };
+            while(1) {
+                //*d_first++ = start + compute_index(idx, std::make_index_sequence<N>());
+                (std::forward<UnaryFunction>(fun)(start + compute_index(idx, std::make_index_sequence<N>())));
+                size_t j;
+                for(j=0; j < dims.size(); j++) {
+                    size_t i = N - j - 1;
+                    idx[i]++;
+                    if(idx[i] < dims[i]) break;
+                    idx[i] = 0;
+                }
+                if(j == dims.size()) break;
+            }
+        }
+
+        /**
+         * helper function
+         * @param - starting coordinate of submatrix
+         * @param - extents of submatrix
+         */
+        template <typename UnaryFunction>
+        void submatrix(const shape_type& a, const shape_type& b, UnaryFunction&& fun) {
+            shape_type dims = b;// - a;
+            auto start = linearize(a, std::make_index_sequence<N>());
+            submatrix(start, dims, std::forward<UnaryFunction>(fun));
         }
 
     };
@@ -176,7 +221,7 @@ namespace wee {
         void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
             for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
 
-            this->iterate(axis, depth, [&](auto... s) {
+            this->iterate_axis(axis, depth, [&](auto... s) {
                 *d_iter++ = _data->at(this->linearize(s...));
             });
         }

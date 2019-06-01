@@ -38,7 +38,7 @@ struct border_constraint : public basic_constraint<T, N> {
         std::copy(std::begin(topo._shape), std::end(topo._shape), ary.begin());
         ndindexer<N> ix(ary);
 
-        ix.iterate(_axis, 0, [&](auto... coord) {
+        ix.iterate_axis(_axis, 0, [&](auto... coord) {
             auto idx = ix.linearize(coord...);
             wave._coeff[idx] = nami::bitmaskof<T>(_tile);
             res->push_back(idx);

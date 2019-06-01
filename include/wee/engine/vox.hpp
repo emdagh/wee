@@ -4,8 +4,10 @@
 #include <core/binary_writer.hpp>
 #include <core/range.hpp>
 #include <core/factory.hpp>
+#include <core/logstream.hpp>
 #include <nlohmann/json.hpp>
 #include <map>
+
 /**
  * LEARNING MOMENTS:
  *
@@ -38,6 +40,8 @@
 
 #define TAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
 namespace wee {
+
+    class model;
 
     using wee::binary_reader;
     using wee::range;
@@ -157,14 +161,16 @@ namespace wee {
         }
 
         template <typename T>
-            static const T* get(const vox* v) {
-                for(const auto* ptr: v->chunks) {
-                    if(const auto* a = dynamic_cast<const T*>(ptr); a != nullptr) {
-                        return a;
-                    }
+        static const T* get(const vox* v) {
+            for(const auto* ptr: v->chunks) {
+                if(const auto* a = dynamic_cast<const T*>(ptr); a != nullptr) {
+                    return a;
                 }
-                return nullptr;
             }
+            return nullptr;
+        }
+
+        static void to_model(const vox*, model**);
 
     };
     void to_json(json& j, const vox::voxel& v) {
