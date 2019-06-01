@@ -525,8 +525,8 @@ struct border_constraint : public basic_constraint<T,N> {
             auto is_signed = std::signbit(sum);
             auto slice = is_signed * (ix.shape()[axis] - 1);
             DEBUG_VALUE_OF(slice);
-            ix.iterate_axis(axis, slice, [&] (auto... coord) {
-                auto idx = ix.linearize(coord...);
+            ix.iterate_axis(axis, slice, [&] (auto idx) {
+                //auto idx = ix.linearize(coord...);
                 prop.limit(idx, _tile);
                 res->push_back(idx);
             });
@@ -624,7 +624,7 @@ void make_demo() {
         std::move(a)
     );
     std::vector<uint64_t> res;
-    model.add_constraint(new border_constraint<uint64_t, 2>(0, { 0, 2}));//{ 5 })); // direction index 5 = 0, -1, 0
+    //model.add_constraint(new border_constraint<uint64_t, 2>(0, { 0 }));//{ 5 })); // direction index 5 = 0, -1, 0
 
     model.solve(topology<ND>(d_shape), std::back_inserter(res));
 

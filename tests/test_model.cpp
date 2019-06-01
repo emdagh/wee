@@ -38,8 +38,8 @@ struct border_constraint : public basic_constraint<T, N> {
         std::copy(std::begin(topo._shape), std::end(topo._shape), ary.begin());
         ndindexer<N> ix(ary);
 
-        ix.iterate_axis(_axis, 0, [&](auto... coord) {
-            auto idx = ix.linearize(coord...);
+        ix.iterate_axis(_axis, 0, [&](auto idx) {
+//            auto idx = ix.linearize(coord...);
             wave._coeff[idx] = nami::bitmaskof<T>(_tile);
             res->push_back(idx);
         });
@@ -557,7 +557,6 @@ model* demo2() {
 
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
     DEBUG_VALUE_OF(test._adjacency);
-    exit(1);
     test.solve_for({OUT_D, OUT_H, OUT_W});
     DEBUG_VALUE_OF(ts._index);
 #if 0

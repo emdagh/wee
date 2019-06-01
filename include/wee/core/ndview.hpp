@@ -95,11 +95,11 @@ namespace wee {
         constexpr const shape_type& shape() const { return _shape; }
         constexpr const size_t length() const { return array_sum(_shape); }
 
-        template <typename UnaryOperation>
-        void iterate_all(UnaryOperation&& op) const {
+        template <typename UnaryFunction>
+        void iterate_all(UnaryFunction&& fun) const {
             for(auto axis: range(N)) {
                 for(auto depth: range(shape()[axis])) {
-                    iterate_axis(axis, depth, std::forward<UnaryOperation>(op));
+                    iterate_axis(axis, depth, std::forward<UnaryFunction>(fun));
                 }
             }
         }
@@ -109,12 +109,13 @@ namespace wee {
             (std::forward<T>(f)(s[Is]...));
         }
         
-        template <typename UnaryOperation>
-        void iterate_axis(size_t d, size_t n, UnaryOperation&& unary_op) const {
+        template <typename UnaryFunction>
+        void iterate_axis(size_t d, size_t n, UnaryFunction&& fun) const {
             shape_type idx = { 0 };
             idx[d] = n;
             while(1) {
-                do_operation(std::forward<UnaryOperation>(unary_op), idx, std::make_index_sequence<N>());
+                //do_operation(std::forward<UnaryOperation>(unary_op), idx, std::make_index_sequence<N>());
+                fun(linearize_array(idx, std::make_index_sequence<N>()));
                 size_t j;
                 for(j=0; j < N; j++) {
                     auto i = N - j - 1;
@@ -135,7 +136,7 @@ namespace wee {
         }
 
         template <size_t... Is>
-        size_t linearize(const shape_type& s, std::index_sequence<Is...>) {
+        size_t linearize_array(const shape_type& s, std::index_sequence<Is...>) const {
             return linearize(s[Is]...);
         }
         /**
@@ -175,7 +176,8 @@ namespace wee {
             std::array<ptrdiff_t, N> idx = { 0 };
             while(1) {
                 //*d_first++ = start + compute_index(idx, std::make_index_sequence<N>());
-                (std::forward<UnaryFunction>(fun)(start + compute_index(idx, std::make_index_sequence<N>())));
+                //(std::forward<UnaryFunction>(fun)(start + compute_index(idx, std::make_index_sequence<N>())));
+                fun(linearize_array(idx, std::make_index_sequence<N>()));
                 size_t j;
                 for(j=0; j < dims.size(); j++) {
                     size_t i = N - j - 1;
@@ -198,7 +200,6 @@ namespace wee {
             auto start = linearize(a, std::make_index_sequence<N>());
             submatrix(start, dims, std::forward<UnaryFunction>(fun));
         }
-
     };
 
     template <typename T, size_t N>
@@ -221,8 +222,8 @@ namespace wee {
         void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
             for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
 
-            this->iterate_axis(axis, depth, [&](auto... s) {
-                *d_iter++ = _data->at(this->linearize(s...));
+            this->iterate_axis(axis, depth, [&](auto s) {
+                *d_iter++ = _data->at(s);//this->linearize(s...));
             });
         }
 
