@@ -84,6 +84,9 @@ using direction_index = std::array<ptrdiff_t, N * (N << 1)>;//= build();
 template <size_t N>
 struct topology {
     static const int kNumNeighbors = N << 1;
+    static const int kNumDirections = N * (N << 1);
+    static const int kNumCorners = 2 << N;
+
     static std::array<ptrdiff_t, N * (N<<1)> sides;
 
     typedef std::array<ptrdiff_t, N> value_type;
@@ -193,8 +196,6 @@ struct adjacency_list {
 
         ndindexer<N> ix(topo.shape());
         for(auto idx : range(n)) {
-            auto coord = ix.delinearize(idx);
-            DEBUG_VALUE_OF(coord);
             for(auto d: range(kNumNeighbors)) {
                 size_t j;
                 if(topo.try_move(idx, d, &j)) {
@@ -202,7 +203,6 @@ struct adjacency_list {
                 }
             }
         }
-        DEBUG_VALUE_OF(_data);
     }
 
 
@@ -387,6 +387,10 @@ struct wave_propagator {
         }
     }
 
+    void limit(size_t i, T t) const {
+        _wave->collapse_at(i, t);
+    }
+
 
     bool is_done() const {
         for(auto i: range(_wave->length())) {
@@ -426,7 +430,7 @@ struct basic_model {
 
     void add_constraint(basic_constraint<T,N>* ptr) { _constraints.push_back(ptr); }
 
-    void ban(T t) { _banned |= index_of(_tileset.to_index(t)); }
+    void ban(T t) { _banned |= to_index(_tileset.to_index(t)); }
 
     T domain() const {
         T res = 0;
@@ -484,20 +488,63 @@ struct basic_model {
     }
 };
 template <typename T, size_t N>
-struct border_constraint {
-    size_t _axis;
+struct border_constraint : public basic_constraint<T,N> {
     T _tile;
+    std::vector<size_t> _directions;
+
+    border_constraint(T tile, const std::vector<size_t>& dir) 
+    : _tile(tile)
+    , _directions(dir) 
+    {
+    }
+
     virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
-        const auto& topo = prop.topo();
+        /**
+         * 2019-06-01
+         *
+         * first of all, dermine which axis the iteration needs to be
+         * processed across. This should be based on direction index
+         * from topology<N>::sides.
+         *
+         * The mapping should look something like this:
+         * [direction_index] => (axis, min/max)
+         * the axis can be determined by it's index
+         *      axis = index % N (where N is the number of dimensions)
+         * the sign can probably be done getting the sign of the array sum of
+         * the direction vector. We can multiply the result of this sum by the max
+         * extent of the dimension and reach a final set of variables to into into
+         * a ndindexer::slice function.
+         */
+        ndindexer<N> ix(prop.topo().shape());
+        for(size_t i=0; i < _directions.size(); i++) {
+            auto neighbor = prop.topo().neighbor(_directions[i]);
+            size_t axis = _directions[i] % N;
+            int sum = array_sum(neighbor);
+            DEBUG_VALUE_OF(_directions[i]);
+            DEBUG_VALUE_OF(axis);
+            auto is_signed = std::signbit(sum);
+            auto slice = is_signed * (ix.shape()[axis] - 1);
+            DEBUG_VALUE_OF(slice);
+            ix.iterate_axis(axis, slice, [&] (auto... coord) {
+                auto idx = ix.linearize(coord...);
+                prop.limit(idx, _tile);
+                res->push_back(idx);
+            });
+
+            DEBUG_VALUE_OF(prop._wave->_data);
+            
+        }
+
+        /**const auto& topo = prop.topo();
         std::array<ptrdiff_t, N> ary = { 0 };
         std::copy(std::begin(topo._shape), std::end(topo._shape), ary.begin());
         ndindexer<N> ix(ary);
 
-        ix.iterate(_axis, 0, [&](auto... coord) {
+        ix.iterate_axis(_axis, 0, [&](auto... coord) {
             auto idx = ix.linearize(coord...);
-            prop.wave().collapse_to(idx, _tile);
+            prop.limit(idx, _tile);//wave().collapse_at(idx, _tile);
             res->push_back(idx);
-        });
+        });*/
 
     }
     virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
@@ -571,10 +618,13 @@ void make_demo() {
      */
     a.add_example(example.begin(), ts, topology<ND> { { 7, 4 } }); 
     basic_model<uint64_t, ND> model(
-        std::forward<tileset<uint64_t> >(ts), 
-        std::forward<adjacency_list<uint64_t, ND> >(a)
+        //std::forward<tileset<uint64_t> >(ts), 
+        //std::forward<adjacency_list<uint64_t, ND> >(a)
+        std::move(ts),
+        std::move(a)
     );
     std::vector<uint64_t> res;
+    model.add_constraint(new border_constraint<uint64_t, 2>(0, { 0, 2}));//{ 5 })); // direction index 5 = 0, -1, 0
 
     model.solve(topology<ND>(d_shape), std::back_inserter(res));
 
@@ -595,9 +645,9 @@ void make_demo2() {
     vox* vx = vox_reader::read(rd);
     auto* extents = vox::get<vox::size>(vx);
     std::array<ptrdiff_t, 3> vdim = {
-        extents->x,
-        extents->y, 
-        extents->z
+        extents->y,
+        extents->z, 
+        extents->x
     };
     size_t len = array_product(vdim);
     std::vector<int> example(len, 0);
@@ -610,33 +660,23 @@ void make_demo2() {
             }
         }
     }
-}
-template <typename T, size_t N, typename UnaryFunction>
-void gslice(T first, const std::array<T,N>& dims, const std::array<T,N>& strides, UnaryFunction&& fun) {
-    DEBUG_VALUE_OF(strides);
-    std::array<T,N> idx = { 0 };
-    while(1) {
-        (std::forward<UnaryFunction>(fun)(wee::inner_product(idx, strides, first)));
-        size_t j;
-        for(j=0; j < dims.size(); j++) {
-            size_t i = N - j - 1;
-            idx[i]++;
-            if(idx[i] < dims[i]) break;
-            idx[i] = 0;
-        }
-        if(j == dims.size()) break;
-    }
+    auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
+    adjacency_list<uint64_t, 3> adj(ts.length());
+    adj.add_example(example.begin(), ts, topology<3> { vdim }); 
+    DEBUG_VALUE_OF(adj._data);
+    basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
 
-}
 
-template <typename T, size_t N, typename InputIt, typename OutputIt>
-void submatrix(InputIt first, T start, const std::array<T,N>& dims, const std::array<T, N>& strides, OutputIt d_first) {
-    T idx = { 0 }; 
-    gslice(start, dims, strides, [&] (auto t) mutable { *d_first++ = first[t]; });
+
+    md.add_constraint(new border_constraint<uint64_t, 3>(1, {4}));//{ 5 })); // direction index 5 = 0, -1, 0
+    //md.add_constraint(new border_constraint(1, 1)); // direction index 5 = 0, -1, 0
+    md.ban(1);
+
+
 }
 
 int main(int argc, char** argv) {
-#if 1
+#if 0
 
     ptrdiff_t rows = 6, cols = 6;
     std::vector<int> src(rows * cols);
@@ -668,6 +708,6 @@ int main(int argc, char** argv) {
 #endif
 
     make_demo();
-    make_demo2();
+    //make_demo2();
     return 0;
 }

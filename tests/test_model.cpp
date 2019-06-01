@@ -556,6 +556,8 @@ model* demo2() {
 
 
     test.add_example(&example[0], { len->z, len->y, len->x});//, len->z });
+    DEBUG_VALUE_OF(test._adjacency);
+    exit(1);
     test.solve_for({OUT_D, OUT_H, OUT_W});
     DEBUG_VALUE_OF(ts._index);
 #if 0
