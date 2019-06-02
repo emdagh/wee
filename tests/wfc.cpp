@@ -70,8 +70,9 @@ void trace(T* ptr, size_t start, size_t n, size_t stride, T val) {
 }
 template <size_t N> //, const size_t M = N * (N<<1)>
 constexpr std::array<ptrdiff_t, N * (N<<1)>  make_direction_index() {
+
     const size_t M = N * (N << 1);
-    std::array<ptrdiff_t, M> res;
+    std::array<ptrdiff_t, M> res = { 0 };
     trace<ptrdiff_t>(&res[0], 0,     M >> 1, N + 1,  1);
     trace<ptrdiff_t>(&res[0], N * N, M >> 1, N + 1, -1);
     return res;
@@ -443,7 +444,8 @@ struct basic_model {
     }
 
     template <typename OutputIt>
-    void solve(const topology<N>& topo, OutputIt d_it) {
+    void solve(const typename topology<N>::value_type& shape, OutputIt d_it) { //const topology<N>& topo, OutputIt d_it) {
+        auto topo = topology<N>(shape);
         auto len = topo.length();
         DEBUG_VALUE_OF(len);
         wave<T> wv(len, domain());
@@ -630,7 +632,7 @@ void make_demo() {
     model.add_constraint(new fixed_tile_constraint<uint64_t, 2>(to_bitmask(2), { 7, 23 }));
     model.add_constraint(new border_constraint<uint64_t, 2>(to_bitmask(3), { 1, 2, 3 }));
 
-    model.solve(topology<ND>(d_shape), std::back_inserter(res));
+    model.solve(d_shape, std::back_inserter(res));
 
     for(auto r: range(d_shape[0])) {
         for(auto c: range(d_shape[1])) {
@@ -638,6 +640,26 @@ void make_demo() {
         }
         std::cout << std::endl;
     }
+}
+template <typename T>
+vox* vox_from_topology(std::vector<T>& data, const ndindexer<3>& topo, tileset<T>& ts) {
+    vox* d_vox = new vox();
+    d_vox->version = 150;
+    vox::set_size(d_vox, topo.shape()[2], topo.shape()[1], topo.shape()[0]);// reverse??
+    vox::set_pack(d_vox, 1);
+
+    vox::xyzi* d_data = new vox::xyzi();
+    for(auto i: range(topo.length())) {
+        auto coord = topo.delinearize(i);
+        vox::voxel vx;
+        vx.x = coord[2];
+        vx.y = coord[1];
+        vx.z = coord[0];// reverse??
+        vx.i = ts.to_tile(ts.to_index(data[i]));
+        d_data->voxels.push_back(vx);
+    }
+    d_vox->chunks.push_back(d_data);
+    return d_vox;
 }
 
 void make_demo2() {
@@ -672,11 +694,21 @@ void make_demo2() {
 
 
 
-    md.add_constraint(new border_constraint<uint64_t, 3>(1, {4}));//{ 5 })); // direction index 5 = 0, -1, 0
+    //md.add_constraint(new border_constraint<uint64_t, 3>(1, {4}));//{ 5 })); // direction index 5 = 0, -1, 0
     //md.add_constraint(new border_constraint(1, 1)); // direction index 5 = 0, -1, 0
     md.ban(1);
+    std::vector<uint64_t> res;
+    md.solve({5,5,5}, std::back_inserter(res));
+    DEBUG_VALUE_OF(res);
 
+    model* mdl = nullptr;
+    vox* d_vox = vox_from_topology(res, ndindexer<3>({5,5,5}), ts);
+    vox::set_palette(d_vox, vox::get<vox::rgba>(vx)->colors);
+    vox::to_model(d_vox, &mdl);
+   
+    DEBUG_VALUE_OF(mdl);
 
+    
 }
 
 template <typename T>
@@ -688,7 +720,7 @@ void zero_vec(std::vector<T>& first, const std::array<T, 2>& size, const std::ar
 }
 
 int main(int argc, char** argv) {
-#if 0
+#if 0 
 
     ptrdiff_t rows = 6, cols = 6;
     std::vector<ptrdiff_t> src(rows * cols);
@@ -716,6 +748,6 @@ int main(int argc, char** argv) {
 #endif
 
     make_demo();
-    //make_demo2();
+    make_demo2();
     return 0;
 }

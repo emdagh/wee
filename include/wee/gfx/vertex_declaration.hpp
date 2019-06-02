@@ -136,12 +136,16 @@ namespace wee {
     };
     template <typename T, template <typename> typename I, size_t... P>
     void install_vertex_attributes(size_t& offset, const std::index_sequence<P...>&) {
-        using expand = int[];
         const size_t stride = sizeof(T);
-
+#if 0
+        using expand = int[];
         static_cast<void>(expand{0, (static_cast<void>(
             I<typename T::template attribute<P> >()(stride, offset) // wow...
         ), 0)...}); 
+#else
+        (I<typename T::template attribute<P> >()(stride, offset), ...);
+#endif
+
     }
 
     template <typename T, template <typename> class I>

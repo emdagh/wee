@@ -95,6 +95,25 @@ namespace wee {
         constexpr const shape_type& shape() const { return _shape; }
         constexpr const size_t length() const { return array_sum(_shape); }
 
+        template <typename F, typename C>
+        auto iterate_generic(F&& fun, C&& should_ignore, const shape_type& idx_, const shape_type& dims, size_t offset) const 
+        -> typename std::enable_if<!std::is_void<C>::value>::type
+        {
+            auto idx = idx_;
+            while(1) {
+                (std::forward<F>(fun)(offset + linearize_array(idx, std::make_index_sequence<N>{})));
+                size_t j;
+                for(j=0; j < N; j++) {
+                    size_t i = N - j - 1;
+                    if(should_ignore(i)) continue;
+                    idx[i]++;
+                    if(idx[i] < dims[i]) break;
+                    idx[i] = 0;
+                }
+                if(j == N) break;
+            }
+        }
+
         template <typename UnaryFunction>
         void iterate_all(UnaryFunction&& fun) const {
             for(auto axis: range(N)) {
@@ -109,20 +128,21 @@ namespace wee {
         void iterate_axis(size_t d, size_t n, UnaryFunction&& fun) const {
             shape_type idx = { 0 };
             idx[d] = n;
+#if 1
             while(1) {
                 (std::forward<UnaryFunction>(fun)(linearize_array(idx, std::make_index_sequence<N>())));
                 size_t j;
                 for(j=0; j < N; j++) {
                     auto i = N - j - 1;
-                    if(i == d) 
-                        continue;
+                    if(i == d) continue;
                     idx[i]++;
-                    if(idx[i] < _shape[i]) 
-                        break;
+                    if(idx[i] < _shape[i]) break;
                     idx[i] = 0;
                 }
                 if(j == N) break;
             }
+#else
+#endif
         }
 
         template <typename... Ts>
@@ -159,18 +179,22 @@ namespace wee {
         template <typename UnaryFunction>
         void submatrix(ptrdiff_t start, const shape_type& dims, UnaryFunction&& fun) {
             std::array<ptrdiff_t, N> idx = { 0 };
+#if 1
             while(1) {
-                //(std::forward<UnaryFunction>(fun)(linearize_array(idx, std::make_index_sequence<N>())));
                 (std::forward<UnaryFunction>(fun)(start + linearize_array(idx, std::make_index_sequence<N>())));
                 size_t j;
-                for(j=0; j < dims.size(); j++) {
+                for(j=0; j < N; j++) {
                     size_t i = N - j - 1;
                     idx[i]++;
                     if(idx[i] < dims[i]) break;
                     idx[i] = 0;
                 }
-                if(j == dims.size()) break;
+                if(j == N) break;
             }
+#else
+            iterate_generic(std::forward<UnaryFunction>(fun), idx, dims, 0);
+
+#endif
         }
 
         /**
@@ -184,6 +208,8 @@ namespace wee {
             auto start = linearize_array(a, std::make_index_sequence<N>());
             submatrix(start, dims, std::forward<UnaryFunction>(fun));
         }
+
+
     };
 
     template <typename T, size_t N>
