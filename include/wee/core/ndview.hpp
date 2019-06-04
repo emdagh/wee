@@ -93,7 +93,7 @@ namespace wee {
 
         constexpr const shape_type& strides() const { return _strides; }
         constexpr const shape_type& shape() const { return _shape; }
-        constexpr const size_t length() const { return array_sum(_shape); }
+        constexpr const size_t length() const { return array_product(_shape); }
 
         template <typename F, typename C>
         auto iterate_generic(F&& fun, C&& should_ignore, const shape_type& idx_, const shape_type& dims, size_t offset) const 

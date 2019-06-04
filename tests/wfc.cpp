@@ -151,7 +151,7 @@ void make_demo() {
     }
 }
 template <typename T>
-vox* vox_from_topology(std::vector<T>& data, const ndindexer<3>& topo, tileset<T>& ts) {
+vox* vox_from_topology(std::vector<T>& data, const topology<3>& topo, tileset<T>& ts) {
     const int A = 2;
     const int B = 1;
     const int C = 0;
@@ -162,12 +162,8 @@ vox* vox_from_topology(std::vector<T>& data, const ndindexer<3>& topo, tileset<T
     vox::set_pack(d_vox, 1);
 
     vox::xyzi* d_data = new vox::xyzi();
-    DEBUG_VALUE_OF(topo.shape());
-    DEBUG_VALUE_OF(array_product(topo.shape()));
     for(auto i: range(array_product(topo.shape()))) {
-        auto coord = topo.delinearize(i);
-        DEBUG_VALUE_OF(i);
-        DEBUG_VALUE_OF(coord);
+        auto coord = topo.to_coordinate(i);
         vox::voxel vx;
         vx.x = coord[A];
         vx.y = coord[B];
@@ -214,20 +210,18 @@ void make_demo2(model** d_model) {
     }
     
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
-    DEBUG_VALUE_OF(ts._data);
-    DEBUG_VALUE_OF(ts._frequency);
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
-    DEBUG_VALUE_OF(adj._data);
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
     md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));//{ 5 })); // direction index 5 = 0, -1, 0
+    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
     //md.add_constraint(new border_constraint(1, 1)); // direction index 5 = 0, -1, 0
     //md.ban(1);
-    std::array<ptrdiff_t, 3> d_shape = { 15,5,15 };
+    std::array<ptrdiff_t, 3> d_shape = { 16,5,16 };
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     DEBUG_VALUE_OF(res);
-    vox* d_vox = vox_from_topology(res, ndindexer<3>(d_shape), ts);
+    vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
     vox::set_palette(d_vox, vox::get<vox::rgba>(vx)->colors);
     vox::to_model(d_vox, d_model);
    
