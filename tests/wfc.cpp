@@ -210,13 +210,13 @@ void make_demo2(model** d_model) {
     }
     
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
+    ts.set_frequency(0, 900);
+    //ts.set_frequency(6, 300);
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
     md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));//{ 5 })); // direction index 5 = 0, -1, 0
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
-    //md.add_constraint(new border_constraint(1, 1)); // direction index 5 = 0, -1, 0
-    //md.ban(1);
     std::array<ptrdiff_t, 3> d_shape = { 16,5,16 };
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
