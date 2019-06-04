@@ -447,6 +447,7 @@ struct meshify {
                         v0._position = quad_face[ii];
                         v0._color    = palette->colors[color - 1];
                         v0._normal   = std::get<0>(coord) == 0 ? vec3f::right() : std::get<0>(coord)== 1 ? vec3f::up() : vec3f::forward();
+                        v0._normal  *= ((face & 1) == 1) ? 1.0f : -1.0f;
                         builder
                             .add_vertex(v0)
                             .add_index(num_indices++);
@@ -528,22 +529,25 @@ model* demo2() {
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 35;
-    static int OUT_H = 19;
-    static int OUT_W = 35;
+    static int OUT_D = 5;
+    static int OUT_H = 5;
+    static int OUT_W = 5;
 
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
+#if 0
     ts.set_frequency(0, 3000);
     ts._frequency[6] = 600;
     ts._frequency[7] = 600;
-
+#endif
     //ts.set_frequency(7, 1000);
     //ts.set_frequency(7, 500);
     nami::basic_model<uint64_t, 3> test(ts, 3);
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
+        DEBUG_VALUE_OF(res);
+        exit(1);
     };
 
     test.add_constraint(new border_constraint<uint64_t, 3>(1, 1));
@@ -609,7 +613,9 @@ model* demo2() {
     /**
      * 5.) Convert voxels to mesh
      */
-    return meshify::vox_to_mesh(vx_res);
+    model* res_model = nullptr;
+    vox::to_model(vx_res, &res_model);
+    return res_model;
 }
 
 struct game : public applet {
@@ -747,7 +753,9 @@ struct game : public applet {
         {
             //glPolygonMode( GL_BACK, GL_LINE );
             glUseProgram(_program->_handle);
-            _program->set_uniform<uniform4x4f>("wvp", mat4::mul(world, mat4::mul(view, projection)));
+            _program->set_uniform<uniform4x4f>("World", world);//mat4::mul(world, mat4::mul(view, projection)));
+            _program->set_uniform<uniform4x4f>("View", view);//mat4::mul(world, mat4::mul(view, projection)));
+            _program->set_uniform<uniform4x4f>("Projection", projection);//mat4::mul(world, mat4::mul(view, projection)));
             install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
             GLint prev;
             glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev);

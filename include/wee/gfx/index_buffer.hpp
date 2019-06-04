@@ -13,6 +13,18 @@ namespace wee {
     template <typename T>
     using basic_index_buffer = basic_device_buffer<T, GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING>; 
     typedef basic_index_buffer<char> index_buffer;
+    
+    struct with_index_buffer {
+        GLint _prev;
+        with_index_buffer(vertex_buffer* b) {
+            glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &_prev);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->_handle);
+        }
+
+        ~with_index_buffer() {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _prev);
+        }
+    };
 
 }
 #else

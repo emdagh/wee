@@ -157,15 +157,15 @@ namespace wee {
         void validate() ;
     };
 
-    struct scoped_shader_program {
+    struct with_shader_program {
         GLint _cached;
 
-        scoped_shader_program(shader_program* p) {
+        with_shader_program(shader_program* p) {
             glGetIntegerv(GL_CURRENT_PROGRAM, &_cached);
             glUseProgram(p->_handle);
         }
 
-        ~scoped_shader_program() {
+        ~with_shader_program() {
             glUseProgram(_cached);
         }
     };

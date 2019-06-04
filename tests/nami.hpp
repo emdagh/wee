@@ -407,7 +407,7 @@ struct adjacency_list {
 template <typename T, size_t N>
 struct wave_propagator {
     
-    wee::random _randgen;// = { 58385623 };
+    wee::random _randgen = { 600089286 };
     size_t _len;
 
     typedef wee::event_handler<void(const wave<T>&)> cb_t;

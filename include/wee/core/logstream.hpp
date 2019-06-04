@@ -94,6 +94,10 @@ std::ostream& operator << (std::ostream& os, const C<T, Args...>& objects) {
 #define DEBUG_VALUE_AND_TYPE_OF(x)  wee::log(std::cout, AT).write(wee::value_of(#x, x, true))
 #define TRACE(...)                  wee::log(std::cout, AT).write(__VA_ARGS__)
 
+/**
+ * wee::log << loglevel::debug << std::hex << value_of(var) << std::endl;
+ */
+
 namespace wee {
     enum class loglevel : uint8_t {
         quiet = 0,

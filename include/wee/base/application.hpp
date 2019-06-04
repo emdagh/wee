@@ -23,6 +23,7 @@ namespace wee {
         int get_graphics_device(graphics_device**);
 
     public:
+        event_handler<int(int, int)> on_resize;
         event_handler<int(uint16_t)> on_keypress;
         event_handler<int(uint16_t)> on_keyrelease;
 

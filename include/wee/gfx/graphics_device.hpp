@@ -12,6 +12,8 @@
 #include <core/enum_cast.hpp>
 #include <core/range.hpp>
 
+#include <stack>
+
 #include <SDL.h>
 
 //struct SDL_Renderer;
@@ -76,8 +78,15 @@ namespace wee {
         kClearStencil   = 0b0100,
         kClearAll       = 0b0111
     };
+
+    struct shader_program;
+
     struct graphics_device {
         SDL_Renderer* _renderer;
+
+        std::stack<vertex_buffer*> _vbo;
+        std::stack<index_buffer*> _ibo;
+        std::stack<shader_program*> _shaders;
 
 
         SDL_Renderer* get_renderer() const { return _renderer; }
@@ -106,6 +115,15 @@ namespace wee {
 
         void set_index_buffer(index_buffer* buf) {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf->_handle);
+        }
+
+        /*void set_shader_program(shader_program* s) {
+            
+        }*/
+
+        template <typename V>
+        void set_vertex_declaration() {
+            install_vertex_attributes<V, vertex_attribute_installer>();
         }
 
         template <primitive_type P>

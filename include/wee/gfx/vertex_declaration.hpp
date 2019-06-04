@@ -220,4 +220,14 @@ namespace wee {
     DECLARE_VERTEXATTRIBPTR_IMPL_FLOAT(GL_UNSIGNED_BYTE);
     DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_SHORT);
     DECLARE_VERTEXATTRIBPTR_IMPL_INT(GL_UNSIGNED_INT);
+
+    template <typename T>
+    struct with_vertex_declaration {
+        with_vertex_declaration() {
+            install_vertex_attributes<T, vertex_attribute_installer>();
+        }
+
+        ~with_vertex_declaration() {
+        }
+    };
 }

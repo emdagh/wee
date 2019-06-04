@@ -60,6 +60,12 @@ application::application(applet* a)
         self->on_mousemove(event->x, event->y);
         return 0;
     });
+    SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_WINDOW_RESIZE, [] (const SDL_Application* app, const void* data) {
+        const SDL_WindowEvent* e = static_cast<const SDL_WindowEvent*>(data);
+        auto* self = static_cast<application*>(SDL_GetApplicationUserData(app));
+        self->on_resize(e->data1, e->data2);
+        return 0;
+    });
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_MOUSEBUTTON, [] (const SDL_Application* app, const void* userdata) {
         const SDL_MouseButtonEvent* event = static_cast<const SDL_MouseButtonEvent*>(userdata);
@@ -83,6 +89,7 @@ application::application(applet* a)
         //SDL_Renderer* renderer = SDL_GetApplicationRenderer(app);
         return self->_applet->draw(self->_graphics_device);
     });
+
 
     SDL_SetApplicationUserData(_handle, this);
     SDL_InitApplication(_handle);
