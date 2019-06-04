@@ -517,7 +517,6 @@ model* demo2() {
             for(const auto& v: a->voxels) {
                 DEBUG_VALUE_OF(v);
                 size_t idx = view.linearize(v.y, v.z, v.x);
-                DEBUG_VALUE_OF(idx);
                 example[idx] = v.i;
             }
         }
@@ -529,9 +528,9 @@ model* demo2() {
      * 3.) Apply WFC
      */
 
-    static int OUT_D = 5;
-    static int OUT_H = 5;
-    static int OUT_W = 5;
+    static int OUT_D = 15;
+    static int OUT_H = 35;
+    static int OUT_W = 15;
 
     std::vector<int> res;
 
@@ -605,6 +604,7 @@ model* demo2() {
         voxl.x = coord[2];
         voxl.y = coord[1];
         voxl.z = coord[0];
+        DEBUG_VALUE_OF(coord);
         voxl.i = ts.tile(ts.tile_to_index(res[i]));
         data->voxels.push_back(voxl);
     }
@@ -721,7 +721,7 @@ struct game : public applet {
 
     int update(int dt) { 
         //_time += static_cast<float>(dt) * 0.001f;
-#if 0 
+#if 1 
         static float kSensitivity = 0.01f;
         _camera.set_rotation(
             (input::instance().mouse_x) * kSensitivity, 

@@ -162,8 +162,12 @@ vox* vox_from_topology(std::vector<T>& data, const ndindexer<3>& topo, tileset<T
     vox::set_pack(d_vox, 1);
 
     vox::xyzi* d_data = new vox::xyzi();
-    for(auto i: range(topo.length())) {
+    DEBUG_VALUE_OF(topo.shape());
+    DEBUG_VALUE_OF(array_product(topo.shape()));
+    for(auto i: range(array_product(topo.shape()))) {
         auto coord = topo.delinearize(i);
+        DEBUG_VALUE_OF(i);
+        DEBUG_VALUE_OF(coord);
         vox::voxel vx;
         vx.x = coord[A];
         vx.y = coord[B];
@@ -219,7 +223,7 @@ void make_demo2(model** d_model) {
     md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));//{ 5 })); // direction index 5 = 0, -1, 0
     //md.add_constraint(new border_constraint(1, 1)); // direction index 5 = 0, -1, 0
     //md.ban(1);
-    std::array<ptrdiff_t, 3> d_shape = { 5,5,5 };
+    std::array<ptrdiff_t, 3> d_shape = { 15,5,15 };
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     DEBUG_VALUE_OF(res);
@@ -264,7 +268,7 @@ struct game : public applet {
 
     game() {
         _camera = new camera();
-        _camera->set_position(5, 5, 5);
+        _camera->set_position(15, 10, 15);
         _camera->lookat(0, 0, 0);
         _viewport = { 1.f, 1.f };
     }
