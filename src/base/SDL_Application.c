@@ -53,7 +53,8 @@ int SDL_ApplicationHandleWindowEvent(struct SDL_Application* ptr, const SDL_Wind
 //                    e->data2);
             break;
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-            DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window size changed");// (%d, %d)",
+            //DELEGATE(SDL_APPLICATION_CALLBACK_LOG, ptr, "Window size changed");// (%d, %d)",
+            DELEGATE(SDL_APPLICATION_CALLBACK_WINDOW_RESIZE, ptr, e);
 //                    e->data1,
 //                    e->data2);
             break;
@@ -155,7 +156,6 @@ int SDL_InitApplication(SDL_Application* res) {
 
     if(!res->window) 
         return -1;
-
     /**
      * create the renderer
      */

@@ -52,7 +52,7 @@ struct border_constraint : public basic_constraint<T,N> {
             auto slice      = is_signed * (ix.shape()[axis] - 1);
             
             ix.iterate_axis(axis, slice, [&] (auto idx) {
-                prop.limit(idx, to_bitmask(_tile));
+                prop.limit(idx, (_tile));
                 res->push_back(idx);
             });
         }
@@ -152,18 +152,22 @@ void make_demo() {
 }
 template <typename T>
 vox* vox_from_topology(std::vector<T>& data, const ndindexer<3>& topo, tileset<T>& ts) {
+    const int A = 2;
+    const int B = 1;
+    const int C = 0;
+
     vox* d_vox = new vox();
     d_vox->version = 150;
-    vox::set_size(d_vox, topo.shape()[2], topo.shape()[1], topo.shape()[0]);// reverse??
+    vox::set_size(d_vox, topo.shape()[A], topo.shape()[B], topo.shape()[C]);// reverse??
     vox::set_pack(d_vox, 1);
 
     vox::xyzi* d_data = new vox::xyzi();
     for(auto i: range(topo.length())) {
         auto coord = topo.delinearize(i);
         vox::voxel vx;
-        vx.x = coord[2];
-        vx.y = coord[1];
-        vx.z = coord[0];// reverse??
+        vx.x = coord[A];
+        vx.y = coord[B];
+        vx.z = coord[C];// reverse??
         vx.i = ts.to_tile(ts.to_index(data[i]));
         d_data->voxels.push_back(vx);
     }
@@ -212,15 +216,13 @@ void make_demo2(model** d_model) {
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
     DEBUG_VALUE_OF(adj._data);
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
-    md.add_constraint(new border_constraint<uint64_t, 3>(1, {1}));//{ 5 })); // direction index 5 = 0, -1, 0
+    md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));//{ 5 })); // direction index 5 = 0, -1, 0
     //md.add_constraint(new border_constraint(1, 1)); // direction index 5 = 0, -1, 0
     //md.ban(1);
     std::array<ptrdiff_t, 3> d_shape = { 5,5,5 };
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     DEBUG_VALUE_OF(res);
-    exit(1);
-
     vox* d_vox = vox_from_topology(res, ndindexer<3>(d_shape), ts);
     vox::set_palette(d_vox, vox::get<vox::rgba>(vx)->colors);
     vox::to_model(d_vox, d_model);
@@ -274,7 +276,7 @@ struct game : public applet {
         try {
             make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
             make_demo();
-            //make_demo2(&_model);
+            make_demo2(&_model);
         } catch(...) {
             exit(-2);
         }
@@ -286,6 +288,35 @@ struct game : public applet {
     }
 
     int draw(graphics_device* dev) {
+#if 1
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        dev->clear(SDL_ColorPresetEXT::IndianRed, clear_options::kClearAll, 1.0f, 0); 
+
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 view = _camera->get_transform();
+        mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
+        
+            shader_program* _program =  _shader;
+        {
+            //glPolygonMode( GL_BACK, GL_LINE );
+            glUseProgram(_program->_handle);
+            _program->set_uniform<uniform4x4f>("World", world);//mat4::mul(world, mat4::mul(view, projection)));
+            _program->set_uniform<uniform4x4f>("View", view);//mat4::mul(world, mat4::mul(view, projection)));
+            _program->set_uniform<uniform4x4f>("Projection", projection);//mat4::mul(world, mat4::mul(view, projection)));
+            install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
+            GLint prev;
+            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev);
+            glBindBuffer(GL_ARRAY_BUFFER, _model->_vertices->_handle);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _model->_indices->_handle);
+            install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
+            for(const auto* mesh: _model->_meshes) {
+                draw_indexed_primitives<primitive_type::quads, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+            }
+            glBindBuffer(GL_ARRAY_BUFFER, prev);
+        }
+        return 0;
+#else
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         mat4 world, view, projection;
@@ -302,15 +333,18 @@ struct game : public applet {
                 _shader->set_uniform<uniform4x4f>("Projection", projection);
             }
             { 
-                with_vertex_declaration<vertex_voxel> _decl();
+                //with_vertex_declaration<vertex_voxel> _decl();
+                install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
                 with_vertex_buffer _vb(_model->_vertices);
                 with_index_buffer _ib(_model->_vertices);
                 for(auto* mesh : _model->_meshes) {
-                    draw_indexed_primitives<primitive_type::quads, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+                    draw_indexed_primitives<primitive_type::points, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
                 }
             }
         }
         return 0;
+
+#endif
     }
 
     void set_callbacks(application* app) {
@@ -331,5 +365,6 @@ int main(int argc, char** argv) {
     application app(let);
     app.set_mouse_position(320, 240);
     ((game*)let)->set_callbacks(&app);
+    app.resize(640, 480);
     return app.start();
 }

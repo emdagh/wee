@@ -536,6 +536,7 @@ model* demo2() {
     std::vector<int> res;
 
     nami::tileset ts = nami::tileset::from_example(&example[0], example_len);
+    DEBUG_VALUE_OF(ts._frequency);
 #if 0
     ts.set_frequency(0, 3000);
     ts._frequency[6] = 600;
@@ -547,7 +548,7 @@ model* demo2() {
     test.on_done += [&res] (const std::vector<int>& a) {
         res = a;
         DEBUG_VALUE_OF(res);
-        exit(1);
+        //exit(1);
     };
 
     test.add_constraint(new border_constraint<uint64_t, 3>(1, 1));
@@ -705,8 +706,8 @@ struct game : public applet {
             _model = _models[0];
 #endif
 
-            _camera.set_position(5, 0, 5);
-            _camera.lookat(5, 0, 0);
+            _camera.set_position(5, 5, 5);
+            _camera.lookat(0, 0, 0);
             _camera.set_viewport(640, 480);
 
             _renderer = new aabb_renderer;
@@ -720,7 +721,7 @@ struct game : public applet {
 
     int update(int dt) { 
         //_time += static_cast<float>(dt) * 0.001f;
-#if 1 
+#if 0 
         static float kSensitivity = 0.01f;
         _camera.set_rotation(
             (input::instance().mouse_x) * kSensitivity, 
