@@ -1,4 +1,6 @@
 #include <wee.hpp>
+#include <map>
+#include <string>
 #include <sstream>
 #include <numeric>
 #include <vector>
@@ -11,9 +13,17 @@
 #include <core/logstream.hpp>
 #include <engine/vox.hpp>
 #include <engine/assets.hpp>
+#include <engine/model_importer.hpp>
 using namespace wee;
 #include <prettyprint.hpp>
 #include "hokusai/hokusai.hpp"
+
+template <typename T>
+void json_keys (const json& j, T d_first) {
+    for(auto it=j.begin(); it != j.end(); it++) {
+        *d_first++ = it.key();
+    }
+}
 
 template <typename T, size_t N>
 struct border_constraint : public basic_constraint<T,N> {
@@ -220,7 +230,6 @@ void make_demo2(model** d_model) {
     std::array<ptrdiff_t, 3> d_shape = { 16,5,16 };
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
-    DEBUG_VALUE_OF(res);
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
     vox::set_palette(d_vox, vox::get<vox::rgba>(vx)->colors);
     vox::to_model(d_vox, d_model);
@@ -259,6 +268,9 @@ struct game : public applet {
     camera* _camera = nullptr;
     shader_program* _shader = nullptr;
     vec2f _viewport;
+    std::vector<model*> _models;
+    std::unordered_map<std::string, size_t> _names;
+
 
     game() {
         _camera = new camera();
@@ -272,10 +284,67 @@ struct game : public applet {
 
     int load_content() {
         try {
+            {
+                auto is = open_ifstream("assets/adjacencies.json");
+                json j = json::parse(is);
+                auto tileset = j["tileset"];
+                std::string basepath = tileset["basepath"];
+
+                for(const auto& tile : tileset["tiles"]) {
+                    DEBUG_VALUE_OF(tile["name"]);
+                    DEBUG_VALUE_OF(tile["src"]);
+                    auto mis = open_ifstream(basepath + "/" + std::string(tile["src"]));
+                    _names[tile["name"]] = _models.size();
+                    _models.push_back(import_model(mis));
+                }
+
+                
+                std::map<std::string, int> direction_mapping = {
+                    {"left",  3}, //topology<3>::sides[3] },
+                    {"right", 0}, //topology<3>::sides[0] },
+                    {"above", 4}, //topology<3>::sides[4] },
+                    {"below", 1}  //topology<3>::sides[1] }
+                };
+
+            
+                adjacency_list<uint64_t, 3> al(_names.size());
+                for(auto& a : j["adjacencies"]) {
+                    DEBUG_VALUE_OF(a[0]);
+                    std::vector<std::string> keys;
+                    /**
+                     * for each of the values in the first entry of the adjacency,
+                     * we add all values of the second entry of the adjacency
+                     * the direction is based on the direction required from 
+                     * a to b.
+                     */
+                    json_keys(a, std::back_inserter(keys));
+                    /*for (json::iterator it = a.begin(); it != a.end(); ++it) {
+                        //DEBUG_VALUE_OF(direction_mapping[it.key()]);
+                        DEBUG_VALUE_OF(it.key());
+                        for(auto& b: it.value()) {
+                            //DEBUG_VALUE_OF(_names[b]);
+                            DEBUG_VALUE_OF(b);
+
+                        }
+                        //std::cout << it.key() << " : " << it.value() << "\n";
+
+                    }*/
+
+                    /*std::vector<std::string> keys;
+                    array_keys(
+                        a.begin(),
+                        a.end(), 
+                        std::back_inserter(keys)
+                    );
+                    DEBUG_VALUE_OF(keys);*/
+                }
+            }
+
             make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
             make_demo();
             make_demo2(&_model);
-        } catch(...) {
+        } catch(std::exception& e) {
+            DEBUG_LOG(e.what());
             exit(-2);
         }
         return 0;

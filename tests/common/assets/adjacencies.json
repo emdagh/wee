@@ -7,15 +7,15 @@
         "rotational" : 4,
         "reflectional" : false
     },
-    "tiles" : [
-        { "src": "assets/castle/empty.vox",             "name": "empty",            "symmetry": "X" },
-        { "src": "assets/castle/ground.vox",            "name": "ground",           "symmetry": "X" },
-        { "src": "assets/castle/wall.vox",              "name": "wall",             "symmetry": "E" },
-        { "src": "assets/castle/wall_outer_corner.vox", "name": "wall_outer_corner","symmetry": "L" },
-        { "src": "assets/castle/wall_inner_corner.vox", "name": "wall_inner_corner","symmetry": "L" },
-        { "src": "assets/castle/solid.vox",             "name": "solid",            "symmetry": "X" }
-    ],
-    "todo" : "add more adjacencies types", 
+    "tileset": {
+        "basepath" : "assets/models/modular_buildings/Models",
+        "tiles" : [
+            { "src": "modularBuildings_001.fbx", "name": "ground",   "symmetry": "X" },
+            { "src": "modularBuildings_025.fbx", "name": "wall",     "symmetry": "E" },
+            { "src": "modularBuildings_040.fbx", "name": "corner",   "symmetry": "L" },
+            { "src": "modularBuildings_022.fbx", "name": "solid",    "symmetry": "X" }
+        ]
+    },
     "adjacencies": [
         { "left": ["ground"], "right" : ["ground"] },
         { "left": ["empty"], "right" : ["empty"] },
@@ -25,15 +25,15 @@
         ]},
         { "below": ["ground"], "above": [
             "wall", 
-            "wall_outer_corner", 
-            "wall_inner_corner", 
+            "corner", 
             "solid"
         ]}
     ],
     "constraints": [
         {
             "class": "border",
-            "tile": "empty"
+            "direction" : "below",
+            "tile": "ground"
         },
         {
             "class": "fixed",
