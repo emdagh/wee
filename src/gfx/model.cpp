@@ -5,13 +5,14 @@
 using namespace wee;
 
 
+
 void model::draw(graphics_device* dev) {
     dev->set_vertex_buffer(_vertices);
     dev->set_index_buffer(_indices);
     for(const auto* mesh: _meshes) {
         //for(const auto& p: mesh._parts) {
 
-            dev->draw_indexed_primitives<primitive_type::line_list, index_type::unsigned_int>(
+            dev->draw_indexed_primitives<primitive_type::triangles, index_type::unsigned_int>(
                 mesh->base_vertex, 
                 mesh->base_index, 
                 mesh->num_indices, 

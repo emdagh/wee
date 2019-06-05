@@ -286,63 +286,27 @@ struct game : public applet {
     }
 
     int draw(graphics_device* dev) {
-#if 1
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
-        dev->clear(SDL_ColorPresetEXT::IndianRed, clear_options::kClearAll, 1.0f, 0); 
+        dev->clear(SDL_ColorPresetEXT::CornflowerBlue);//, clear_options::kClearAll, 1.0f, 0); 
 
         mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera->get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
-            shader_program* _program =  _shader;
         {
-            //glPolygonMode( GL_BACK, GL_LINE );
-            glUseProgram(_program->_handle);
-            _program->set_uniform<uniform4x4f>("World", world);//mat4::mul(world, mat4::mul(view, projection)));
-            _program->set_uniform<uniform4x4f>("View", view);//mat4::mul(world, mat4::mul(view, projection)));
-            _program->set_uniform<uniform4x4f>("Projection", projection);//mat4::mul(world, mat4::mul(view, projection)));
-            install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
-            GLint prev;
-            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev);
-            glBindBuffer(GL_ARRAY_BUFFER, _model->_vertices->_handle);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _model->_indices->_handle);
-            install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
+            with_shader_program context(_shader);
+            _shader->set_uniform<uniform4x4f>("World", world);//mat4::mul(world, mat4::mul(view, projection)));
+            _shader->set_uniform<uniform4x4f>("View", view);//mat4::mul(world, mat4::mul(view, projection)));
+            _shader->set_uniform<uniform4x4f>("Projection", projection);//mat4::mul(world, mat4::mul(view, projection)));
+            dev->set_vertex_buffer(_model->_vertices);
+            dev->set_index_buffer(_model->_indices);
+            dev->set_vertex_declaration<vertex_voxel>();
             for(const auto* mesh: _model->_meshes) {
                 draw_indexed_primitives<primitive_type::quads, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
             }
-            glBindBuffer(GL_ARRAY_BUFFER, prev);
         }
         return 0;
-#else
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        mat4 world, view, projection;
-        world = mat4::identity();
-        view = _camera->get_transform();
-        projection = mat4::create_perspective_fov(45.f * M_PI / 180.0f, _viewport.x / _viewport.y, 0.1f, 1000.0f); 
-
-        dev->clear(SDL_ColorPresetEXT::CornflowerBlue);
-        {
-            with_shader_program s(_shader); 
-            {
-                _shader->set_uniform<uniform4x4f>("World", world);
-                _shader->set_uniform<uniform4x4f>("View", view);
-                _shader->set_uniform<uniform4x4f>("Projection", projection);
-            }
-            { 
-                //with_vertex_declaration<vertex_voxel> _decl();
-                install_vertex_attributes<vertex_voxel, vertex_attribute_installer>();
-                with_vertex_buffer _vb(_model->_vertices);
-                with_index_buffer _ib(_model->_vertices);
-                for(auto* mesh : _model->_meshes) {
-                    draw_indexed_primitives<primitive_type::points, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
-                }
-            }
-        }
-        return 0;
-
-#endif
     }
 
     void set_callbacks(application* app) {
