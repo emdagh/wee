@@ -32,7 +32,8 @@
     "constraints": [
         {
             "class": "border",
-            "direction" : "below",
+            "sides" : ["ymax"], 
+            "available_sides_in_order" : ["xmax", "ymax", "zmax", "xmin", "ymin", "zmin"],
             "tile": "ground"
         },
         {

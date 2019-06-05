@@ -237,6 +237,63 @@ void make_demo2(model** d_model) {
     //DEBUG_VALUE_OF(mdl);    
 }
 
+void make_demo3(auto& _names, auto& _models) {
+    auto is = open_ifstream("assets/adjacencies.json");
+    json j = json::parse(is);
+    auto tileset = j["tileset"];
+    std::string basepath = tileset["basepath"];
+    /**
+     * load any mesh data that is in the adjacencies file
+     */
+    for(const auto& tile : tileset["tiles"]) {
+        auto mis = open_ifstream(basepath + "/" + std::string(tile["src"]));
+        _names[tile["name"]] = _models.size();
+        _models.push_back(import_model(mis));
+    }
+
+
+    std::map<std::string, int> direction_mapping = {
+        {"left",  3}, //topology<3>::sides[3] },
+        {"right", 0}, //topology<3>::sides[0] },
+        {"above", 4}, //topology<3>::sides[4] },
+        {"below", 1}  //topology<3>::sides[1] }
+    };
+
+    std::map<std::string, int> axis_mapping = {
+        { "xmax", 0 },
+        { "ymax", 1 },
+        { "zmax", 2 },
+        { "xmin", 3 },
+        { "ymin", 4 },
+        { "zmin", 5 }
+    };
+
+
+    adjacency_list<uint64_t, 3> al(_names.size());
+    for(auto& a : j["adjacencies"]) {
+        std::vector<std::string> keys;
+        json_keys(a, std::back_inserter(keys));
+        assert(keys.size() == 2);
+        for(auto it: a[keys[0]]) {
+            DEBUG_VALUE_OF(keys[0]);
+            DEBUG_VALUE_OF(it);
+            for(auto it_second: a[keys[1]]) {
+                DEBUG_VALUE_OF(keys[1]);
+                DEBUG_VALUE_OF(it_second);
+
+                auto d_a = direction_mapping[keys[0]]; // left
+                auto d_b = direction_mapping[keys[1]]; // right
+
+                auto tile_a = _names[it];
+                auto tile_b = _names[it_second];
+
+                al.add(tile_a, tile_b, d_a);
+                al.add(tile_b, tile_a, d_b);
+            }
+        }
+    }
+}
+
 
 #include <gfx/graphics_device.hpp>
 #include <gfx/shader.hpp>
@@ -284,61 +341,6 @@ struct game : public applet {
 
     int load_content() {
         try {
-            {
-                auto is = open_ifstream("assets/adjacencies.json");
-                json j = json::parse(is);
-                auto tileset = j["tileset"];
-                std::string basepath = tileset["basepath"];
-
-                for(const auto& tile : tileset["tiles"]) {
-                    DEBUG_VALUE_OF(tile["name"]);
-                    DEBUG_VALUE_OF(tile["src"]);
-                    auto mis = open_ifstream(basepath + "/" + std::string(tile["src"]));
-                    _names[tile["name"]] = _models.size();
-                    _models.push_back(import_model(mis));
-                }
-
-                
-                std::map<std::string, int> direction_mapping = {
-                    {"left",  3}, //topology<3>::sides[3] },
-                    {"right", 0}, //topology<3>::sides[0] },
-                    {"above", 4}, //topology<3>::sides[4] },
-                    {"below", 1}  //topology<3>::sides[1] }
-                };
-
-            
-                adjacency_list<uint64_t, 3> al(_names.size());
-                for(auto& a : j["adjacencies"]) {
-                    DEBUG_VALUE_OF(a[0]);
-                    std::vector<std::string> keys;
-                    /**
-                     * for each of the values in the first entry of the adjacency,
-                     * we add all values of the second entry of the adjacency
-                     * the direction is based on the direction required from 
-                     * a to b.
-                     */
-                    json_keys(a, std::back_inserter(keys));
-                    /*for (json::iterator it = a.begin(); it != a.end(); ++it) {
-                        //DEBUG_VALUE_OF(direction_mapping[it.key()]);
-                        DEBUG_VALUE_OF(it.key());
-                        for(auto& b: it.value()) {
-                            //DEBUG_VALUE_OF(_names[b]);
-                            DEBUG_VALUE_OF(b);
-
-                        }
-                        //std::cout << it.key() << " : " << it.value() << "\n";
-
-                    }*/
-
-                    /*std::vector<std::string> keys;
-                    array_keys(
-                        a.begin(),
-                        a.end(), 
-                        std::back_inserter(keys)
-                    );
-                    DEBUG_VALUE_OF(keys);*/
-                }
-            }
 
             make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
             make_demo();
