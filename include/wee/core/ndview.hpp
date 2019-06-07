@@ -11,20 +11,6 @@ namespace wee {
 
 
 
-    template <size_t N, size_t I = 0, typename E, typename... Ts>
-    constexpr auto recursive_for(E&& f, const Ts&... args) {
-        std::tuple<Ts...> x = std::make_tuple(args...);
-        if constexpr(I == N) {
-            for(auto i=0; i < std::get<0>(x).shape()[I]; i++) {
-                //std::forward<E>(f(args..., i));
-                (std::forward<E>(f)(args...));
-            }
-        } else {
-            for(auto i=0; i < std::get<0>(x).shape()[I]; i++) {
-                recursive_for<N, I + 1>(std::forward<E>(f), args..., i);
-            }
-        }
-    }
 
 
     template <size_t N>
@@ -214,8 +200,25 @@ namespace wee {
             submatrix(start, dims, std::forward<UnaryFunction>(fun));
         }
 
+        template <size_t K, size_t I = 0, typename E, typename... Ts>
+        constexpr auto recursive_for(E&& f, const Ts&... args) {
+            if constexpr(I == K) {
+                for(auto i=0; i < shape()[I]; i++) {
+                    f(args..., i);
+                }
+            } else {
+                for(auto i=0; i < shape()[I]; i++) {
+                    recursive_for<K, I + 1>(f, args..., i);
+                }
+            }
+        }
 
     };
+
+    template <typename... Ts>
+    auto make_ndindexer(Ts... args) {
+        return ndindexer<sizeof...(Ts)>(std::array<ptrdiff_t, sizeof...(Ts)> { args... });
+    }
 
     template <typename T, size_t N>
     class ndview : public ndindexer<N> {
