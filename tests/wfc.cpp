@@ -18,6 +18,18 @@ using namespace wee;
 #include <prettyprint.hpp>
 #include "hokusai/hokusai.hpp"
 
+template <typename InputIt, typename OutputIt>
+void array_keys(InputIt first, InputIt last, OutputIt d_first) {
+    while(first != last) {
+        *d_first++ = (*first++).first;
+    }
+}
+template <typename InputIt, typename OutputIt>
+void array_values(InputIt first, InputIt last, OutputIt d_first) {
+    while(first != last) {
+        *d_first++ = (*first++).second;
+    }
+}
 template <typename T>
 void json_keys (const json& j, T d_first) {
     for(auto it=j.begin(); it != j.end(); it++) {
@@ -224,6 +236,7 @@ void make_demo2(model** d_model) {
     //ts.set_frequency(6, 300);
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
+    DEBUG_VALUE_OF(adj._data);
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
     md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));//{ 5 })); // direction index 5 = 0, -1, 0
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
@@ -233,30 +246,33 @@ void make_demo2(model** d_model) {
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
     vox::set_palette(d_vox, vox::get<vox::rgba>(vx)->colors);
     vox::to_model(d_vox, d_model);
-   
-    //DEBUG_VALUE_OF(mdl);    
 }
 
 void make_demo3(auto& _names, auto& _models) {
     auto is = open_ifstream("assets/adjacencies.json");
     json j = json::parse(is);
-    auto tileset = j["tileset"];
-    std::string basepath = tileset["basepath"];
+    std::string basepath = j["tileset"]["basepath"];
     /**
      * load any mesh data that is in the adjacencies file
      */
-    for(const auto& tile : tileset["tiles"]) {
+    for(const auto& tile : j["tileset"]["tiles"]) {
         auto mis = open_ifstream(basepath + "/" + std::string(tile["src"]));
         _names[tile["name"]] = _models.size();
         _models.push_back(import_model(mis));
     }
+    std::vector<size_t> values;
+    array_values(_names.begin(), _names.end(), std::back_inserter(values));
+    tileset ts = tileset<uint64_t>::make_tileset(values.begin(), values.end());
+    DEBUG_VALUE_OF(ts._data);
 
 
     std::map<std::string, int> direction_mapping = {
-        {"left",  3}, //topology<3>::sides[3] },
-        {"right", 0}, //topology<3>::sides[0] },
-        {"above", 4}, //topology<3>::sides[4] },
-        {"below", 1}  //topology<3>::sides[1] }
+        {"right",  0}, //topology<3>::sides[0] },
+        {"below",  1},  //topology<3>::sides[1] }
+        {"behind", 2},
+        {"left",   3}, //topology<3>::sides[3] },
+        {"above",  4}, //topology<3>::sides[4] },
+        {"in_front_of", 5}
     };
 
     std::map<std::string, int> axis_mapping = {
@@ -269,7 +285,7 @@ void make_demo3(auto& _names, auto& _models) {
     };
 
 
-    adjacency_list<uint64_t, 3> al(_names.size());
+    adjacency_list<uint64_t, 3> al(ts.length());
     for(auto& a : j["adjacencies"]) {
         std::vector<std::string> keys;
         json_keys(a, std::back_inserter(keys));
@@ -292,6 +308,7 @@ void make_demo3(auto& _names, auto& _models) {
             }
         }
     }
+    DEBUG_VALUE_OF(al._data);
 }
 
 
@@ -345,6 +362,7 @@ struct game : public applet {
             make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
             make_demo();
             make_demo2(&_model);
+            make_demo3(_names, _models);
         } catch(std::exception& e) {
             DEBUG_LOG(e.what());
             exit(-2);
@@ -357,11 +375,13 @@ struct game : public applet {
     }
 
     int draw(graphics_device* dev) {
+        static float t = 0.f;
+        //t+=0.5f;
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::CornflowerBlue);//, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_z(-0.0f * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(t * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera->get_transform();
         mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
         
