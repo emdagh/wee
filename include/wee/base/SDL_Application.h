@@ -35,7 +35,7 @@ typedef enum {
 
 
 APICALL struct SDL_Application* SDL_CreateApplication();
-APICALL int SDL_InitApplication(struct SDL_Application*);
+APICALL int SDL_InitApplication(struct SDL_Application*, int width, int height, int depth, int stencil, int vsync);
 APICALL int SDL_DestroyApplication(struct SDL_Application*);
 APICALL struct SDL_Window* SDL_GetApplicationWindow(const struct SDL_Application*);
 APICALL struct SDL_Renderer* SDL_GetApplicationRenderer(const struct SDL_Application*);
@@ -46,7 +46,7 @@ APICALL int SDL_StartApplication(struct SDL_Application*);
 APICALL void SDL_StopApplication(struct SDL_Application*);
 APICALL void SDL_PauseApplication(struct SDL_Application*);
 APICALL void SDL_ResumeApplication(struct SDL_Application*);
-APICALL void SDL_SetApplicationUserData(struct SDL_Application*, const void*);
+APICALL void SDL_SetApplicationUserData(struct SDL_Application*, void*);
 APICALL void* SDL_GetApplicationUserData(const struct SDL_Application*);
 
 #endif

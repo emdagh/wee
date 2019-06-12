@@ -5,15 +5,17 @@
 struct SDL_Application;
 
 namespace wee {
-
+    class graphics_initializer;
     class graphics_device;
     class applet;
     class application {
         SDL_Application* _handle;
         applet* _applet;
         graphics_device* _graphics_device = nullptr;
+        graphics_initializer&& _graphics_initializer;
     public:
         explicit application(applet*);
+        application(applet*, graphics_initializer&&);
         virtual ~application();
         int start();
         //int stop(); 

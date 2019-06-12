@@ -5,6 +5,7 @@
 #include <numeric>
 #include <vector>
 #include <functional>
+#include <prettyprint.hpp>
 #include <core/range.hpp>
 #include <core/ndview.hpp>
 #include <core/bits.hpp>
@@ -14,8 +15,8 @@
 #include <engine/vox.hpp>
 #include <engine/assets.hpp>
 #include <engine/model_importer.hpp>
+#include <gfx/graphics_initializer.hpp>
 using namespace wee;
-#include <prettyprint.hpp>
 #include "hokusai/hokusai.hpp"
 
 template <typename InputIt, typename OutputIt>
@@ -36,6 +37,67 @@ void json_keys (const json& j, T d_first) {
         *d_first++ = it.key();
     }
 }
+
+template <typename T, size_t N>
+struct mirror_constraint : public basic_constraint<T,N> {
+
+    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
+
+    virtual void check(const wave_propagator<T, N>& wp, size_t i, std::vector<size_t>*) {
+    }
+};
+
+template <typename T, size_t N>
+struct max_consecutive_constraint : public basic_constraint<T,N> {
+    T _tilemask;
+    size_t _maxcount;
+    std::vector<size_t> _directions;
+
+    max_consecutive_constraint(T t, size_t maxcount, const std::vector<size_t>& directions)
+    : _tilemask(t)
+    , _maxcount(maxcount)
+    , _directions(directions) 
+    {
+    }
+
+    virtual ~max_consecutive_constraint() {
+    }
+
+    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    }
+
+    virtual void check(const wave_propagator<T, N>& wp, size_t i, std::vector<size_t>*) {
+        /**
+         * this constraint will check if the current wave has less than the 
+         * maximum amount of consecutive tiles in the indicated direction.
+         * It could benefit from a monitoring system.
+         *
+         * wp.pop(nexttile_in_current_direction, _tilemask)
+         *
+         */
+        size_t current = i;
+        auto& topo = wp.topo();
+        if(wp.data(i) == _tilemask) {
+            for(auto d: _directions) {
+                size_t j;
+                size_t count = 0;
+                while(topo.try_move(current, d, &j)) {
+                    if(wp.data(j) == _tilemask) {
+                        count++;
+                    }
+                    if(count == _maxcount) {
+                        size_t k;
+                        if(topo.try_move(j, d, &k)) {
+                            wp.pop(k, _tilemask);
+                        }
+                    }
+                    current = j;
+                }
+            }
+        }
+    }
+};
 
 template <typename T, size_t N>
 struct border_constraint : public basic_constraint<T,N> {
@@ -65,9 +127,10 @@ struct border_constraint : public basic_constraint<T,N> {
          * extent of the dimension and reach a final set of variables to into into
          * a ndindexer::slice function.
          */
-        ndindexer<N> ix(prop.topo().shape());
+        const topology<N>& topo = prop.topo();
+        ndindexer<N> ix(topo.shape());
         for(size_t i=0; i < _directions.size(); i++) {
-            auto neighbor   = prop.topo().neighbor(_directions[i]);
+            auto neighbor   = topo.neighbor(_directions[i]);
             size_t axis     = _directions[i] % N;
             
             auto is_signed  = std::signbit(array_sum(neighbor));
@@ -80,7 +143,7 @@ struct border_constraint : public basic_constraint<T,N> {
         }
     }
 
-    virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    virtual void check(const wave_propagator<T, N>&, size_t, std::vector<size_t>*) {
     }
 };
 template <typename T, size_t N>
@@ -94,7 +157,7 @@ struct corner_constraint {
     }
     virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
     }
-    virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    virtual void check(const wave_propagator<T, N>&, size_t, std::vector<size_t>*) {
     }
 
     static corners_type make_corners(const shape_type& shape) {
@@ -121,7 +184,7 @@ struct fixed_tile_constraint : public basic_constraint<T, N> {
         prop.limit(idx, _tilemask);
         res->push_back(idx);
     }
-    virtual void check(const wave_propagator<T, N>&, std::vector<size_t>*) {
+    virtual void check(const wave_propagator<T, N>&, size_t, std::vector<size_t>*) {
     }
 };
 
@@ -206,7 +269,7 @@ void zero_vec(std::vector<T>& first, const std::array<T, 2>& size, const std::ar
 }
 
 
-void make_demo2(model** d_model) {
+void make_demo2(model** d_model, const std::array<ptrdiff_t, 3>& d_shape) { // = { 16,5,16 };
     auto ifs = wee::open_ifstream("assets/test_09.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
@@ -233,14 +296,19 @@ void make_demo2(model** d_model) {
     
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
     ts.set_frequency(0, 900);
+    DEBUG_VALUE_OF(ts._frequency);
     //ts.set_frequency(6, 300);
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
     DEBUG_VALUE_OF(adj._data);
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
-    md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));//{ 5 })); // direction index 5 = 0, -1, 0
+    md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));
+    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(2), { 4, 4, 8 }));
+    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(3), { 5, 4, 8 }));
+    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));
+    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(5), { 7, 4, 8 }));
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
-    std::array<ptrdiff_t, 3> d_shape = { 16,5,16 };
+    md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 1, { 1, 4 }));
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
@@ -348,7 +416,7 @@ struct game : public applet {
 
     game() {
         _camera = new camera();
-        _camera->set_position(15, 10, 15);
+        _camera->set_position(20, 15, 20);
         _camera->lookat(0, 0, 0);
         _viewport = { 1.f, 1.f };
     }
@@ -361,7 +429,7 @@ struct game : public applet {
 
             make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
             make_demo();
-            make_demo2(&_model);
+            make_demo2(&_model, {32, 5, 32});
             make_demo3(_names, _models);
         } catch(std::exception& e) {
             DEBUG_LOG(e.what());
@@ -414,10 +482,13 @@ struct game : public applet {
 
 
 int main(int argc, char** argv) {
+    graphics_initializer init;
+    init.width(800)
+        .height(600);
     applet* let = new game;
-    application app(let);
+    application app(let, std::move(init));
     app.set_mouse_position(320, 240);
     ((game*)let)->set_callbacks(&app);
-    app.resize(640, 480);
+    //app.resize(640, 480);
     return app.start();
 }

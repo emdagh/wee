@@ -17,19 +17,16 @@ typedef struct SDL_Application{
     int is_running;
     int is_paused;
     void* userdata;
-
-
 } SDL_Application;
 
 
-void SDL_SetApplicationUserData(struct SDL_Application* ptr, const void* userdata) {
+void SDL_SetApplicationUserData(struct SDL_Application* ptr, void* userdata) {
     ptr->userdata = userdata;
 }
 
 void* SDL_GetApplicationUserData(const struct SDL_Application* ptr) {
     return ptr->userdata;
 }
-
 
 int SDL_ApplicationHandleWindowEvent(struct SDL_Application* ptr, const SDL_WindowEvent* e) {
     switch(e->event) {
@@ -90,7 +87,6 @@ int SDL_ApplicationHandleWindowEvent(struct SDL_Application* ptr, const SDL_Wind
     return 0;
 }
 
-
 int SDL_ApplicationHandleTextEditingEvent(struct SDL_Application* ptr, const SDL_TextEditingEvent* e) {
     return 0;
 }
@@ -123,7 +119,7 @@ struct SDL_Application* SDL_CreateApplication() {
     return res;
 }
 
-int SDL_InitApplication(SDL_Application* res) {
+int SDL_InitApplication(SDL_Application* res, int width, int height, int depth_bits, int stencil_bits, int vsync) {
     /**
      * create the window
      */
@@ -132,8 +128,8 @@ int SDL_InitApplication(SDL_Application* res) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth_bits);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencil_bits);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         // SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
@@ -141,8 +137,8 @@ int SDL_InitApplication(SDL_Application* res) {
         SDL_GetDesktopDisplayMode(0, &dm);
         SDL_Window* _win = SDL_CreateWindow(NULL, 
                 0, 0, 
-                640, //dm.w, 
-                480, //dm.h, 
+                width, //dm.w, 
+                height, //dm.h, 
                 SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI 
 //#if defined(IOS) || defined(ANDROID)
 //                | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS

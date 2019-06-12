@@ -5,14 +5,24 @@
 #include <core/logstream.hpp>
 #include <weegl.h>
 #include <gfx/graphics_device.hpp>
+#include <gfx/graphics_initializer.hpp>
 
 using namespace wee;
 
 // During init, enable debug output
 
+graphics_initializer default_graphics_initializer;
+
 application::application(applet* a) 
+: application(a, std::move(default_graphics_initializer))
+{
+
+}
+
+application::application(applet* a, graphics_initializer&& init) 
     : _handle(SDL_CreateApplication())
     , _applet(a)
+    , _graphics_initializer(std::forward<graphics_initializer>(init))
 
 {
     if(!_handle) {
@@ -92,7 +102,13 @@ application::application(applet* a)
 
 
     SDL_SetApplicationUserData(_handle, this);
-    SDL_InitApplication(_handle);
+    SDL_InitApplication(_handle, 
+        _graphics_initializer.width(), 
+        _graphics_initializer.height(), 
+        _graphics_initializer.depth_bits(), 
+        _graphics_initializer.stencil_bits(), 
+        _graphics_initializer.vsync()
+    );
 
 
     int w, h;

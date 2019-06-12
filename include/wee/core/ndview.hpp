@@ -6,13 +6,9 @@
 #include <core/range.hpp>
 #include <algorithm>
 #include <numeric>
+#include <cassert>
 
 namespace wee {
-
-
-
-
-
     template <size_t N>
     class ndindexer {
         typedef std::array<ptrdiff_t, N> shape_t;
@@ -132,7 +128,11 @@ namespace wee {
                 if(j == N) break;
             }
 #else
-            iterate_generic<false>(std::forward<UnaryFunction>(fun), [&] (auto i) { return i == d; }, idx, _shape);
+     
+            recursive_for<N>([this] (auto a) {
+                std::forward<UnaryFunction>(fun)(a);
+            }, 
+
 #endif
         }
 
@@ -169,8 +169,9 @@ namespace wee {
          */
         template <typename UnaryFunction>
         void submatrix(ptrdiff_t start, const shape_type& dims, UnaryFunction&& fun) {
+#if 1 
+            assert(array_product(dims) != 0);
             std::array<ptrdiff_t, N> idx = { 0 };
-#if 1
             while(1) {
                 (std::forward<UnaryFunction>(fun)(start + linearize_array(idx, std::make_index_sequence<N>())));
                 size_t j;
@@ -183,8 +184,7 @@ namespace wee {
                 if(j == N) break;
             }
 #else
-            iterate_generic(std::forward<UnaryFunction>(fun), idx, dims, 0);
-
+            recursive_for<N>(fun, start, dims);
 #endif
         }
 
@@ -201,18 +201,17 @@ namespace wee {
         }
 
         template <size_t K, size_t I = 0, typename E, typename... Ts>
-        constexpr auto recursive_for(E&& f, const Ts&... args) {
+        constexpr auto recursive_for(E&& f, size_t start, const shape_type& s, const Ts&... args) {
             if constexpr(I == K) {
-                for(auto i=0; i < shape()[I]; i++) {
-                    f(args..., i);
-                }
+                //for(auto i=0; i < s[I]; i++) {
+                std::forward<E>(f)(start + linearize(args...));//, i);
+                //}
             } else {
-                for(auto i=0; i < shape()[I]; i++) {
-                    recursive_for<K, I + 1>(f, args..., i);
+                for(auto i=0; i < s[I]; i++) {
+                    recursive_for<K, I + 1>(f, start, s, args..., i);
                 }
             }
         }
-
     };
 
     template <typename... Ts>
