@@ -67,6 +67,27 @@ struct max_consecutive_constraint : public basic_constraint<T,N> {
     virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
     }
 
+    size_t find_first(const wave_propagator<T,N>& wp, size_t i, size_t d, size_t* d_first) {
+        static const size_t kNumDimensions = N;
+        static const size_t kNumNeighbors = kNumDimensions << 1;
+
+        auto& topo = wp.topo();
+
+        size_t count   = 0;
+        size_t d_inv   = (d + kNumDimensions) % kNumNeighbors;
+        size_t j       = 0;
+
+        *d_first = i;
+
+        while(topo.try_move(*d_first, d_inv, &j)) {
+            if(!(wp.data(j) == _tilemask)) 
+                break;
+            *d_first = j;
+            count++;
+        }
+        return count;
+    }
+
     virtual void check(const wave_propagator<T, N>& wp, size_t i, std::vector<size_t>*) {
         /**
          * this constraint will check if the current wave has less than the 
@@ -75,13 +96,24 @@ struct max_consecutive_constraint : public basic_constraint<T,N> {
          *
          * wp.pop(nexttile_in_current_direction, _tilemask)
          *
+         * update: 2019-06-12:
+         *  this will obviously not work in all cases. An edge case would be that a cell collapsed to a 
+         *  tile that is in the middle of two disjoint sets of 
+         *  similar tiles (low entropy is likely here).
+         * 
+         *  another case could be where a tile will make a run across emoty space until a disjoint set 
+         *  of self similar tiles is encountered. This could be mitigated with a look-ahead of max_consucutive cells...
          */
         size_t current = i;
         auto& topo = wp.topo();
         if(wp.data(i) == _tilemask) {
             for(auto d: _directions) {
-                size_t j;
-                size_t count = 0;
+
+                size_t j, first;
+                size_t count = find_first(wp, i, d, &first);
+                if(count == _maxcount) 
+                    break;
+
                 while(topo.try_move(current, d, &j)) {
                     if(wp.data(j) == _tilemask) {
                         count++;
@@ -308,7 +340,7 @@ void make_demo2(model** d_model, const std::array<ptrdiff_t, 3>& d_shape) { // =
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(5), { 7, 4, 8 }));
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
-    md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 1, { 1, 4 }));
+    md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 1, { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4 }));
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
