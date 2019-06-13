@@ -22,6 +22,10 @@ foreach( testsourcefile ${APP_SOURCES} )
     message(STATUS ${barename})
 
     add_executable( ${barename} ${testsourcefile} ${COMMON_SOURCES} )
+    target_include_directories(
+        ${barename} PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
     target_link_libraries(
         ${barename}
         wee_engine

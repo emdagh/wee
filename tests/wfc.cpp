@@ -67,17 +67,15 @@ struct max_consecutive_constraint : public basic_constraint<T,N> {
     virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
     }
 
-    size_t find_first(const wave_propagator<T,N>& wp, size_t i, size_t d, size_t* d_first) {
-        static const size_t kNumDimensions = N;
-        static const size_t kNumNeighbors = kNumDimensions << 1;
+    size_t find_first(const wave_propagator<T,N>& wp, size_t i, size_t d_inv, size_t* d_first) {
 
         auto& topo = wp.topo();
 
         size_t count   = 0;
-        size_t d_inv   = (d + kNumDimensions) % kNumNeighbors;
         size_t j       = 0;
 
         *d_first = i;
+
 
         while(topo.try_move(*d_first, d_inv, &j)) {
             if(!(wp.data(j) == _tilemask)) 
@@ -106,25 +104,32 @@ struct max_consecutive_constraint : public basic_constraint<T,N> {
          */
         size_t current = i;
         auto& topo = wp.topo();
+
         if(wp.data(i) == _tilemask) {
+#if 0
             for(auto d: _directions) {
+                size_t d_min = d + N;
+                size_t d_max = d;
+#else
+            static const size_t kNumDimensions = N;
+            static const size_t kNumNeighbors = kNumDimensions << 1;
 
-                size_t j, first;
-                size_t count = find_first(wp, i, d, &first);
-                if(count == _maxcount) 
-                    break;
-
-                while(topo.try_move(current, d, &j)) {
-                    if(wp.data(j) == _tilemask) {
+            for(auto d: _directions) {
+                size_t d_min = d;
+                size_t d_max = (d + kNumDimensions) % kNumNeighbors;
+#endif
+                size_t first;
+                size_t count = find_first(wp, i, d_min, &first);
+                while(topo.try_move(current, d_max, &current)) {
+                    if(wp.data(current) == _tilemask) {
                         count++;
                     }
                     if(count == _maxcount) {
                         size_t k;
-                        if(topo.try_move(j, d, &k)) {
+                        if(topo.try_move(current, d_max, &k)) {
                             wp.pop(k, _tilemask);
                         }
                     }
-                    current = j;
                 }
             }
         }
@@ -340,7 +345,7 @@ void make_demo2(model** d_model, const std::array<ptrdiff_t, 3>& d_shape) { // =
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(5), { 7, 4, 8 }));
     md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
-    md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 1, { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4 }));
+    md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 1, { 1, 4 }));
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
