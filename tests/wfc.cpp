@@ -492,9 +492,9 @@ struct game : public applet {
         
         {
             with_shader_program context(_shader);
-            _shader->set_uniform<uniform4x4f>("World", world);//mat4::mul(world, mat4::mul(view, projection)));
-            _shader->set_uniform<uniform4x4f>("View", view);//mat4::mul(world, mat4::mul(view, projection)));
-            _shader->set_uniform<uniform4x4f>("Projection", projection);//mat4::mul(world, mat4::mul(view, projection)));
+            _shader->set_uniform<uniform4x4f>("World", world);
+            _shader->set_uniform<uniform4x4f>("View", view);
+            _shader->set_uniform<uniform4x4f>("Projection", projection);
             dev->set_vertex_buffer(_model->_vertices);
             dev->set_index_buffer(_model->_indices);
             dev->set_vertex_declaration<vertex_voxel>();
