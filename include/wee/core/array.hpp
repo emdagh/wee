@@ -107,3 +107,9 @@ std::array<T, N> operator % (const std::array<T, N>& a, const std::array<T, N>& 
     std::transform(a.begin(), a.end(), b.begin(), res.begin(), std::modulus<T>());
     return res;
 }
+template<typename T, size_t N>
+std::array<T, N> operator * (const std::array<T, N>& a, const std::array<T, N>& b) {
+    std::array<T, N> res;
+    std::transform(a.begin(), a.end(), b.begin(), res.begin(), std::multiplies<T>());
+    return res;
+}

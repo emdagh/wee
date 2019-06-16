@@ -29,19 +29,14 @@
             "solid"
         ]}
     ],
+    "comments" : { 
+        "available_sides_in_order" : ["xmax", "ymax", "zmax", "xmin", "ymin", "zmin"]
+    },
     "constraints": [
         {
-            "class": "border",
+            "class": "border_constraint",
             "sides" : ["ymax"], 
-            "available_sides_in_order" : ["xmax", "ymax", "zmax", "xmin", "ymin", "zmin"],
             "tile": "ground"
-        },
-        {
-            "class": "fixed",
-            "tile" : "turret_top",
-            "at": {
-                "x": 5, "y": 4, "z": 8
-            }
         }
     ]
 }

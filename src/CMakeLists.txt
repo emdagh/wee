@@ -1,6 +1,2 @@
-
-ADD_SUBDIRECTORY(core)
-ADD_SUBDIRECTORY(base)
-ADD_SUBDIRECTORY(gfx)
-ADD_SUBDIRECTORY(engine)
-ADD_SUBDIRECTORY(util)
+add_subdirectory(wee)
+add_subdirectory(hokusai)

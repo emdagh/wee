@@ -2,9 +2,42 @@
 
 #include <iostream>
 #include <queue>
+#include <stack>
 #include <unordered_map>
 
 namespace wee {
+
+    template <typename T, typename S>
+    struct basic_graph_search {
+        void operator()(const T& start, const T& goal,
+                        std::unordered_map<T, T>& came_from) {
+            //std::queue<T> frontier;
+            //frontier.push(start);
+            S frontier = { start };
+
+            while (!frontier.empty()) {
+                T current = frontier.front();
+                frontier.pop();
+
+                if (current == goal) break;
+
+                for (T next : this->neighbors(current)) {
+                    if (came_from.find(next) == came_from.end()) {
+                        frontier.push(next);
+                        came_from[next] = current;
+                    }
+                }
+            }
+        }
+    };
+
+    template <typename T>
+    using breadth_first_search = basic_graph_search<T, std::queue<T> >;
+
+    template <typename T>
+    using depth_first_search = basic_graph_search<T, std::stack<T> >;
+
+
 
     template <typename T>
     struct basic_graph {
@@ -13,28 +46,6 @@ namespace wee {
         const auto& neighbors(const T& v) {
             return _edges[v];
         }
-
-
-        void breadth_first_search(const T& start, const T& goal, std::unordered_map<T, T>& came_from) {
-            std::queue<T> frontier;
-            frontier.push(start);
-
-            while(!frontier.empty()) {
-                T current = frontier.front();
-                frontier.pop();
-
-                if(current == goal) 
-                    break;
-
-                for(T next : this->neighbors(current)) {
-                    if(came_from.find(next) == came_from.end()) {
-                        frontier.push(next);
-                        came_from[next] = current;
-                    }
-                }
-            }
-        }
-
     };
 
     template <typename T, typename W> 

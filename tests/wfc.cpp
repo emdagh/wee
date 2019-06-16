@@ -17,14 +17,9 @@
 #include <engine/model_importer.hpp>
 #include <gfx/graphics_initializer.hpp>
 using namespace wee;
-#include "hokusai/hokusai.hpp"
+#include <hokusai/hokusai.hpp>
+    
 
-template <typename InputIt, typename OutputIt>
-void array_keys(InputIt first, InputIt last, OutputIt d_first) {
-    while(first != last) {
-        *d_first++ = (*first++).first;
-    }
-}
 template <typename InputIt, typename OutputIt>
 void array_values(InputIt first, InputIt last, OutputIt d_first) {
     while(first != last) {
@@ -38,192 +33,6 @@ void json_keys (const json& j, T d_first) {
     }
 }
 
-template <typename T, size_t N>
-struct mirror_constraint : public basic_constraint<T,N> {
-
-    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
-    }
-
-    virtual void check(const wave_propagator<T, N>& wp, size_t i, std::vector<size_t>*) {
-    }
-};
-
-template <typename T, size_t N>
-struct max_consecutive_constraint : public basic_constraint<T,N> {
-    T _tilemask;
-    size_t _maxcount;
-    std::vector<size_t> _directions;
-
-    max_consecutive_constraint(T t, size_t maxcount, const std::vector<size_t>& directions)
-    : _tilemask(t)
-    , _maxcount(maxcount)
-    , _directions(directions) 
-    {
-    }
-
-    virtual ~max_consecutive_constraint() {
-    }
-
-    virtual void init(const wave_propagator<T, N>&, std::vector<size_t>*) {
-    }
-
-    size_t find_first(const wave_propagator<T,N>& wp, size_t i, size_t d_inv, size_t* d_first) {
-
-        auto& topo = wp.topo();
-
-        size_t count   = 0;
-        size_t j       = 0;
-
-        *d_first = i;
-
-
-        while(topo.try_move(*d_first, d_inv, &j)) {
-            if(!(wp.data(j) == _tilemask)) 
-                break;
-            *d_first = j;
-            count++;
-        }
-        return count;
-    }
-
-    virtual void check(const wave_propagator<T, N>& wp, size_t i, std::vector<size_t>*) {
-        /**
-         * this constraint will check if the current wave has less than the 
-         * maximum amount of consecutive tiles in the indicated direction.
-         * It could benefit from a monitoring system.
-         *
-         * wp.pop(nexttile_in_current_direction, _tilemask)
-         *
-         * update: 2019-06-12:
-         *  this will obviously not work in all cases. An edge case would be that a cell collapsed to a 
-         *  tile that is in the middle of two disjoint sets of 
-         *  similar tiles (low entropy is likely here).
-         * 
-         *  another case could be where a tile will make a run across emoty space until a disjoint set 
-         *  of self similar tiles is encountered. This could be mitigated with a look-ahead of max_consucutive cells...
-         */
-        size_t current = i;
-        auto& topo = wp.topo();
-
-        if(wp.data(i) == _tilemask) {
-#if 0
-            for(auto d: _directions) {
-                size_t d_min = d + N;
-                size_t d_max = d;
-#else
-            static const size_t kNumDimensions = N;
-            static const size_t kNumNeighbors = kNumDimensions << 1;
-
-            for(auto d: _directions) {
-                size_t d_min = d;
-                size_t d_max = (d + kNumDimensions) % kNumNeighbors;
-#endif
-                size_t first;
-                size_t count = find_first(wp, i, d_min, &first);
-                while(topo.try_move(current, d_max, &current)) {
-                    if(wp.data(current) == _tilemask) {
-                        count++;
-                    }
-                    if(count == _maxcount) {
-                        size_t k;
-                        if(topo.try_move(current, d_max, &k)) {
-                            wp.pop(k, _tilemask);
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
-
-template <typename T, size_t N>
-struct border_constraint : public basic_constraint<T,N> {
-    T _tile;
-    std::vector<size_t> _directions;
-
-    border_constraint(T tile, const std::vector<size_t>& dir) 
-    : _tile(tile)
-    , _directions(dir) 
-    {
-    }
-
-    virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
-        /**
-         * 2019-06-01
-         *
-         * first of all, dermine which axis the iteration needs to be
-         * processed across. This should be based on direction index
-         * from topology<N>::sides.
-         *
-         * The mapping should look something like this:
-         * [direction_index] => (axis, min/max)
-         * the axis can be determined by it's index
-         *      axis = index % N (where N is the number of dimensions)
-         * the sign can probably be done getting the sign of the array sum of
-         * the direction vector. We can multiply the result of this sum by the max
-         * extent of the dimension and reach a final set of variables to into into
-         * a ndindexer::slice function.
-         */
-        const topology<N>& topo = prop.topo();
-        ndindexer<N> ix(topo.shape());
-        for(size_t i=0; i < _directions.size(); i++) {
-            auto neighbor   = topo.neighbor(_directions[i]);
-            size_t axis     = _directions[i] % N;
-            
-            auto is_signed  = std::signbit(array_sum(neighbor));
-            auto slice      = is_signed * (ix.shape()[axis] - 1);
-            
-            ix.iterate_axis(axis, slice, [&] (auto idx) {
-                prop.limit(idx, (_tile));
-                res->push_back(idx);
-            });
-        }
-    }
-
-    virtual void check(const wave_propagator<T, N>&, size_t, std::vector<size_t>*) {
-    }
-};
-template <typename T, size_t N>
-struct corner_constraint {
-    static const size_t kNumCorners = 1 << N;
-    typedef typename std::array<T, kNumCorners> corners_type;
-    typedef typename topology<N>::value_type shape_type;
-    corners_type _corners = { 0 };
-
-    corner_constraint(size_t axis, const corners_type& corners) { 
-    }
-    virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
-    }
-    virtual void check(const wave_propagator<T, N>&, size_t, std::vector<size_t>*) {
-    }
-
-    static corners_type make_corners(const shape_type& shape) {
-        ndindexer<N> ix(shape);
-        //for(auto dim : range(N)) {
-        //    std::array<ptrdiff_t, N-1> aux; 
-        //}
-    }
-        
-};
-
-template <typename T, size_t N>
-struct fixed_tile_constraint : public basic_constraint<T, N> {
-
-    typedef typename topology<N>::value_type coord_type;
-
-    T _tilemask;
-    coord_type _at;
-
-    fixed_tile_constraint(T tilemask, const coord_type& at) : _tilemask(tilemask), _at(at) {}
-
-    virtual void init(const wave_propagator<T, N>& prop, std::vector<size_t>* res) {
-        size_t idx = prop.topo().to_index(_at);
-        prop.limit(idx, _tilemask);
-        res->push_back(idx);
-    }
-    virtual void check(const wave_propagator<T, N>&, size_t, std::vector<size_t>*) {
-    }
-};
 
 void make_demo() {
     static const size_t ND = 2;
@@ -255,6 +64,7 @@ void make_demo() {
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
     adjacency_list<uint64_t, ND> a(ts.length());
     a.add_example(example.begin(), ts, topology<ND> { { 7, 4 } }); 
+    DEBUG_VALUE_OF(a._data);
     basic_model<uint64_t, ND> model(std::move(ts), std::move(a));
     std::vector<uint64_t> res;
     /**
@@ -306,7 +116,8 @@ void zero_vec(std::vector<T>& first, const std::array<T, 2>& size, const std::ar
 }
 
 
-void make_demo2(model** d_model, const std::array<ptrdiff_t, 3>& d_shape) { // = { 16,5,16 };
+template <typename OutputIt>
+void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // = { 16,5,16 };
     auto ifs = wee::open_ifstream("assets/test_09.vox");
     if(!ifs.is_open()) {
         throw file_not_found("file not found");
@@ -350,20 +161,26 @@ void make_demo2(model** d_model, const std::array<ptrdiff_t, 3>& d_shape) { // =
     md.solve(d_shape, std::back_inserter(res));
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
     vox::set_palette(d_vox, vox::get<vox::rgba>(vx)->colors);
-    vox::to_model(d_vox, d_model);
+    model* mres = nullptr;
+    vox::to_model(d_vox, &mres);
+    *d_first++ = mres;
 }
 
-void make_demo3(auto& _names, auto& _models) {
+template <typename OutputIt>
+std::vector<uint64_t> make_demo3(auto& _names, const auto& dim, OutputIt d_first) {
     auto is = open_ifstream("assets/adjacencies.json");
     json j = json::parse(is);
     std::string basepath = j["tileset"]["basepath"];
     /**
      * load any mesh data that is in the adjacencies file
      */
+    size_t i=1;
     for(const auto& tile : j["tileset"]["tiles"]) {
         auto mis = open_ifstream(basepath + "/" + std::string(tile["src"]));
-        _names[tile["name"]] = _models.size();
-        _models.push_back(import_model(mis));
+        _names[tile["name"]] = i++;
+#if 1
+        *d_first++ = import_model(mis);
+#endif
     }
     std::vector<size_t> values;
     array_values(_names.begin(), _names.end(), std::back_inserter(values));
@@ -414,6 +231,15 @@ void make_demo3(auto& _names, auto& _models) {
         }
     }
     DEBUG_VALUE_OF(al._data);
+
+    
+    std::vector<uint64_t> res;
+    basic_model mm(std::move(ts), std::move(al));
+
+    mm.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(_names["ground"]), {1}));
+    mm.solve(dim, std::back_inserter(res));
+
+    return res;
 }
 
 
@@ -442,6 +268,19 @@ typedef vertex<
     attributes::primary_color
 > vertex_voxel;
 
+
+typedef vertex<
+    attributes::position,
+    attributes::normal,
+    attributes::texcoord
+> vertex_p3_n3_t2;
+
+#define DEMO_1  0
+#define DEMO_2  1
+#define DEMO_3  2
+
+#define DEMO_PROGRAM DEMO_2
+
 struct game : public applet {
     model* _model = nullptr;
     camera* _camera = nullptr;
@@ -449,6 +288,10 @@ struct game : public applet {
     vec2f _viewport;
     std::vector<model*> _models;
     std::unordered_map<std::string, size_t> _names;
+    std::array<ptrdiff_t, 3> _dim = { 10, 10, 10 };
+
+
+    std::vector<uint64_t> _grid;
 
 
     game() {
@@ -463,11 +306,15 @@ struct game : public applet {
 
     int load_content() {
         try {
-
-            make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
+#if DEMO_PROGRAM == DEMO_1
             make_demo();
-            make_demo2(&_model, {32, 5, 32});
-            make_demo3(_names, _models);
+#elif DEMO_PROGRAM == DEMO_2
+            make_demo2({32, 5, 32}, std::back_inserter(_models));
+            make_shader_from_file("assets/shaders/default_p3c0.glsl", &_shader);
+#elif DEMO_PROGRAM == DEMO_3
+            _grid = make_demo3(_names, _dim, std::back_inserter(_models));
+            make_shader_from_file("assets/shaders/default_p3n3t2.glsl", &_shader);
+#endif
         } catch(std::exception& e) {
             DEBUG_LOG(e.what());
             exit(-2);
@@ -480,27 +327,49 @@ struct game : public applet {
     }
 
     int draw(graphics_device* dev) {
-        static float t = 0.f;
+        //static float t = 0.f;
         //t+=0.5f;
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         dev->clear(SDL_ColorPresetEXT::CornflowerBlue);//, clear_options::kClearAll, 1.0f, 0); 
 
-        mat4 world = mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(t * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
+        mat4 world = mat4::identity();//mat4::mul(mat4::create_scale(0.5f), mat4::mul(mat4::create_rotation_y(t * M_PI / 180.0f), mat4::create_translation(0, 0, 0)));
         mat4 view = _camera->get_transform();
-        mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, 640.0f / 480.0f, 0.1f, 100.0f);
+        mat4 projection = mat4::create_perspective_fov(45.0f * M_PI / 180.0f, _viewport.x / _viewport.y, 0.1f, 100.0f);
         
         {
             with_shader_program context(_shader);
             _shader->set_uniform<uniform4x4f>("World", world);
             _shader->set_uniform<uniform4x4f>("View", view);
             _shader->set_uniform<uniform4x4f>("Projection", projection);
-            dev->set_vertex_buffer(_model->_vertices);
-            dev->set_index_buffer(_model->_indices);
-            dev->set_vertex_declaration<vertex_voxel>();
-            for(const auto* mesh: _model->_meshes) {
-                draw_indexed_primitives<primitive_type::quads, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+#if DEMO_PROGRAM == DEMO_2
+            mat4 world = mat4::create_scale(0.5f);
+            _shader->set_uniform<uniform4x4f>("World", world);
+            for(const auto* model : _models) {
+                dev->set_vertex_buffer(model->_vertices);
+                dev->set_index_buffer(model->_indices);
+                dev->set_vertex_declaration<vertex_voxel>(); // < this goes after setting the buffer objects, apparently..
+                static const primitive_type ptype = primitive_type::quads;
+                for(const auto* mesh: model->_meshes) {
+                    draw_indexed_primitives<ptype, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+                }
             }
+#elif DEMO_PROGRAM == DEMO_3
+            dev->set_vertex_declaration<vertex_p3_n3_t2>(); // < this goes after setting the buffer objects, apparently..
+            ndindexer<3> ix(_dim);
+            for(auto i: range(array_product(_dim))) {
+                auto coord = ix.delinearize(i);// * 1.0f;
+                DEBUG_VALUE_OF(coord);
+                world = mat4::create_translation(coord[0], coord[1], coord[2]);
+                _shader->set_uniform<uniform4x4f>("World", world);
+                size_t tileid = _grid[i];//+ 1;
+                auto* model = _models[tileid];//_names[i]];
+                for(const auto* mesh: model->_meshes) {
+                    draw_indexed_primitives<primitive_type::triangles, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+                }
+
+            }
+#endif
         }
         return 0;
     }
@@ -508,9 +377,9 @@ struct game : public applet {
     void set_callbacks(application* app) {
         app->on_resize += [this] (int w, int h) {
             DEBUG_LOG("window resized");
-            // wee::debug << "window resized" << std::endl;
-
             _viewport = { static_cast<float>(w), static_cast<float>(h) };
+            glViewport(0, 0, _viewport.x, _viewport.y);
+            DEBUG_VALUE_OF(_viewport);
             return 0;
         };
     }
@@ -524,7 +393,7 @@ int main(int argc, char** argv) {
         .height(600);
     applet* let = new game;
     application app(let, std::move(init));
-    app.set_mouse_position(320, 240);
+    app.set_mouse_position(400, 300);
     ((game*)let)->set_callbacks(&app);
     //app.resize(640, 480);
     return app.start();
