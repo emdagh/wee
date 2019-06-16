@@ -64,7 +64,7 @@ application::application(applet* a, graphics_initializer&& init)
         application* a = static_cast<application*>(SDL_GetApplicationUserData(app));
         int w, h;
         SDL_GetWindowSize(SDL_GetApplicationWindow(app), &w, &h);
-        a->on_resize(w, h); // < here??
+        a->on_resize(w, h); // < here
         return a->_applet->load_content();
     });
 
