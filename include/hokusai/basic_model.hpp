@@ -16,6 +16,9 @@ struct basic_model {
     adjacency_list_type&& _adjacencies;
     T _banned;
 
+    std::function<void(const wave_propagator<T,N>&)> on_update;
+    
+
     basic_model(tileset_type&& ts, adjacency_list_type&& a) 
     : _tileset(std::forward<tileset_type>(ts))
     , _adjacencies(std::forward<adjacency_list_type>(a)) 
@@ -57,6 +60,8 @@ struct basic_model {
                     p.propagate(i, _adjacencies);
                 }
             }
+            if(this->on_update) 
+                this->on_update(p);
         };
         for(auto* ptr : _constraints) {
             std::vector<size_t> res;

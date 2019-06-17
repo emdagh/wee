@@ -24,6 +24,12 @@ struct wave_propagator {
         propagate(i, adj);
     }
 
+    float progress() const {
+        int num_collapsed =
+            std::count_if(_wave->data().begin(), _wave->data().end(), [](const T& i) { return popcount(i) == 1; });
+        return static_cast<float>(num_collapsed) / _wave.length();
+    }
+
     void propagate(size_t at, const adjacency_list<T, N>& adj) const {
         std::vector<T> open = { at };
         while(!open.empty()) {
