@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="8" height="8" tilewidth="8" tileheight="8" infinite="0" nextlayerid="3" nextobjectid="1">
+ <tileset firstgid="1" name="s4m_ur4i_elements-gamejam-free-8x8-sprites" tilewidth="8" tileheight="8" tilecount="162" columns="18">
+  <image source="../img/s4m_ur4i_elements-gamejam-free-8x8-sprites.png" width="144" height="72"/>
+ </tileset>
+ <layer id="2" name="Tile Layer 1" width="8" height="8">
+  <data encoding="csv">
+0,82,83,84,85,86,115,0,
+0,0,0,0,0,0,115,0,
+96,67,0,0,0,0,115,0,
+53,54,0,0,0,0,115,0,
+0,0,0,0,0,0,115,128,
+0,0,0,0,0,0,82,83,
+0,0,96,0,0,0,0,0,
+82,83,84,85,86,87,88,89
+</data>
+ </layer>
+</map>
