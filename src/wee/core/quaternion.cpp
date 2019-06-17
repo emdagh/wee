@@ -1,3 +1,6 @@
+#define _USE_MATH_DEFINES
+#include <cmath> // MSVC...
+
 #include <core/quaternion.hpp>
 #include <core/vec3.hpp>
 #include <nlohmann/json.hpp>
@@ -49,7 +52,7 @@ quaternion quaternion::lookat(const vec3& sourcePoint, const vec3& destPoint, co
 
     if (std::abs(dot - (-1.0f)) < 0.000001f)
     {
-        return  quaternion { up.x, up.y, up.z, M_PI };
+        return  quaternion { up.x, up.y, up.z, static_cast<float>( M_PI )};
     }
     if (std::abs(dot - (1.0f)) < 0.000001f)
     {

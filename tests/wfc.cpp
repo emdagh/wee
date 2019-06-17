@@ -184,7 +184,7 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
 }
 
 template <typename OutputIt>
-std::vector<uint64_t> make_demo3(auto& _names, const auto& dim, OutputIt d_first) {
+std::vector<uint64_t> make_demo3(std::unordered_map<std::string, size_t>& _names, const std::array<ptrdiff_t, 3>& dim, OutputIt d_first) {
     auto is = open_ifstream("assets/adjacencies.json");
     json j = json::parse(is);
     std::string basepath = j["tileset"]["basepath"];

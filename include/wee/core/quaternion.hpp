@@ -14,7 +14,7 @@ namespace wee {
         typedef const quaternion& const_ref;
 
         static const constexpr quaternion identity() {
-            return quaternion { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+            return quaternion { 0.0f, 0.0f, 0.0f, 1.0f };
         }
 
         static quaternion axis_angle(const vec3& axis, float angle);

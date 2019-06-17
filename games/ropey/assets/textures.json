@@ -1,7 +1,0 @@
-[
-    { "name" : "@ts", "path" : "assets/img/spritesheet.png" },
-    { "name" : "@pickup10", "path" : "assets/img/pickup_10.png" },
-    { "name" : "@pickup100", "path" : "assets/img/pickup_100.png" },
-    { "name" : "@splash_0", "path" : "assets/img/fa-image.png" },
-    { "name" : "@splash_1", "path" : "assets/img/fa-image.png" }
-]

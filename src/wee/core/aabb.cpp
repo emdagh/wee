@@ -1,5 +1,6 @@
 #include <core/aabb.hpp>
 #include <core/intersect.hpp>
+#include <algorithm> // MSVC specific
 
 using namespace wee;
 

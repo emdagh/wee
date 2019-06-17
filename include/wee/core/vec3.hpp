@@ -10,19 +10,19 @@ namespace wee {
     struct vec3 {
 
         static const constexpr vec3 zero() {
-            return vec3 { .x = 0.0f, .y = 0.0f, .z = 0.0f };
+            return vec3 { 0.0f, 0.0f, 0.0f };
         }
         static const constexpr vec3 one() {
-            return vec3 { .x = 1.0f, .y = 1.0f, .z = 1.0f };
+            return vec3 { 1.0f, 1.0f, 1.0f };
         }
         static const constexpr vec3 up() {
-            return vec3 { .x = 0.0f, .y = 1.0f, .z = 0.0f };
+            return vec3 { 0.0f, 1.0f, 0.0f };
         }
         static const constexpr vec3 right() {
-            return vec3 { .x = 1.0f, .y = 0.0f, .z = 0.0f };
+            return vec3 { 1.0f, 0.0f, 0.0f };
         }
         static const constexpr vec3 forward() {
-            return vec3 { .x = 0.0f, .y = 0.0f, .z = -1.0f };
+            return vec3 { 0.0f, 0.0f, -1.0f };
         }
 
         typedef const vec3& const_ref;

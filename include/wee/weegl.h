@@ -1,7 +1,10 @@
 #pragma once
 
 #define GL_GLEXT_PROTOTYPES 1
-#if !defined(__MACOSX__)
+#if defined(_MSC_VER)
+#include <Windows.h>
+#include <gl/GL.h>
+#elif !defined(__MACOSX__)
 #include <GL/gl.h>
 #include <GL/glext.h>
 #else
