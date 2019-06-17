@@ -1,0 +1,6 @@
+SET(ASSIMP_BUILD_ASSIMP_TOOLS   FALSE CACHE BOOL "" FORCE)
+SET(ASSIMP_BUILD_TESTS          FALSE CACHE BOOL "" FORCE)
+SET( ASSIMP_LIB_INSTALL_DIR     "${CMAKE_BINARY_DIR}" CACHE STRING  "Path the built library files are installed to." )
+SET( ASSIMP_INCLUDE_INSTALL_DIR "${CMAKE_BINARY_DIR}" CACHE STRING  "Path the header files are installed to." )
+SET( ASSIMP_BIN_INSTALL_DIR     "${CMAKE_BINARY_DIR}" CACHE STRING  "Path the tool executables are installed to." )
+ADD_SUBDIRECTORY(assimp)
