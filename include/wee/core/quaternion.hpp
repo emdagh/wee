@@ -129,6 +129,10 @@ namespace wee {
             return copy;
         }
 
+        static quaternion concat(const_ref a, const_ref b) {
+            return a * b;
+        }
+
         ref operator *= (float a) {
             x *= a; y *= a; z *=a; w *= a;
             return *this;

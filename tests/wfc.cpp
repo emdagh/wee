@@ -18,6 +18,17 @@
 #include <gfx/graphics_initializer.hpp>
 using namespace wee;
 #include <hokusai/hokusai.hpp>
+
+struct input : wee::singleton<input> {
+    bool mouse_down;
+    int mouse_x = 0, mouse_y = 0;   
+    std::map<char, bool> keydown = {
+        {'w', false},
+        {'a', false},
+        {'s', false},
+        {'d', false}
+    };
+};
     
 
 template <typename InputIt, typename OutputIt>
@@ -322,7 +333,24 @@ struct game : public applet {
         return 0;
     }
 
+    void arcball(camera* c, const vec3f& lookat, float d, float rx, float ry) {
+        quaternion qa, qb;
+        qa = quaternion::axis_angle(vec3f::right(), ry);
+        qb = quaternion::axis_angle(vec3f::up(), rx);
+        quaternion qc = quaternion::normalized(quaternion::concat(qa, qb));
+        auto p  = lookat + vec3f::transform(vec3f::forward(), qc) * d;
+        c->set_position(p.x, p.y, p.z);
+        c->lookat(lookat.x, lookat.y, lookat.z);
+    }
+
     int update(int dt) {
+        constexpr static const float kS = 0.001f;
+        vec3 lookat = { 8, 0, 8 };
+        arcball(_camera, lookat, 25.f, input::instance().mouse_x * kS, input::instance().mouse_y * kS);
+        if(input::instance().keydown['w']) _camera->move_forward( 1.0f);
+        if(input::instance().keydown['a']) _camera->strafe(-1.0f);
+        if(input::instance().keydown['s']) _camera->move_forward(-1.0f);
+        if(input::instance().keydown['d']) _camera->strafe( 1.0f);
         return 0;
     }
 
@@ -380,6 +408,21 @@ struct game : public applet {
             _viewport = { static_cast<float>(w), static_cast<float>(h) };
             glViewport(0, 0, _viewport.x, _viewport.y);
             DEBUG_VALUE_OF(_viewport);
+            return 0;
+        };
+        app->on_keypress += [] (char c) { input::instance().keydown[c] = true; return 0; };
+        app->on_keyrelease += [] (char c) { input::instance().keydown[c] = false; return 0; };
+        app->on_mousemove += [this, app] (int x, int y) {
+            static bool once = false;
+            if(!once) {
+                once = true;
+                return 0;
+            }
+            input::instance().mouse_x += (_viewport.x * 0.5f - x);// * kSensitivity;
+            input::instance().mouse_y += (_viewport.y * 0.5f - y);// * kSensitivity;
+
+            app->set_mouse_position(_viewport.x / 2, _viewport.y / 2);
+
             return 0;
         };
     }
