@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef WIN32
+#define NOMINMAX
+#undef min
+#undef max
+#endif
+
 #include <sstream>
 #include <typeinfo>
 //#include <cxxabi.h>

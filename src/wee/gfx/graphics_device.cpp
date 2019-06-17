@@ -15,7 +15,7 @@ DECLARE_GLGET_TYPE(GLfloat,     glGetFloatv);
 DECLARE_GLGET_TYPE(GLint,       glGetIntegerv);
 DECLARE_GLGET_TYPE(GLint64,     glGetInteger64v);
 
-void GLAPIENTRY
+void
 glDebugCallback( GLenum source,
         GLenum type,
         GLuint id,
@@ -40,6 +40,7 @@ graphics_device::graphics_device(SDL_Renderer* renderer)
     
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_CULL_FACE);
-
+#if !defined(_MSC_VER)
     glDebugMessageCallback( glDebugCallback, 0 );
+#endif
 }

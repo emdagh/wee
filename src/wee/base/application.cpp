@@ -1,9 +1,9 @@
+#include <weegl.h>
 #include <base/application.hpp>
 #include <base/applet.hpp>
 #include <engine/assets.hpp>
 #include <base/SDL_Application.h>
 #include <core/logstream.hpp>
-#include <weegl.h>
 #include <gfx/graphics_device.hpp>
 #include <gfx/graphics_initializer.hpp>
 

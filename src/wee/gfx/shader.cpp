@@ -22,7 +22,7 @@ void shader_program::cache_all_uniforms() {
         auto* u = uniform_factory::instance().create(type);
         u->set_location(glGetUniformLocation(_handle, name.c_str()));
 
-        _info.insert(std::make_pair(name.substr(0, len), (uniform_info){u,glGetUniformLocation(_handle, name.c_str())}));
+        _info.insert(std::make_pair(name.substr(0, len), uniform_info{u,glGetUniformLocation(_handle, name.c_str())}));
         DEBUG_VALUE_OF(name);
         DEBUG_VALUE_OF(_info[name]._location);
     }

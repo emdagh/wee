@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace wee {
 
     enum struct primitive_type : uint8_t {

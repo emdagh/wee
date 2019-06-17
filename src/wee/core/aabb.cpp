@@ -1,6 +1,9 @@
 #include <core/aabb.hpp>
 #include <core/intersect.hpp>
+#define NOMINMAX
 #include <algorithm> // MSVC specific
+#undef min
+#undef max
 
 using namespace wee;
 

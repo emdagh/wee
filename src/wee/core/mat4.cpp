@@ -5,26 +5,26 @@
 #include <limits>
 using namespace wee;
 
-mat4 mat4::create_ortho_offcenter(float left, float right, float top, float bottom, float near, float far) {
+mat4 mat4::create_ortho_offcenter(float left, float right, float top, float bottom, float zmin, float zmax) {
     mat4 res = identity();
     res.m11 = 2.0f / (right - left);
     res.m22 = 2.0f / (top - bottom);
-    res.m33 = -2.0f / (far - near);
+    res.m33 = -2.0f / (zmax - zmin);
     res.m41 = -(right + left) / (right - left);
     res.m42 = -(top + bottom) / (top - bottom);
-    res.m43 = -(far + near) / (far - near);
+    res.m43 = -(zmax + zmin) / (zmax - zmin);
     return res;
 }
 
-mat4 mat4::create_perspective_fov(float fov, float aspectRatio, float near, float far) {
+mat4 mat4::create_perspective_fov(float fov, float aspectRatio, float zmin, float zmax) {
     mat4 res = identity();
     float num = 1.0f / std::tan(fov * 0.5f);
     float num9 = num / aspectRatio;
     res.m11 = num9;
     res.m22 = num;
-    res.m33 = -(far / (far - near));
+    res.m33 = -(zmax / (zmax - zmin));
     res.m34 = -1.0f;
-    res.m43 = -((far * near) / (far - near)); 
+    res.m43 = -((zmax * zmin) / (zmax - zmin)); 
     res.m44 = 0.0f;
     return res;
 }

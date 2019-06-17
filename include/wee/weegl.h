@@ -2,12 +2,9 @@
 
 #define GL_GLEXT_PROTOTYPES 1
 #if defined(_MSC_VER)
-#include <Windows.h>
-#include <gl/GL.h>
-#elif !defined(__MACOSX__)
-#include <GL/gl.h>
-#include <GL/glext.h>
-#else
-#include <OpenGL/OpenGL.h>
+# include <windows.h>
+# include <gl/GL.h>
 #endif
+//#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
 #define BUFFER_OFFSET(i) ((char *)NULL + (i)) 

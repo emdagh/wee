@@ -1,8 +1,6 @@
 #pragma once
-#define GL_GLEXT_PROTOTYPES 1
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <wee.hpp>
+
+#include <weegl.h>
 #include <core/mat4.hpp>
 #include <core/vec2.hpp>
 #include <core/vec3.hpp>

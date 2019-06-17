@@ -2,6 +2,7 @@
 #define _WEE_H_
 
 #if defined(_MSC_VER)
+#include <Windows.h>
 # define __aligned_type(x)  __declspec(align(x))
 # define __public_type      __declspec(dllexport)
 # define __private_type

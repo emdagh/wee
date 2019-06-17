@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <SDL.h>
 #include <weegl.h>
 #include <gfx/primitive_type.hpp>
 #include <gfx/vertex_buffer.hpp>
@@ -14,7 +14,7 @@
 
 #include <stack>
 
-#include <SDL.h>
+
 
 //struct SDL_Renderer;
 

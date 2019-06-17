@@ -1,7 +1,8 @@
+#include <weegl.h>
 #include <base/SDL_Application.h>
 #include <SDL.h>
 #include <string.h>
-#include <weegl.h>
+
 
 #define DELEGATE(x, arg_0, arg_1) \
     return ptr->callback[x] ? ptr->callback[x](arg_0, (const void*)arg_1) : 0
