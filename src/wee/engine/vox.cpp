@@ -152,20 +152,18 @@ typedef vertex<
         for(const auto* ptr: v_in->chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
                 for(const auto& v: a->voxels) {
-                    auto idx = view.linearize(v.z, v.y, v.x);
+                    size_t idx = view.linearize(v.z, v.y, v.x);
                     data[idx] = v.i;
                 }
             }
         }
-
-        //DEBUG_VALUE_OF(data);
 
         std::map<int, std::vector<std::tuple<int, int, vec2i, vec2i> > > coords_info;
         for(auto dim: range(3)) {
             for(auto depth: range(view.shape()[dim])) {
                 std::vector<int> plane, colors;
                 std::array<ptrdiff_t, 2> aux;
-				view.slice(dim, depth, aux, [&plane](auto s) { plane.push_back(s); });
+                view.slice(dim, depth, aux, [&plane, &data] (auto s) { plane.push_back(data[s]); } );//std::back_inserter(plane));
                 colors = plane;
                 std::sort(colors.begin(), colors.end());
                 auto last = std::unique(colors.begin(), colors.end());

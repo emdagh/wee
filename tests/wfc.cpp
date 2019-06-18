@@ -1,21 +1,27 @@
-#if 1
-
+#if 0
+#include <cassert>
+#include <iostream>
 #include <limits.h>
+#include <core/bits.hpp>
 
-template <typename T>
-T popcount(T t) {
-	auto v = t;
-	v = v - ((v >> 1) & (T)~(T)0 / 3);                            // temp
-	v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3); // temp
-	v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                     // temp
-	T c = (T)(v * ((T)~(T)0 / 255)) >> (sizeof(T) - 1) * CHAR_BIT;  // count
-	return c;
-}
+using namespace wee;
 
 int main(int, char**) {
 	//wee::ndindexer<3> ix({ 4,3,2 });
-	//ix.linearize(0, 1, 2);
-	return popcount(4);
+	//ix.linearize(0, 1, 2)
+    //;
+    
+    std::cout << popcount<unsigned int>(1) << std::endl; // 1 -> 1 
+    std::cout << popcount<unsigned int>(2) << std::endl; // 10 -> 1
+    std::cout << popcount<unsigned int>(3) << std::endl; // 11 -> 2
+    std::cout << popcount<unsigned int>(4) << std::endl; // 100 -> 1
+
+    std::cout << ctz<unsigned int>(1) << std::endl; // 1 -> 0
+    std::cout << ctz<unsigned int>(2) << std::endl; // 10 -> 1
+    std::cout << ctz<unsigned int>(3) << std::endl; // 11 -> 0
+    std::cout << ctz<unsigned int>(4) << std::endl; // 100 -> 2
+
+	return 0;
 	
 }
 #else 

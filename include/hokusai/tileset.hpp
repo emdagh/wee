@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 template <typename T>
 struct tileset {
     /**

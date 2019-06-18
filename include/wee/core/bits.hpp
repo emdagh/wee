@@ -4,6 +4,7 @@
 #include <bitset>
 #include <array>
 
+
 #ifdef _MSC_VER
 #include <Windows.h>
 #include <intrin.h>
@@ -24,7 +25,7 @@
 #endif
 
 namespace wee {
-#if 1
+#if 0
     template <typename T>
     constexpr int ctz(const T& t) {
         throw not_implemented("unknown type for ctz");
@@ -61,13 +62,14 @@ namespace wee {
         return __builtin_popcountll(l);
     }
 #else
+    template <typename T> //, std::enable_if<std::is_unsigned<T>::value, T>::value* = 0>
+    constexpr T popcount(T x) {
+        return (x == 0) ? 0 : 1 + popcount(x & (x - 1));
+    }
     template <typename T>
-    constexpr int popcount(T x) {
-        int r = 0;
-        for(; x; x &= x-1)
-            ++r;
-        return r;
-}
+    constexpr T ctz( T x ) {
+        return popcount<T>((x & -x) - 1);
+    }
 
 #endif
 
@@ -96,15 +98,15 @@ namespace wee {
         return object ;
     }
 
-template <typename T>
-void pop_bits(T& d_bits, const T& mask) {
-    d_bits &= ~mask;
-}
+    template <typename T>
+    void pop_bits(T& d_bits, const T& mask) {
+        d_bits &= ~mask;
+    }
 
-template <typename T>
-void push_bits(T& d_bits, const T& mask) {
-    d_bits |= mask;
-}
+    template <typename T>
+    void push_bits(T& d_bits, const T& mask) {
+        d_bits |= mask;
+    }
 
 }
 
