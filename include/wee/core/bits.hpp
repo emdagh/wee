@@ -4,26 +4,6 @@
 #include <bitset>
 #include <array>
 
-
-#ifdef _MSC_VER
-#include <Windows.h>
-#include <intrin.h>
-#include <nmmintrin.h>
-
-
-
-#define __builtin_ctz		__builtin_ctzl
-#define __builtin_ctzll		__builtin_ctzl
-#define __builtin_popcount   __popcnt
-#define __builtin_popcountl  _mm_popcnt_u32
-#if defined _WIN64
-#define __builtin_popcountll _mm_popcnt_u64
-#else
-#define __builtin_popcountll   __popcnt
-#endif
-
-#endif
-
 namespace wee {
 #if 0
     template <typename T>
