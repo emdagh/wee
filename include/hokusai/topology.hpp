@@ -2,6 +2,7 @@
 
 #include <array>
 #include <wee/core/ndview.hpp>
+#include <wee/core/range.hpp>
 
 
 

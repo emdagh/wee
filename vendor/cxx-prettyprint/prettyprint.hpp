@@ -54,12 +54,12 @@ namespace pretty_print
         private:
 #if 1
 			// Work around ICE in 15.9.x 
-			template <typename C, typename LEFT = C::const_iterator(C::*)() const>
+			template <typename C, typename LEFT = typename C::const_iterator(C::*)() const>
 			static yes & f(
 				typename std::enable_if< std::is_same<decltype(static_cast<LEFT>(&C::begin)),
 				typename C::const_iterator(C::*)() const>::value>::type *);
 
-			template <typename C, typename LEFT = C::const_iterator(C::)() const>
+			template <typename C, typename LEFT = typename C::const_iterator(C::*)() const>
 			static yes & g(
 				typename std::enable_if<std::is_same<decltype(static_cast<LEFT>(&C::end)),
 				typename C::const_iterator(C::*)() const>::value, void>::type*);
