@@ -1,6 +1,6 @@
 #if 1
 
-constexpr static const int CHAR_BIT = sizeof(char) * 8;
+#include <limits.h>
 
 template <typename T>
 T popcount(T t) {
