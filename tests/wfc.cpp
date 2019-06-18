@@ -1,3 +1,56 @@
+#if 0
+
+//#include <core/ndview.hpp>
+#include <core/array.hpp>
+
+struct worble {
+	template <typename T>
+	constexpr int bar() const { 
+		return 0; 
+	}
+
+	template <typename R, typename... Rs>
+	constexpr int bar(R first, Rs... rest) const {
+		std::array<int, sizeof...(Rs) + 1> ary = {
+			first,
+			rest...
+		};
+		return wee::inner_product({ 1,1,1 }, ary);
+	}
+
+	template <typename... Ts>
+	constexpr int foo(Ts... ts) const {
+		return bar(ts...);
+	}
+
+	template <typename T>
+	constexpr ptrdiff_t compute_index() const { return ptrdiff_t(0); }
+
+	template <typename R, typename... Rs>
+	constexpr ptrdiff_t compute_index(R first, Rs... rest) const {
+
+		std::array<ptrdiff_t, sizeof...(Rs) + 1> idx{
+			first,
+			rest...
+			};
+		return 0;// wee::inner_product({ 1,1,1 }, idx);//first, rest...);
+
+	}
+
+	template <typename... Ts>
+	constexpr ptrdiff_t linearize(Ts... args) const {
+		return compute_index(std::forward<Ts>(args)...);
+	}
+};
+
+int main(int, char**) {
+	//wee::ndindexer<3> ix({ 4,3,2 });
+	//ix.linearize(0, 1, 2);
+	worble w;
+	long x = w.linearize(1, 2, 3);
+	return static_cast<int>(x);
+}
+#else 
 #include <wee.hpp>
 #include <map>
 #include <string>
@@ -5,7 +58,7 @@
 #include <numeric>
 #include <vector>
 #include <functional>
-#include <prettyprint.hpp>
+
 #include <core/range.hpp>
 #include <core/ndview.hpp>
 #include <core/bits.hpp>
@@ -18,6 +71,7 @@
 #include <gfx/graphics_initializer.hpp>
 using namespace wee;
 #include <hokusai/hokusai.hpp>
+#include <prettyprint.hpp>
 
 struct input : wee::singleton<input> {
     bool mouse_down;
@@ -446,3 +500,4 @@ int main(int argc, char** argv) {
     //app.resize(640, 480);
     return app.start();
 }
+#endif

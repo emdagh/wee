@@ -8,7 +8,12 @@ namespace wee {
 
     template <typename T>
     struct input_iterator {
-        typedef std::iterator<std::input_iterator_tag, T, T, T*, T&> type;
+        //typedef std::iterator<std::input_iterator_tag, T, T, T*, T&> type;
+		using iterator_category = std::input_iterator_tag;
+		using value_type = T; // crap
+		using difference_type = T;
+		using pointer = T*;
+		using reference = T&;
 
     };
 
@@ -16,7 +21,7 @@ namespace wee {
     class range_impl {
         T _begin, _end;
         public:
-        class iterator : public input_iterator<T>::type { // < an example why `public` can be important....
+        class iterator : public input_iterator<T> { // < an example why `public` can be important....
             //friend class range_impl;
             T i_;
             public:

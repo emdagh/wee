@@ -2,6 +2,9 @@
 //#include <atom/core/math/math.h>
 #define  _USE_MATH_DEFINES
 #include <cmath>
+#ifdef _MSC_VER
+#pragma warning disable C4244
+#endif
 
 namespace wee {
 
@@ -117,32 +120,32 @@ float easing::ease_quintic_in(float p) {
     return p * p * p * p * p;
 }
 float easing::ease_quintic_out(float p) {
-    float f = (p - 1);
+    float f = (p - 1.0f);
     return f * f * f * f * f + 1;
 }
 float easing::ease_quintic_in_out(float p) {
-    if(p < 0.5)
+    if(p < 0.5f)
     {
-        return 16 * p * p * p * p * p;
+        return 16.f * p * p * p * p * p;
     }
     else
     {
-        float f = ((2 * p) - 2);
-        return  0.5 * f * f * f * f * f + 1;
+        float f = ((2.f * p) - 2.f);
+        return  0.5f * f * f * f * f * f + 1.0f;
     }
 }
 float easing::ease_exp_in(float p) {
-    return (p == 0.0) ? p : std::pow(2, 10 * (p - 1));
+    return (p == 0.0f) ? p : std::pow(2.f, 10.f * (p - 1.f));
 }
 float easing::ease_exp_out(float p) {
-    return (p == 1.0) ? p : 1 - std::pow(2, -10 * p);
+    return (p == 1.0f) ? p : 1 - std::pow(2.f, -10.f * p);
 }
 float easing::ease_exp_in_out(float p) {
-    if(p == 0.0 || p == 1.0) return p;
-    if(p < 0.5) {
-        return 0.5 * std::pow(2, (20 * p) - 10);
+    if(p == 0.0f || p == 1.0f) return p;
+    if(p < 0.5f) {
+        return 0.5f * std::pow(2.f, (20.f * p) - 10.f);
     } else {
-        return -0.5 * std::pow(2, (-20 * p) + 10) + 1;
+        return -0.5f * std::pow(2.f, (-20.f * p) + 10.f) + 1.f;
     }
 }
 

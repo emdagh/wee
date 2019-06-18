@@ -7,6 +7,9 @@
 // @todo: [ entity, component, system( position, velocity ), engine ].diff(), patch(), save(), load(), versioning?
 
 #pragma once
+#ifdef _MSC_VER
+#undef interface
+#endif
 
 #define KULT_VERSION "1.0.0" /* (2015/11/24) Allow external serializer; new entity methods; extra join/exclude sugars; improve dump info
 #define KULT_VERSION "0.0.0" // (2014/05/04) Initial commit */

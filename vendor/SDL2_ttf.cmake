@@ -75,4 +75,4 @@ if(IOS)
 #set_xcode_property (SDL2 IPHONEOS_DEPLOYMENT_TARGET "7.1")
 endif()
 
-target_link_libraries(SDL_ttf freetype2)
+target_link_libraries(SDL_ttf freetype2 SDL2)

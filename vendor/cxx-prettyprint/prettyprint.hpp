@@ -26,6 +26,7 @@ namespace pretty_print
 {
     namespace detail
     {
+		
         // SFINAE type trait to detect whether T::const_iterator exists.
 
         struct sfinae_base
@@ -48,20 +49,39 @@ namespace pretty_print
         template <typename T>
         struct has_begin_end : private sfinae_base
         {
+			
+			
         private:
-            template <typename C>
-            static yes & f(typename std::enable_if<
-                std::is_same<decltype(static_cast<typename C::const_iterator(C::*)() const>(&C::begin)),
-                             typename C::const_iterator(C::*)() const>::value>::type *);
+#if 1
+			// Work around ICE in 15.9.x 
+			template <typename C, typename LEFT = C::const_iterator(C::*)() const>
+			static yes & f(
+				typename std::enable_if< std::is_same<decltype(static_cast<LEFT>(&C::begin)),
+				typename C::const_iterator(C::*)() const>::value>::type *);
 
-            template <typename C> static no & f(...);
-
+			template <typename C, typename LEFT = C::const_iterator(C::)() const>
+			static yes & g(
+				typename std::enable_if<std::is_same<decltype(static_cast<LEFT>(&C::end)),
+				typename C::const_iterator(C::*)() const>::value, void>::type*);
+            
+#else
+			template <typename C>
+			static yes & f(
+				typename std::enable_if<std::is_same<decltype(static_cast<typename C::const_iterator(C::*)() const>(&C::begin)),
+				typename C::const_iterator(C::*)() const>::value>::type *);
+			
+			
             template <typename C>
-            static yes & g(typename std::enable_if<
-                std::is_same<decltype(static_cast<typename C::const_iterator(C::*)() const>(&C::end)),
+            static yes & g(
+				typename std::enable_if<std::is_same<decltype(static_cast<typename C::const_iterator(C::*)() const>(&C::end)),
                              typename C::const_iterator(C::*)() const>::value, void>::type*);
+			
+			
 
-            template <typename C> static no & g(...);
+            
+#endif
+			template <typename C> static no & f(...);
+			template <typename C> static no & g(...);
 
         public:
             static bool const beg_value = sizeof(f<T>(nullptr)) == sizeof(yes);

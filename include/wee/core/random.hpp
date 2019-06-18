@@ -4,6 +4,10 @@
 #include <random>
 #include <type_traits>
 #include <chrono>
+#ifdef _MSC_VER
+#pragma warning disable C4244
+#endif
+
 
 namespace wee {
 

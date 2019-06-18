@@ -139,7 +139,7 @@ typedef vertex<
     attributes::primary_color
 > vertex_voxel;
     DEBUG_METHOD();
-        typedef ndview<std::vector<int>, 3> ndview3i;
+        typedef ndindexer<3> ndview3i;
         /**
          * first, convert all chunks to a structured 3-D array;
          */
@@ -148,11 +148,11 @@ typedef vertex<
         DEBUG_VALUE_OF(len->y);
         DEBUG_VALUE_OF(len->z);
         std::vector<int> data(len->x * len->y * len->z, 0);
-        ndview3i view(&data, { len->z, len->y, len->x });
+        ndview3i view({ len->z, len->y, len->x });
         for(const auto* ptr: v_in->chunks) {
             if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
                 for(const auto& v: a->voxels) {
-                    size_t idx = view.linearize(v.z, v.y, v.x);
+                    auto idx = view.linearize(v.z, v.y, v.x);
                     data[idx] = v.i;
                 }
             }
@@ -165,7 +165,7 @@ typedef vertex<
             for(auto depth: range(view.shape()[dim])) {
                 std::vector<int> plane, colors;
                 std::array<ptrdiff_t, 2> aux;
-                view.slice(dim, depth, aux, std::back_inserter(plane));
+				view.slice(dim, depth, aux, [&plane](auto s) { plane.push_back(s); });
                 colors = plane;
                 std::sort(colors.begin(), colors.end());
                 auto last = std::unique(colors.begin(), colors.end());
