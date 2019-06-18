@@ -5,8 +5,8 @@
 #cmakedefine NDEBUG
 
 #define SYSTEM_NAME     "@CMAKE_SYSTEM_NAME@"
-#define PACKAGE_NAME    "@PROJECT_NAME@"
-#define VERSION         "@VERSION@"
+#define PACKAGE_NAME    "@CMAKE_PROJECT_NAME@"
+#define VERSION         "@CMAKE_PROJECT_VERSION@"
 
 #define WEE_PLATFORM_UNDEFINED  -1
 
@@ -15,3 +15,6 @@
 #cmakedefine        IOS
 #cmakedefine        WINRT
 #cmakedefine        ANDROID_NDK_API_LEVEL   ${ANDROID_NDK_API_LEVEL}
+
+#cmakedefine WEE_BUILD_SHARED
+#cmakedefine WEE_BUILD_STATIC
