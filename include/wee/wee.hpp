@@ -6,6 +6,7 @@
 
 #ifdef _MSC_VER
 #pragma warning (disable: 4146)
+#define WEE_EXPORT __declspec(dllexport)
 #   define ALWAYS_INLINE __forceinline
 #elif defined(__GNUC__)
 #   define ALWAYS_INLINE __attribute__((always_inline)) inline

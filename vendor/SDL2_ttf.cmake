@@ -59,7 +59,7 @@ FILE(GLOB SRC_FREETYPE
 	${FT2_BASE}/src/winfonts/winfnt.c
 )
 
-add_library(freetype2 ${SRC_FREETYPE})
+add_library(freetype2 STATIC ${SRC_FREETYPE})
 add_library(SDL_ttf ${SDL_TTF_SOURCES})
 
 if(IOS)
