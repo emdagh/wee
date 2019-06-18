@@ -52,10 +52,10 @@ namespace wee {
                 return compute_index(first, rest..., 1);
             } 
             else {
-                std::array<ptrdiff_t, sizeof...(Rs) + 1> idx({
+                std::array<ptrdiff_t, sizeof...(Rs) + 1> idx{
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
-                });
+                };
                 return wee::inner_product(_strides, idx);//first, rest...);
             }
         }
@@ -138,7 +138,7 @@ namespace wee {
 
         template <typename... Ts>
         size_t linearize(Ts... args) const {
-            return compute_index(args...);
+            return compute_index(std::forward<Ts>(args)...);
         }
 
         template <size_t... Is>
@@ -212,6 +212,14 @@ namespace wee {
                 }
             }
         }
+        template <typename UnaryFunction>
+        void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, UnaryFunction d_iter) const {
+            for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
+            this->iterate_axis(axis, depth, [&](auto s) {
+                //*d_iter++ = _data->at(s);//this->linearize(s...));
+                std::forward<UnaryFunction>(d_iter)(s);
+            });
+        }
     };
 
     template <typename... Ts>
@@ -234,13 +242,6 @@ namespace wee {
         template <typename... Ts>
         value_type& operator () (Ts... args) {
             return _data->at(linearize(args...));//compute_index(args...)];
-        }
-        template <typename OutputIt>
-        void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, OutputIt d_iter) const {
-            for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
-            this->iterate_axis(axis, depth, [&](auto s) {
-                *d_iter++ = _data->at(s);//this->linearize(s...));
-            });
         }
     };
     template <typename T, typename... Ts>
