@@ -7,6 +7,7 @@
 #include <regex>
 #include <nlohmann/json.hpp>
 #include <core/lexical_cast.hpp>
+#include <wee/wee.hpp>
 
 
 namespace wee {
@@ -29,7 +30,7 @@ namespace wee {
 		ECondition _cond;
 	};
 
-	struct achievement {
+	struct WEE_EXPORT achievement {
 		
 		std::string _name;
 		std::string _text;

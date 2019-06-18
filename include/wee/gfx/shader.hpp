@@ -110,7 +110,7 @@ namespace wee {
     }_;
 
 
-    struct shader_program {
+    struct WEE_EXPORT shader_program {
         GLuint _handle;
         //GLuint _vs, _ps;
         GLuint _shader[static_cast<int>(shader_type::max_shader_type)] = { 0 };

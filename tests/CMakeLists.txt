@@ -33,7 +33,7 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_gfx
         wee_core
         tmxlite
-	liquidfun
+		liquidfun
         ${OPENGL_gl_LIBRARY}
         SDL_ttf
         SDL2_image
