@@ -1,12 +1,15 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
-PROJECT(wee LANGUAGES C CXX)
+PROJECT(wee VERSION 1.0.0 LANGUAGES C CXX)
+
 
 set(default_build_type "Release")
 if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
     set(default_build_type "Debug")
     SET(_DEBUG True)
 endif()
+
+SET(LIBRARY_TYPE SHARED)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -18,7 +21,8 @@ endif()
 MESSAGE(STATUS "Build type is '${CMAKE_BUILD_TYPE}'.")
 
 IF(UNIX)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Werror -std=c++17") #-Wextra
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic  -Wall -Werror -std=c++17") #-Wextra
+    #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden)
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic")
 
     IF(ANDROID)
@@ -30,7 +34,6 @@ IF(UNIX)
 
         #SET(BUILD_STATIC_LIBRARIES OFF CACHE BOOL "Build static libraries" FORCE)
         #SET(BUILD_DYNAMIC_LIBRARIES ON CACHE BOOL "Build dynamic libraries" FORCE)
-        #SET(LIBRARY_TYPE SHARED)
     ELSEIF(IOS)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -x objective-c++")
         SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
@@ -55,14 +58,13 @@ IF(UNIX)
     ENDIF()
 ELSEIF(WIN32)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
-    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
     ADD_DEFINITIONS(-D_SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
     SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
     SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
     SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-    SET(LIBRARY_TYPE STATIC)
     IF(WINDOWS_PHONE)
     ELSE()
     ENDIF()
@@ -70,6 +72,18 @@ ENDIF()
 
 MESSAGE(STATUS "Output directory (libraries/archives): '${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}'")
 MESSAGE(STATUS "Output directory (binaries): '${CMAKE_RUNTIME_OUTPUT_DIRECTORY}'")
+
+#configure_file(
+#    ${CMAKE_CURRENT_SOURCE_DIR}/include/wee/wee_gen.hpp.cmake
+#    ${CMAKE_CURRENT_BINARY_DIR}/include/wee/wee_gen.hpp
+#)
+ADD_DEFINITIONS(-DWEE_LIB_EXPORTS)
+
+IF(LIBRARY_TYPE MATCHES "SHARED")
+    SET(WEE_BUILD_SHARED 1)
+ELSE()
+    SET(WEE_BUILD_STATIC 1)
+ENDIF()
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/wee/config.h.in
@@ -80,6 +94,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/vendor/SDL2/include
     ${CMAKE_SOURCE_DIR}/vendor
     ${CMAKE_BINARY_DIR}/include/wee
+    ${CMAKE_BINARY_DIR}/include
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/wee
     ${CMAKE_SOURCE_DIR}/vendor/liquidfun/liquidfun/Box2D
@@ -106,5 +121,4 @@ LINK_DIRECTORIES(
 ADD_SUBDIRECTORY(vendor)
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(tests)
-ADD_SUBDIRECTORY(games)
 
