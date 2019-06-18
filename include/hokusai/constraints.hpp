@@ -4,6 +4,10 @@
 #include <hokusai/topology.hpp>
 #include <cmath>
 
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 template <typename T, size_t N>
 struct mirror_constraint : public basic_constraint<T,N> {
 
@@ -136,7 +140,8 @@ struct border_constraint : public basic_constraint<T,N> {
             auto neighbor   = topo.neighbor(_directions[i]);
             size_t axis     = _directions[i] % N;
             
-            auto is_signed  = std::signbit(array_sum(neighbor));
+            //auto is_signed  = std::signbit(array_sum(neighbor));
+            auto is_signed  = sgn(array_sum(neighbor)) < 0;
             auto slice      = is_signed * (ix.shape()[axis] - 1);
             
             ix.iterate_axis(axis, slice, [&] (auto idx) {
