@@ -3,29 +3,13 @@
 #include <wee.hpp>
 #include <bitset>
 #include <array>
+
 #ifdef _MSC_VER
 #include <Windows.h>
 #include <intrin.h>
 #include <nmmintrin.h>
-constexpr int __inline __builtin_ctzl(unsigned long value) {
-	DWORD trailing_zero = 0;
-	if (_BitScanForward(&trailing_zero, value))
-	{
-		return static_cast<int>(trailing_zero);
-	}
-	return 32;
-}
-#if defined _WIN64
-int __inline __builtin_ctzll(__int64 value) {
-	unsigned long trailing_zero = 0;
-	if (_BitScanForward64(&trailing_zero, value))
-	{
-		return static_cast<int>(trailing_zero);
-	}
-	return 32;
-}
-#else
-#endif
+
+
 
 #define __builtin_ctz		__builtin_ctzl
 #define __builtin_ctzll		__builtin_ctzl

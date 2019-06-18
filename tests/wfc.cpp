@@ -1,54 +1,22 @@
-#if 0
+#if 1
 
-//#include <core/ndview.hpp>
-#include <core/array.hpp>
+constexpr static const int CHAR_BIT = sizeof(char) * 8;
 
-struct worble {
-	template <typename T>
-	constexpr int bar() const { 
-		return 0; 
-	}
-
-	template <typename R, typename... Rs>
-	constexpr int bar(R first, Rs... rest) const {
-		std::array<int, sizeof...(Rs) + 1> ary = {
-			first,
-			rest...
-		};
-		return wee::inner_product({ 1,1,1 }, ary);
-	}
-
-	template <typename... Ts>
-	constexpr int foo(Ts... ts) const {
-		return bar(ts...);
-	}
-
-	template <typename T>
-	constexpr ptrdiff_t compute_index() const { return ptrdiff_t(0); }
-
-	template <typename R, typename... Rs>
-	constexpr ptrdiff_t compute_index(R first, Rs... rest) const {
-
-		std::array<ptrdiff_t, sizeof...(Rs) + 1> idx{
-			first,
-			rest...
-			};
-		return 0;// wee::inner_product({ 1,1,1 }, idx);//first, rest...);
-
-	}
-
-	template <typename... Ts>
-	constexpr ptrdiff_t linearize(Ts... args) const {
-		return compute_index(std::forward<Ts>(args)...);
-	}
-};
+template <typename T>
+T popcount(T t) {
+	auto v = t;
+	v = v - ((v >> 1) & (T)~(T)0 / 3);                            // temp
+	v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3); // temp
+	v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                     // temp
+	T c = (T)(v * ((T)~(T)0 / 255)) >> (sizeof(T) - 1) * CHAR_BIT;  // count
+	return c;
+}
 
 int main(int, char**) {
 	//wee::ndindexer<3> ix({ 4,3,2 });
 	//ix.linearize(0, 1, 2);
-	worble w;
-	long x = w.linearize(1, 2, 3);
-	return static_cast<int>(x);
+	return popcount(4);
+	
 }
 #else 
 #include <wee.hpp>

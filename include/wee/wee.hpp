@@ -13,35 +13,6 @@
 #   define ALWAYS_INLINE inline
 #endif
 
-#ifdef  __GNUC__
-#define __clz(x)        __builtin_clz(x)
-#define __ctz(x)        __builtin_ctz(x)
-#define __popcount(x)   __builtin_popcount(x)
-#else
-static uint32_t ALWAYS_INLINE popcnt( uint32_t x )
-{
-    x -= ((x >> 1) & 0x55555555);
-    x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
-    x = (((x >> 4) + x) & 0x0f0f0f0f);
-    x += (x >> 8);
-    x += (x >> 16);
-    return x & 0x0000003f;
-}
-static uint32_t ALWAYS_INLINE clz( uint32_t x )
-{
-    x |= (x >> 1);
-    x |= (x >> 2);
-    x |= (x >> 4);
-    x |= (x >> 8);
-    x |= (x >> 16);
-    return 32 - popcnt(x);
-}
-static uint32_t ALWAYS_INLINE ctz( uint32_t x )
-{
-    return popcnt((x & -x) - 1);
-}
-#define __popcount(x) popcnt(x)
-#endif
 
 #define WEE_DEFAULT_COPY_AND_ASSIGN(T) \
     T(const T&) = default; \
