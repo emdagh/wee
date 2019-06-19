@@ -8,8 +8,8 @@
 #define PACKAGE_NAME    "@CMAKE_PROJECT_NAME@"
 #define VERSION         "@CMAKE_PROJECT_VERSION@"
 
-#define WEE_PLATFORM_UNDEFINED  -1
 
+#cmakedefine        WIN32
 #cmakedefine        UNIX
 #cmakedefine        ANDROID
 #cmakedefine        IOS

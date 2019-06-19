@@ -18,13 +18,13 @@
 	url = https://github.com/google/liquidfun.git
 [submodule "vendor/SDL2"]
 	path = vendor/SDL2
-	url = https://github.com/spurious/SDL-mirror.git
+    url = https://github.com/davidsiaw/SDL2.git
 [submodule "vendor/SDL2_image"]
 	path = vendor/SDL2_image
 	url = https://github.com/davidsiaw/SDL2_image.git
 [submodule "vendor/SDL2_ttf"]
 	path = vendor/SDL2_ttf
-	url = https://github.com/pulsejet/SDL2_ttf.git
+    url = https://github.com/davidsiaw/SDL2_ttf.git
 [submodule "vendor/txmlite"]
 	path = vendor/txmlite
 	url = https://github.com/fallahn/tmxlite.git
