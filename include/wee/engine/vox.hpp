@@ -54,7 +54,7 @@ namespace wee {
     static const int XYZI= TAG('X', 'Y', 'Z', 'I');
     static const int RGBA= TAG('R', 'G', 'B', 'A');
 
-    struct WEE_EXPORT vox {
+    struct vox {
         constexpr static const unsigned int default_palette[256] = {
             0x00000000, 0xffffffff, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff,
             0xff00ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff, 0xff33ccff,

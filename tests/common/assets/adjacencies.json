@@ -1,0 +1,43 @@
+{
+    "model" : {
+        "type" : "adjacency",
+        "example" : null
+    },
+    "symmetry" : {
+        "rotational" : 4,
+        "reflectional" : false
+    },
+    "tileset": {
+        "basepath" : "assets/models/modular_buildings/Models",
+        "tiles" : [
+            { "src": "modularBuildings_001.fbx", "name": "ground",   "symmetry": "X" },
+            { "src": "modularBuildings_025.fbx", "name": "wall",     "symmetry": "E" },
+            { "src": "modularBuildings_040.fbx", "name": "corner",   "symmetry": "L" },
+            { "src": "modularBuildings_022.fbx", "name": "solid",    "symmetry": "X" }
+        ]
+    },
+    "adjacencies": [
+        { "left": ["ground"], "right" : ["ground"] },
+        { "left": ["empty"], "right" : ["empty"] },
+        { "above": ["empty"], "below" : [
+            "ground", 
+            "empty"
+        ]},
+        { "below": ["ground"], "above": [
+            "wall", 
+            "corner", 
+            "solid"
+        ]}
+    ],
+    "comments" : { 
+        "available_sides_in_order" : ["xmax", "ymax", "zmax", "xmin", "ymin", "zmin"]
+    },
+    "constraints": [
+        {
+            "class": "border_constraint",
+            "sides" : ["ymax"], 
+            "tile": "ground"
+        }
+    ]
+}
+

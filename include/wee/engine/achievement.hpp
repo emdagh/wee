@@ -30,7 +30,7 @@ namespace wee {
 		ECondition _cond;
 	};
 
-	struct WEE_EXPORT achievement {
+	struct achievement {
 		
 		std::string _name;
 		std::string _text;

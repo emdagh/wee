@@ -1,0 +1,8 @@
+[
+    "filename" : "test_09.vox",
+    "frequencies" : [
+        { "tile_id" : 6, "value" : 600 },
+        { "tile_id" : 7, "value" : 600 }
+    ]
+
+]

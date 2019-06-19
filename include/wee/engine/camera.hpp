@@ -20,7 +20,7 @@
 
 namespace wee {
 
-    class WEE_EXPORT camera {
+    class camera {
         quaternion _q;
         vec3f _x;
         bool _dirty;

@@ -11,7 +11,7 @@
 
 namespace wee {
 
-    struct WEE_EXPORT random {
+    struct random {
         uint32_t _seed;
         std::mt19937 eng;
 
