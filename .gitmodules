@@ -28,3 +28,6 @@
 [submodule "vendor/txmlite"]
 	path = vendor/txmlite
 	url = https://github.com/fallahn/tmxlite.git
+[submodule "vendor/SDL2_mixer"]
+	path = vendor/SDL2_mixer
+	url = https://github.com/davidsiaw/SDL2_mixer.git
