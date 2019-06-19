@@ -1,4 +1,7 @@
 #pragma once
+#ifdef _MSC_VER
+#undef interface
+#endif
 
 #include <kult/kult.hpp>
 #include <Box2D/Box2D.h>

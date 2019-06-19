@@ -1,3 +1,4 @@
+#include <wee/wee.hpp>
 #include <core/logstream.hpp>
 
 using namespace wee;

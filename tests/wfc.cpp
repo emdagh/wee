@@ -462,6 +462,7 @@ struct game : public applet {
 
 };
 
+#undef main
 
 int main(int argc, char** argv) {
     graphics_initializer init;

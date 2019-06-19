@@ -20,9 +20,11 @@
 #endif
 #endif
 
-#ifdef WEE_LIB_SHARED // defined if wee is compiled as a shared object
-#ifdef WEE_LIB_EXPORTS // defined if we are building the wee shared object (instead of using it)
-#define WEE_API WEE_HELPER_DLL_EXPORT
+
+
+#ifdef BUILD_SHARED_LIBS// defined if wee is compiled as a shared object
+#ifdef BUILD_LIBRARY// defined if we are building the wee shared object (instead of using it)
+#define WEE_API			WEE_HELPER_DLL_EXPORT
 #else
 #define WEE_API WEE_HELPER_DLL_IMPORT
 #endif
@@ -33,7 +35,7 @@
 #endif // FOX_DLL
 
 #ifdef _MSC_VER
-#pragma warning (disable: 4146)
+#pragma warning ( disable : 4146 )
 #   define ALWAYS_INLINE __forceinline
 #elif defined(__GNUC__)
 # define ALWAYS_INLINE __attribute__((always_inline)) inline
@@ -55,14 +57,19 @@ void operator=(TypeName) = delete
 
 namespace { // prevent cluttering of global namespace
 
-    struct WEE_API not_implemented : std::logic_error {
+    class not_implemented : public std::logic_error {
+	public:
         not_implemented() : std::logic_error("function or method not implemented") {
 
         }
+		virtual ~not_implemented() {}
     };
 
-    struct WEE_API file_not_found : std::runtime_error {
+    class file_not_found : public std::runtime_error {
+	public:
+
         file_not_found(const std::string& what) : std::runtime_error("file not found: " + what) {}
+		virtual ~file_not_found() {}
     };
 
 

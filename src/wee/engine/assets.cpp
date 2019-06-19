@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <cstring>
+#include <algorithm>
 
 #ifdef _WIN32
 #define PATH_SEP '\\'

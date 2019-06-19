@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wee/wee.hpp>
 #include <core/mat4.hpp>
 #include <core/aabb.hpp>
 #include <gfx/vertex_buffer.hpp>
@@ -9,9 +10,9 @@
 #include <map>
 
 namespace wee {
-    struct binary_reader;
-    struct binary_writer;
-    struct graphics_device;
+    class binary_reader;
+    class binary_writer;
+    class graphics_device;
     struct texture;
     
     struct bone {

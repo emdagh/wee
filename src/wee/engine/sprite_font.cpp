@@ -1,5 +1,10 @@
 
 #include <engine/sprite_font.hpp>
+#include <algorithm>
+#ifdef _MSC_VER
+#undef min
+#undef max
+#endif
 
 using namespace wee;
     void measure_string(wee::sprite_font* font, const std::string& what, int* w, int* h) {

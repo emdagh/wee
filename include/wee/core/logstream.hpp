@@ -6,6 +6,7 @@
 #undef max
 #endif
 
+#include <wee/wee.hpp>
 #include <sstream>
 #include <typeinfo>
 //#include <cxxabi.h>

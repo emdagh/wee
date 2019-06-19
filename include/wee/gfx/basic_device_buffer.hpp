@@ -58,7 +58,7 @@ namespace wee {
                 *this->pptr() = c;
                 this->pbump(1);
             }
-            return flush() == traits_type::eq_int_type(c, eof);
+            return flush() && traits_type::eq_int_type(c, eof);
         }
         
         int flush() {

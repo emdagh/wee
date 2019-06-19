@@ -1,4 +1,5 @@
 #include <gfx/graphics_device.hpp>
+#include <cassert>
 
 using namespace wee;
 
@@ -45,4 +46,19 @@ graphics_device::graphics_device(SDL_Renderer* renderer)
 #if !defined(_MSC_VER)
     glDebugMessageCallback( glDebugCallback, 0 );
 #endif
+}
+graphics_device::~graphics_device() {
+}
+
+extern "C" int make_graphics_device(graphics_device** p) {
+	assert(*p == nullptr);
+	*p = new graphics_device(nullptr);
+	return 0;
+}
+
+extern "C" int delete_graphics_device(graphics_device* p) {
+	assert(p != nullptr);
+	delete p;
+	p = nullptr;
+	return 0;
 }

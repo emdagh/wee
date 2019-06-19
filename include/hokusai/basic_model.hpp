@@ -33,7 +33,7 @@ struct basic_model {
         T res = 0;
         for(auto i : range(_tileset.length())) {
             //res |= to_bitmask(_tileset.to_index(_tileset.tile(i)));
-            wee::push_bits(res, to_bitmask(_tileset.to_index(_tileset.to_tile(i))));
+            wee::push_bits(res, static_cast<T>(to_bitmask(_tileset.to_index(_tileset.to_tile(i)))));
         }
         return res;
     }

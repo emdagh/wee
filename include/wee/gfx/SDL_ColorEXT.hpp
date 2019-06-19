@@ -11,7 +11,7 @@ C_API void SDL_CreateColorEXT(uint32_t, struct SDL_Color*);
 C_API void SDL_CreateColorRGB(uint8_t, uint8_t, uint8_t, struct SDL_Color*);
 C_API void SDL_CreateColorHSV(uint8_t, uint8_t, uint8_t, struct SDL_Color*);
 
-struct SDL_ColorPresetEXT {
+C_API struct SDL_ColorPresetEXT {
 
     static const SDL_Color AliceBlue;
     static const SDL_Color AntiqueWhite;

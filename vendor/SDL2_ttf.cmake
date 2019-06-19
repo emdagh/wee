@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-project(SDL_ttf C)
+project(SDL2_ttf C)
 
 include_directories(
     SDL2_ttf/external/freetype-2.4.12/include
@@ -59,11 +59,11 @@ FILE(GLOB SRC_FREETYPE
 	${FT2_BASE}/src/winfonts/winfnt.c
 )
 
-add_library(freetype2 ${SRC_FREETYPE})
-add_library(SDL_ttf ${SDL_TTF_SOURCES})
+add_library(freetype2 STATIC ${SRC_FREETYPE})
+add_library(${PROJECT_NAME} ${SDL_TTF_SOURCES})
 
 if(IOS)
-    set_target_properties(SDL_ttf PROPERTIES
+    set_target_properties(SDL2_ttf PROPERTIES
         COMPILE_FLAGS ${SDL_COMPILE_FLAGS}
         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
         XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
@@ -75,4 +75,4 @@ if(IOS)
 #set_xcode_property (SDL2 IPHONEOS_DEPLOYMENT_TARGET "7.1")
 endif()
 
-target_link_libraries(SDL_ttf freetype2 SDL2)
+target_link_libraries(${PROJECT_NAME} freetype2 SDL2)

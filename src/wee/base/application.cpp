@@ -55,9 +55,8 @@ application::application(applet* a, graphics_initializer&& init)
 
         application* a = static_cast<application*>(SDL_GetApplicationUserData(app));
         a->_graphics_device = new graphics_device(SDL_GetApplicationRenderer(app));
-
-        return 0;
-            
+		return 0;
+		//return make_graphics_device(&a->_graphics_device);            
     });
 
     SDL_SetApplicationCallback(_handle, SDL_APPLICATION_CALLBACK_STARTED, [] (const SDL_Application* app, const void* ) {

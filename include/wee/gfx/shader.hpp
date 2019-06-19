@@ -1,6 +1,7 @@
 #pragma once
 
 #include <weegl.h>
+#include <wee.hpp>
 #include <core/mat4.hpp>
 #include <core/vec2.hpp>
 #include <core/vec3.hpp>

@@ -177,6 +177,7 @@ int SDL_InitApplication(SDL_Application* res, int width, int height, int depth_b
 
     if(res->callback[SDL_APPLICATION_CALLBACK_CREATED]) 
         res->callback[SDL_APPLICATION_CALLBACK_CREATED](res, NULL);
+	return 0;
 
 }
 
@@ -245,7 +246,7 @@ int SDL_StartApplication(struct SDL_Application* ptr) {
 
         while(SDL_PollEvent(&event)) {
             if(SDL_ApplicationHandleEvent(ptr, &event)) {
-                return 0;
+                return -1;
             }
         }
         timeCurrentMs = SDL_GetTicks();
@@ -260,6 +261,7 @@ int SDL_StartApplication(struct SDL_Application* ptr) {
         timeLastMs = timeCurrentMs;
         SDL_GL_SwapWindow(ptr->window);
     }
+	return 0;
 }
 
 void SDL_StopApplication(struct SDL_Application* ptr) {

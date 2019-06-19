@@ -1,5 +1,5 @@
 #pragma once
-
+#define GLEW_STATIC
 #include <GL/glew.h>
 #define GL_GLEXT_PROTOTYPES 1
 #if defined(_MSC_VER)

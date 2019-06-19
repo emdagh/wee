@@ -34,7 +34,7 @@ struct adjacency_list {
     }
     
     void add(size_t i_a, size_t i_b, size_t d, bool do_inverse = false) {
-        wee::push_bits(_data[index_for_neighbor(i_a, d)], to_bitmask(i_b));
+        wee::push_bits(_data[index_for_neighbor(i_a, d)], static_cast<T>(to_bitmask(i_b)));
     }
 
     T at(size_t i, size_t d) const  {

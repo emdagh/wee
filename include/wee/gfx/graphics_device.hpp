@@ -81,17 +81,18 @@ namespace wee {
 
     struct shader_program;
 
-    struct graphics_device {
+    class graphics_device {
         SDL_Renderer* _renderer;
 
         std::stack<vertex_buffer*> _vbo;
         std::stack<index_buffer*> _ibo;
         std::stack<shader_program*> _shaders;
 
-
+    public:
         SDL_Renderer* get_renderer() const { return _renderer; }
 
         explicit graphics_device(SDL_Renderer* renderer);
+        virtual ~graphics_device();
 
         virtual void clear(const SDL_Color& color, const clear_options& copt = clear_options::kClearAll, float depth = 1.0f, int stencil = 0x0) {
             constexpr static float val = 1.0f / 255;
@@ -148,4 +149,7 @@ namespace wee {
             );
         }
     };
+	extern "C" int make_graphics_device(graphics_device**);
+	extern "C" int delete_graphics_device(graphics_device*);
 }
+

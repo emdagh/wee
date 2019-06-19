@@ -128,7 +128,7 @@ void animation_controller::update_animation_time(float dt) {
                 _time -= _animation->_duration;
             }
         } else {
-            _time           = _animation->_duration;
+            _time           = static_cast<float>(_animation->_duration);
             _is_playing     = false;
             _is_finished    = true;
         }

@@ -8,6 +8,8 @@ SET(PLATFORM_LIBS
 	pthread
 	dl
 	sndio
+    X11
+    Xi
 )
 ELSEIF(WIN32)
 SET(PLATFORM_LIBS)
@@ -29,12 +31,13 @@ foreach( sourcefile ${APP_SOURCES} )
         wee_core
         tmxlite
         liquidfun
-        ${OPENGL_gl_LIBRARY}
-        SDL_ttf
+        ${OPENGL_LIBRARIES}
+        SDL2_ttf
         SDL2_image
         SDL2
         ${PLATFORM_LIBS}
         assimp
+        glew
 
     )
 endforeach( sourcefile ${APP_SOURCES} )
