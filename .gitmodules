@@ -31,6 +31,6 @@
 [submodule "vendor/SDL2_mixer"]
 	path = vendor/SDL2_mixer
 	url = https://github.com/davidsiaw/SDL2_mixer.git
-[submodule "tmxlite"]
-	path = tmxlite
+[submodule "vendor/tmxlite"]
+	path = vendor/tmxlite
 	url = https://github.com/fallahn/tmxlite.git
