@@ -32,7 +32,9 @@ glDebugCallback( GLenum source,
 graphics_device::graphics_device(SDL_Renderer* renderer) 
 : _renderer(renderer) 
 {
-    
+    if(auto err = glewInit(); err != GLEW_OK) {
+        throw std::runtime_error("glew init failed.");//std::string(static_cast<const char*>(glewGetErrorString(err))));
+    }
     DEBUG_LOG("vendor:", glGetString(GL_VENDOR));
     DEBUG_LOG(glGetString(GL_RENDERER));
     DEBUG_LOG(glGetString(GL_VERSION));

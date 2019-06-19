@@ -1,5 +1,6 @@
 
 #INCLUDE(poco.cmake)
+include(glew.cmake)
 INCLUDE(SDL2.cmake)
 INCLUDE(SDL2_ttf.cmake)
 INCLUDE(SDL2_mixer.cmake)
