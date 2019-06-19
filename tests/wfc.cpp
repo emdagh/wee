@@ -451,10 +451,13 @@ struct game : public applet {
                 once = true;
                 return 0;
             }
-            input::instance().mouse_x += (_viewport.x * 0.5f - x);// * kSensitivity;
-            input::instance().mouse_y += (_viewport.y * 0.5f - y);// * kSensitivity;
+			//if (input::instance().mouse_down) {
+				input::instance().mouse_x += (_viewport.x * 0.5f - x);// * kSensitivity;
+				input::instance().mouse_y += (_viewport.y * 0.5f - y);// * kSensitivity;
+				app->set_mouse_position(_viewport.x / 2, _viewport.y / 2);
+			//}
 
-            app->set_mouse_position(_viewport.x / 2, _viewport.y / 2);
+            
 
             return 0;
         };

@@ -1,1 +1,0 @@
-/home/emda/git/wee/scripts/cg2glsl.py
