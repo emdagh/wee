@@ -1,6 +1,6 @@
 [submodule "vendor/glew"]
 	path = vendor/glew
-	url = https://github.com/dyledge/glew
+	url = https://github.com/dyledge/glew.git
 [submodule "vendor/assimp"]
 	path = vendor/assimp
 	url = https://github.com/assimp/assimp.git
