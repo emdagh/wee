@@ -1,7 +1,5 @@
 PROJECT(wee_gfx)
 
-
-
 FILE(GLOB SOURCES
     "*.cpp"
     "*.c"
@@ -15,8 +13,8 @@ ADD_LIBRARY(
 
 if(WIN32)
 	find_package(OpenGL REQUIRED)
-	MESSAGE(STATUS "OpenGL found at ${OPENGL_gl_LIBRARY}")
-	set(LIBDEPS SDL2 wee_core ${OPENGL_gl_LIBRARY})
+	MESSAGE(STATUS "Linking ${OPENGL_LIBRARIES}")
+	set(LIBDEPS SDL2 wee_core ${OPENGL_LIBRARIES})
 endif()
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${LIBDEPS})
