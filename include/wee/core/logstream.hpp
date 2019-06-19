@@ -12,7 +12,6 @@
 #include <iterator>
 #include <iostream>
 #include <iomanip>
-#include <date/date.h>
 #include <core/string.hpp>
 
 #define RESET   "\033[0m"
@@ -54,7 +53,7 @@ namespace wee {
         : _os(os)
         {
             std::string _context = context;
-            os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
+            //os << MAGENTA << date::format("%F %T", std::chrono::system_clock::now()) << RESET << " ";
             os << "[" << _context << "] " << RED "> " << RESET;
             //os << RED "> " << RESET;
         }
