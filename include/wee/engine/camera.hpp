@@ -5,36 +5,39 @@
 #include <core/random.hpp>
 #include <core/vec3.hpp>
 #include <core/vec2.hpp>
+#include <core/quaternion.hpp>
 
 #define MAX_SHAKE_X     5.f
 #define MAX_SHAKE_Y     5.f
+#define MAX_SHAKE_Z     5.f
+
+#define DEFINE_LEGACY_FUNCTIONS \
+    float get_zoom() { return 1.f; } \
+    void set_zoom(float) {} \
+    void set_viewport(float, float) {} \
+    void update(int) {} \
+    void shake(int, bool) {} 
 
 namespace wee {
+
     class camera {
+        quaternion _q;
+        vec3f _x;
+        bool _dirty;
         mat4 _transform;
-        float _zoom = 1.0f;;
-        float _rotation = 0.0f;
-        bool _changed = true;
-        bool _shaking = false;
-        bool _restore_after = true;
-        vec2 _position = { 0.0f, 0.0f };
-        vec2 _stored_position = { 0.0f, 0.0f };
-        vec2 _viewport = { 0.0f, 0.0f };
-        int _shaketime = 0;
-    protected:
-        void _update_transform();
     public:
-        void set_viewport(int w, int h);
-        void set_position(float x, float y);
-        void shake(int t, bool restorePositionAfter = true);
-        void end_shake();
-        void update(int dt);
+        camera();
         const mat4& get_transform();
-        void screen_to_world(const vec3& src, vec3* dst);
-        void set_zoom(float a) { 
-            _zoom = a; 
-        }
-        float get_zoom() const { return _zoom; }
+        void set_position(float, float, float);
+        void set_rotation(float, float, float);
+        void lookat(float, float, float);
+
+    public:
+        void move_forward(float);
+        void strafe(float);
+        void rotate(float, float, float);
+
+        DEFINE_LEGACY_FUNCTIONS;
     };
 }
 

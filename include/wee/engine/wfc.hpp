@@ -28,12 +28,12 @@ using wee::range;
 namespace wee {
 
 template <typename T, size_t kNumDimensions = 2>
-class alignas(16) model {
+class alignas(16) wfc_model {
 
     size_t _len;
     wee::random _random;// = { 77408982 };// = { 321696040 };// = { 60413549 };// { 25298873 };// { 4025143874 };// { -279628382}; 
 
-    static constexpr size_t kNumNeighbors = kNumDimensions * 2;
+    static constexpr size_t kNumNeighbors = kNumDimensions * 2; // no diagonals
     typedef uint64_t bitmask_t;//uint64_t bitmask_t;
 
     //union {
@@ -53,7 +53,7 @@ class alignas(16) model {
 
     std::unordered_map<T, int> _tile_to_index;
     std::unordered_map<int, T> _index_to_tile;
-    std::valarray<size_t>      _output_shape;
+    std::valarray<int>         _output_shape;
     std::valarray<int>         _neighbors;
     std::vector<T>             _initial;
     bitmask_t                  _banned;
@@ -112,7 +112,7 @@ class alignas(16) model {
     }
 
 
-    void get_min_entropy(size_t* k) { //std::valarray<size_t>* d) {
+    void get_min_entropy(size_t* k) { 
         float min_H = std::numeric_limits<float>::infinity();
 
         for(size_t i=0; i < _len; i++) {
@@ -151,11 +151,11 @@ class alignas(16) model {
 
 
 
-    bool is_valid(const std::valarray<int>& coord, const std::valarray<size_t>& shape) {
+    bool is_valid(const std::valarray<int>& coord, const std::valarray<int>& shape) {
         size_t n = shape.size();
         assert(n == coord.size());
         for(auto i: wee::range(n)) {
-            if(coord[i] < 0 || shape[i] <= static_cast<size_t>(coord[i]))
+            if(coord[i] < 0 || shape[i] <= coord[i])
                 return false;
         }
         return true;
@@ -180,15 +180,13 @@ class alignas(16) model {
 
                 if(!is_valid(other_coords, _output_shape)) 
                     continue;
-
+                
                 size_t other_i = linearize(other_coords, _output_shape);
-
+                
                 bitmask_t opts = 0;
                 for(auto ct: cur_avail) {
                     opts |= _adjacency[ct * kNumNeighbors + i];
                 }
-                // _mm_and_si128(_mm_coefficients[...], _mm_opts)
-                
                 /**
                  * this next line is important! This prevents the selection of tiles that have 0 neighbors 
                  */
@@ -197,8 +195,8 @@ class alignas(16) model {
                 
                 auto any_possible = _coefficients[other_i] & opts;
                 if(!any_possible) {
-                    reset();
-                    return;
+                    //reset(&_initial[0], _initial.size());
+                    exit(0);
                 }
                 
                 if(_coefficients[other_i] != any_possible) {
@@ -216,7 +214,7 @@ class alignas(16) model {
         return true;
     }
 
-    void build_adjacency(const T* in_map, const std::valarray<size_t>& in_shape, decltype(_adjacency)& res) {
+    void build_adjacency(const T* in_map, const std::valarray<int>& in_shape, decltype(_adjacency)& res) {
         std::fill(res.begin(), res.end(), 0);
 
         size_t in_len = array_product(in_shape);
@@ -256,7 +254,7 @@ class alignas(16) model {
     }
 public:
 
-    model(const T* in_map, const std::valarray<size_t>& in_size, T* out_map, const std::valarray<size_t>& out_size) 
+    wfc_model(const T* in_map, const std::valarray<int>& in_size, T* out_map, const std::valarray<int>& out_size) 
     {
         assert(in_size.size() == out_size.size());
         _len = array_product(out_size);
@@ -291,13 +289,11 @@ public:
         
         _coefficients = decltype(_coefficients)(_len, 0);
 
-        _initial.resize(_len);
-        std::copy(out_map, out_map + n, _initial.begin());
-        //memcpy(&_initial[0], &out_map[0], _len);
-        //
         _banned = 0;
 
-        reset();//out_map, _len);
+        _initial.resize(_len);
+        std::copy(out_map, out_map + _len, _initial.begin());
+        reset(&_initial[0], _initial.size());
     }
 
     template <typename S, typename InputIt, typename OutputIt, typename UnaryPredicate>
@@ -309,8 +305,27 @@ public:
         return d_first;
     }
 
-    void reset() { //const T* initial_tilemap, size_t n) {
-        _random.reset(wee::randgen((uint32_t){}, (uint32_t)78612512));
+    bitmask_t domain() {
+        bitmask_t res = 0;
+        for(auto it : _tile_to_index) {
+            res |= _bitmask_of(it.second);
+        }
+        return res & ~_banned;
+    }
+
+    void reset_coeff(size_t i) {
+        _coefficients[i] = domain();
+    }
+
+    void reset(const T* initial_tilemap, size_t n, bool reset_rng = true) {
+        
+        std::copy(initial_tilemap, initial_tilemap + n, _initial.begin());
+
+        if(reset_rng) {
+            _random.reset(wee::randgen((uint32_t){}, (uint32_t)78612512));
+            DEBUG_VALUE_OF(_random.seed());
+        }
+
         bitmask_t initial_mask = 0;
         for(auto it : _tile_to_index) {
             initial_mask |= _bitmask_of(it.second);
@@ -320,19 +335,18 @@ public:
 
         std::vector<T> to_propagate;
         for(auto i: wee::range(_len)) { 
-            _coefficients[i] = _initial[i] ? _bitmask_of(_tile_to_index[_initial[i]]) : initial_mask;
-            if(_initial[i]) 
+            _coefficients[i] = (_initial[i] != -1) ? _bitmask_of(_tile_to_index[_initial[i]]) : initial_mask;
+            if(_initial[i] != -1) 
                 to_propagate.push_back(i);
         }
         for(const auto& coord: to_propagate) {
             propagate(coord);
         }
-        DEBUG_VALUE_OF(_random.seed());
     }
     
     void ban(size_t tileid) {
         _banned |= _bitmask_of(_tile_to_index.at(tileid));
-        reset();
+        reset(&_initial[0], _initial.size());
     }
     void step() {
         size_t index;

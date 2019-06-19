@@ -7,6 +7,7 @@
 #include <regex>
 #include <nlohmann/json.hpp>
 #include <core/lexical_cast.hpp>
+#include <wee/wee.hpp>
 
 
 namespace wee {

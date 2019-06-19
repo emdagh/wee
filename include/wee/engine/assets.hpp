@@ -64,6 +64,29 @@ namespace wee {
         }
     };
 
+    template <> 
+    struct assets<SDL_Surface> : singleton<assets<SDL_Surface> > {
+        template <typename T>
+        using dictionary = std::unordered_map<std::string, T>;
+
+        dictionary<SDL_Surface*> _data;
+
+        SDL_Surface* load(const std::string& name, std::istream& is) {
+            if(_data.count(name) == 0) {
+                DEBUG_VALUE_AND_TYPE_OF(name);
+                SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
+                if(!surface) {
+                    throw std::runtime_error(IMG_GetError());
+                }
+                _data[name] = surface;
+                //return from_surface(name, surface);
+            }
+            return _data[name];
+
+        }
+
+    };
+
     template <>
     struct assets<SDL_Texture> : singleton<assets<SDL_Texture> > {
         typename dictionary<SDL_Texture*>::type resources;
@@ -73,9 +96,8 @@ namespace wee {
         }
 
         SDL_Texture* load(const std::string& name, std::istream& is) {
-            DEBUG_VALUE_AND_TYPE_OF(name);
             if(resources.count(name) == 0) {
-                DEBUG_LOG("resource not in cache, loading from disk...");
+                DEBUG_VALUE_AND_TYPE_OF(name);
                 SDL_Surface* surface = IMG_Load_RW(SDL_RWFromStream(is), 0);
                 if(!surface) {
                     throw std::runtime_error(IMG_GetError());
@@ -106,7 +128,22 @@ namespace wee {
 
     std::string dirname(const std::string&);
     std::string basename(const std::string&);
+    std::string extension(const std::string&);
 
+    //std::fstream open_fstream(const std::string&, std::ios_base::openmode);
+    template <typename T>
+    T open_fstream(const std::string& pt, std::ios_base::openmode mode) {
+        std::string base_name = wee::basename(pt);
+        std::string abs_path = get_resource_path(dirname(pt)) + basename(pt) + "." + extension(pt);
+        T res(abs_path, mode);
+        if(!res.is_open()) {
+            throw file_not_found(abs_path);
+        }
+        return res;
+
+    }
+
+    std::ofstream open_ofstream(const std::string& pt, std::ios_base::openmode mode = std::ios_base::out); 
     std::ifstream open_ifstream(const std::string& pt, std::ios_base::openmode mode = std::ios_base::in); 
 
     namespace asset_helper {

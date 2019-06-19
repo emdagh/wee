@@ -2,45 +2,47 @@
 
 #include <wee/wee.h>
 #include <exception>
-#include <stdexcept>
+#include <stdexcept>   
+// Generic helper definitions for shared library support
+#if defined _WIN32 || defined __CYGWIN__
+#define WEE_HELPER_DLL_IMPORT __declspec(dllimport)
+#define WEE_HELPER_DLL_EXPORT __declspec(dllexport)
+#define WEE_HELPER_DLL_LOCAL
+#else
+#if __GNUC__ >= 4
+#define WEE_HELPER_DLL_IMPORT __attribute__ ((visibility ("default")))
+#define WEE_HELPER_DLL_EXPORT __attribute__ ((visibility ("default")))
+#define WEE_HELPER_DLL_LOCAL  __attribute__ ((visibility ("hidden")))
+#else
+#define WEE_HELPER_DLL_IMPORT
+#define WEE_HELPER_DLL_EXPORT
+#define WEE_HELPER_DLL_LOCAL
+#endif
+#endif
+
+
+
+#ifdef BUILD_SHARED_LIBS// defined if wee is compiled as a shared object
+#ifdef BUILD_LIBRARY// defined if we are building the wee shared object (instead of using it)
+#define WEE_API			WEE_HELPER_DLL_EXPORT
+#else
+#define WEE_API WEE_HELPER_DLL_IMPORT
+#endif
+#define WEE_LOCAL WEE_HELPER_DLL_LOCAL
+#else 
+#define WEE_API
+#define WEE_LOCAL
+#endif // FOX_DLL
 
 #ifdef _MSC_VER
+#pragma warning ( disable : 4146 )
 #   define ALWAYS_INLINE __forceinline
 #elif defined(__GNUC__)
-#   define ALWAYS_INLINE __attribute__((always_inline)) inline
+# define ALWAYS_INLINE __attribute__((always_inline)) inline
 #else
 #   define ALWAYS_INLINE inline
 #endif
 
-#ifdef  __GNUC__
-#define __clz(x)        __builtin_clz(x)
-#define __ctz(x)        __builtin_ctz(x)
-#define __popcount(x)   __builtin_popcount(x)
-#else
-static uint32_t ALWAYS_INLINE popcnt( uint32_t x )
-{
-    x -= ((x >> 1) & 0x55555555);
-    x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
-    x = (((x >> 4) + x) & 0x0f0f0f0f);
-    x += (x >> 8);
-    x += (x >> 16);
-    return x & 0x0000003f;
-}
-static uint32_t ALWAYS_INLINE clz( uint32_t x )
-{
-    x |= (x >> 1);
-    x |= (x >> 2);
-    x |= (x >> 4);
-    x |= (x >> 8);
-    x |= (x >> 16);
-    return 32 - popcnt(x);
-}
-static uint32_t ALWAYS_INLINE ctz( uint32_t x )
-{
-    return popcnt((x & -x) - 1);
-}
-#define __popcount(x) popcnt(x)
-#endif
 
 #define WEE_DEFAULT_COPY_AND_ASSIGN(T) \
     T(const T&) = default; \
@@ -55,14 +57,19 @@ void operator=(TypeName) = delete
 
 namespace { // prevent cluttering of global namespace
 
-    struct not_implemented : std::logic_error {
+    class not_implemented : public std::logic_error {
+	public:
         not_implemented() : std::logic_error("function or method not implemented") {
 
         }
+		virtual ~not_implemented() {}
     };
 
-    struct file_not_found : std::runtime_error {
+    class file_not_found : public std::runtime_error {
+	public:
+
         file_not_found(const std::string& what) : std::runtime_error("file not found: " + what) {}
+		virtual ~file_not_found() {}
     };
 
 

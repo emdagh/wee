@@ -6,21 +6,49 @@
 namespace wee {
 
     struct mat4;
+	struct quaternion;
     struct vec3 {
-        static const vec3 _one;
-        static const vec3 _zero;
-        static const vec3 _up;
-        static const vec3 _right;
-        static const vec3 _forward;
+
+        static const constexpr vec3 zero() {
+            return vec3 { 0.0f, 0.0f, 0.0f };
+        }
+        static const constexpr vec3 one() {
+            return vec3 { 1.0f, 1.0f, 1.0f };
+        }
+        static const constexpr vec3 up() {
+            return vec3 { 0.0f, 1.0f, 0.0f };
+        }
+        static const constexpr vec3 right() {
+            return vec3 { 1.0f, 0.0f, 0.0f };
+        }
+        static const constexpr vec3 forward() {
+            return vec3 { 0.0f, 0.0f, -1.0f };
+        }
+
+        typedef const vec3& const_ref;
 
         float x, y, z;
 
+        static vec3 lerp(const_ref a, const_ref b, float c) {
+            vec3 res = {
+                a.x + (b.x - a.x) * c,
+                a.y + (b.y - a.y) * c,
+                a.z + (b.z - a.z) * c
+            };
+            return res;
+        }
+
         static vec3 transform(const vec3&, const mat4&);
+        static vec3 transform(const vec3&, const quaternion&);
 
         static float length(const vec3& a) {
             return std::sqrt(dot(a, a));
         }
         static vec3 normalized(const vec3& a) {
+            float len_sq = dot(a, a);
+            if(len_sq == 0.0f) {
+                return a;
+            }
             float r = 1.0f / length(a);
             return { 
                 a.x * r, 
@@ -121,6 +149,8 @@ namespace wee {
         }
 
     };
+
+    typedef vec3 vec3f;
 
     std::ostream& operator << (std::ostream&, const vec3&);
 }

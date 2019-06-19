@@ -1,4 +1,7 @@
 #pragma once
+#ifdef _MSC_VER
+#undef interface
+#endif
 
 #include <kult/kult.hpp>
 #include <Box2D/Box2D.h>
@@ -17,7 +20,10 @@
 namespace wee {
 
 
-    typedef kult::type entity_t;
+    //typedef kult::type entity_t;
+    
+    typedef intptr_t entity_t;
+
     struct collision {
         entity_t self;
         entity_t other;

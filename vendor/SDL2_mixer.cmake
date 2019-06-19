@@ -29,6 +29,8 @@ file(GLOB SDL_mixer_src
 
 list(REMOVE_ITEM SDL_mixer_src "${DIR_VORBIS}/lib/psytune.c")
 list(REMOVE_ITEM SDL_mixer_src "${DIR_VORBIS}/lib/tone.c")
+list(REMOVE_ITEM SDL_mixer_src "${DIR_MIXER}/playwave.c")
+list(REMOVE_ITEM SDL_mixer_src "${DIR_MIXER}/playmus.c")
 
 add_definitions(
     -DWAV_MUSIC

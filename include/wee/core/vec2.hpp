@@ -7,7 +7,12 @@
 namespace wee {
     template <typename T>
     struct basic_vec2 {
-        T x, y;
+        union {
+            struct {
+                T x, y;
+            };
+            T cell[2];
+        };
 
         basic_vec2 operator - () const {
             basic_vec2 copy(*this);
@@ -113,11 +118,13 @@ namespace wee {
     };
 
     typedef basic_vec2<float> vec2f;
+    typedef basic_vec2<int32_t> vec2i;
+    typedef basic_vec2<uint32_t> vec2ui;
     typedef vec2f vec2;
 
     template <typename T>
     std::ostream& operator << (std::ostream& os, const basic_vec2<T>& vec) {
-        return os << vec.x << ", " << vec.y;
+        return os << "{" << vec.x << ", " << vec.y << "}";
     }
 
 

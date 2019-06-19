@@ -18,9 +18,7 @@ file(GLOB liquidfun_SRC
     ${BOX2D_ROOT}/Particle/*.cpp
 )
 
-
-
-add_library(liquidfun ${liquidfun_SRC})
+add_library(liquidfun STATIC ${liquidfun_SRC})
 
 if(ATOM_PLATFORM_IOS)
 set_target_properties(liquidfun PROPERTIES
