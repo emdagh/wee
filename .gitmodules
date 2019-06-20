@@ -10,3 +10,18 @@
 [submodule "vendor/SDL2_image"]
 	path = vendor/SDL2_image
 	url = https://github.com/davidsiaw/SDL2_image.git
+[submodule "vendor/json"]
+	path = vendor/json
+	url = https://github.com/nlohmann/json.git
+[submodule "vendor/liquidfun"]
+	path = vendor/liquidfun
+	url = https://github.com/google/liquidfun.git
+[submodule "vendor/assimp"]
+	path = vendor/assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "vendor/glew"]
+	path = vendor/glew
+	url = https://github.com/dyledge/glew.git
+[submodule "vendor/tmxlite"]
+	path = vendor/tmxlite
+	url = https://github.com/fallahn/tmxlite.git
