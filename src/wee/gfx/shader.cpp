@@ -13,16 +13,17 @@ shader_program::shader_program() {
 void shader_program::cache_all_uniforms() {
     GLint n = 0;
     glGetProgramiv(_handle, GL_ACTIVE_UNIFORMS, &n);
+    GLchar uniform_name[256];
+    GLsizei len;
+    GLint size;
+    GLenum type;
     for(auto it: range(n)) {
-        GLenum type;
-        std::string name(1024, '\0');
-        GLsizei len;
-
-        glGetActiveUniform(_handle, it, 1024, &len, NULL /*size*/, &type, name.data());
+        glGetActiveUniform(_handle, it, sizeof(uniform_name), &len, &size, &type, uniform_name);
         auto* u = uniform_factory::instance().create(type);
+        std::string name(uniform_name);
         u->set_location(glGetUniformLocation(_handle, name.c_str()));
 
-        _info.insert(std::make_pair(name.substr(0, len), uniform_info{u,glGetUniformLocation(_handle, name.c_str())}));
+        _info.insert(std::make_pair(name, uniform_info{u,glGetUniformLocation(_handle, name.c_str())}));
         DEBUG_VALUE_OF(name);
         DEBUG_VALUE_OF(_info[name]._location);
     }
