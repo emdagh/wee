@@ -70,14 +70,15 @@ struct basic_model {
                 prop.propagate(i, _adjacencies);
             }
         }
+        DEBUG_VALUE_OF(prop.progress());
         /**
          * here we run the wave function collapse algorithm
          */
-        std::vector<float> weights(_tileset.length());
-        _tileset.weights(weights.begin());
+
+        auto weights = _tileset.frequencies();
 
         while(!prop.is_done()) {
-            prop.step(_tileset.frequencies(), _adjacencies);
+            prop.step(weights, _adjacencies);
         }
         /**
          * copy result in tile id format

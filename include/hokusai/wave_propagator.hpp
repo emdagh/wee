@@ -27,7 +27,7 @@ struct wave_propagator {
     float progress() const {
         int num_collapsed =
             std::count_if(_wave->data().begin(), _wave->data().end(), [](const T& i) { return popcount(i) == 1; });
-        return static_cast<float>(num_collapsed) / _wave.length();
+        return static_cast<float>(num_collapsed) / _wave->length();
     }
 
     void propagate(size_t at, const adjacency_list<T, N>& adj) const {
@@ -40,6 +40,11 @@ struct wave_propagator {
                 if(!_topo.try_move(self, d, &other)) {
                     continue;
                 }
+
+                if(_wave->_data[self] == to_bitmask(8)) {
+                    [[maybe_unused]] int k = 0;
+                }
+
                 T m = 0;
                 for(auto a : _wave->avail_at(self)) {
                     if(adj.has(a, d)) {

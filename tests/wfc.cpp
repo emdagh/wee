@@ -165,9 +165,9 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
     vox* vx = vox_reader::read(rd);
     auto* extents = vox::get<vox::size>(vx);
     std::array<ptrdiff_t, 3> vdim = {
-        extents->y,
+        extents->x,
         extents->z, 
-        extents->x
+        extents->y
     };
     size_t len = array_product(vdim);
     std::vector<int> example(len, 0);
@@ -175,19 +175,18 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
     for(const auto* ptr: vx->chunks) {
         if(const auto* a = dynamic_cast<const vox::xyzi*>(ptr); a != nullptr) {
             for(const auto& v: a->voxels) {
-                size_t idx = ix.linearize(v.y, v.z, v.x);
+                size_t idx = ix.linearize(v.x, v.z, v.y);
                 example[idx] = v.i;
             }
         }
     }
     
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
-    ts.set_frequency(0, 900);
-    DEBUG_VALUE_OF(ts._frequency);
-    //ts.set_frequency(6, 300);
+    ts.set_frequency(0, 4096);
+    ts.set_frequency(1, 0);
+    ts.set_frequency(8, 32);
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
-    DEBUG_VALUE_OF(adj._data);
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
     /*
     md.on_update = [this] (const wave_propagator<uint64_t, 3>& wp) {
@@ -195,13 +194,14 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
             _is_loading = false;
         }
     };*/
+    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(8), {10, 4, 8 }));
     md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));
-    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(2), { 4, 4, 8 }));
-    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(3), { 5, 4, 8 }));
-    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));
-    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(5), { 7, 4, 8 }));
-    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
-    md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 5, { 1, 4 }));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(2), { 4, 4, 8 }));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(3), { 5, 4, 8 }));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(7), { 9, 4, 8 }));
+    //md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 5, { 1, 4 }));
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
