@@ -31,10 +31,23 @@ struct basic_model {
 
     T domain() const {
         T res = 0;
+#if 0
         for(auto i : range(_tileset.length())) {
-            //res |= to_bitmask(_tileset.to_index(_tileset.tile(i)));
-            wee::push_bits(res, static_cast<T>(to_bitmask(_tileset.to_index(_tileset.to_tile(i)))));
+            if(_tileset.frequency_of(i)) {
+                wee::push_bits(res, static_cast<T>(to_bitmask(i)));
+            }
         }
+#else
+        for(const auto& t: _tileset.data()) {
+            auto f = _tileset.frequency_of(t); 
+            if(f > 0) { // epsilon?
+                auto index_of_tile = _tileset.to_index(t);
+                auto bitmask_of_tile = to_bitmask(index_of_tile);
+
+                wee::push_bits(res, static_cast<T>(bitmask_of_tile));
+            }
+        }
+#endif
         return res;
     }
 
@@ -76,7 +89,6 @@ struct basic_model {
          */
 
         auto weights = _tileset.frequencies();
-
         while(!prop.is_done()) {
             prop.step(weights, _adjacencies);
         }
@@ -84,7 +96,10 @@ struct basic_model {
          * copy result in tile id format
          */
         std::transform(wv.data().begin(), wv.data().end(), d_it, [&] (const T& t) {
-            return _tileset.to_tile(to_index(t));
+            auto index_for_tile = to_index(t);
+            auto tile_at_index = _tileset.to_tile(index_for_tile);
+            
+            return tile_at_index;//_tileset.to_tile(to_index(t));
         });
     }
 };

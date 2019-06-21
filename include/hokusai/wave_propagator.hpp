@@ -41,12 +41,9 @@ struct wave_propagator {
                     continue;
                 }
 
-                if(_wave->_data[self] == to_bitmask(8)) {
-                    [[maybe_unused]] int k = 0;
-                }
-
                 T m = 0;
-                for(auto a : _wave->avail_at(self)) {
+                auto options = _wave->avail_at(self);
+                for(auto a : options) {
                     if(adj.has(a, d)) {
                         wee::push_bits(m, adj.at(a, d));
                     }

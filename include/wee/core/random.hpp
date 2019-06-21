@@ -4,6 +4,7 @@
 #include <random>
 #include <type_traits>
 #include <chrono>
+#include <algorithm>
 #ifdef _MSC_VER
 #pragma warning disable C4244
 #endif
@@ -46,6 +47,11 @@ namespace wee {
             using param_type = typename std::uniform_real_distribution<Real>::param_type;
             std::uniform_real_distribution<Real> dist;
             return dist(eng, param_type{min, max});
+        }
+
+        template <typename RandomIt>
+        void shuffle(RandomIt first, RandomIt last) {
+            std::shuffle(first, last, eng);
         }
     };
 

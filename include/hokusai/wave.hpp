@@ -32,8 +32,8 @@ struct wave {
     size_t collapse(const std::vector<float>& weights) {
         size_t i = min_entropy_index();
 
-        std::unordered_map<int, float> w;
-        //std::map<int, float> w;
+        //std::unordered_map<int, float> w;
+        std::map<int, float> w;
         float total_weight = 0.f;
         auto options = avail_at(i);//_wave->_data[i]);
         for(auto t: options) {

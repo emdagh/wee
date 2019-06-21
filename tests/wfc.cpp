@@ -182,17 +182,8 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
     }
     
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
-    ts.set_frequency(0, 0);//2048);
-#if 1
-    ts.set_frequency(1, 0);
-    ts.set_frequency(2, 0);
-    ts.set_frequency(3, 0);
-    ts.set_frequency(4, 0);
-    ts.set_frequency(5, 0);
-    ts.set_frequency(6, 0);
-    ts.set_frequency(7, 0);
-#endif
-    ts.set_frequency(8, 32);
+    ts.set_frequency(0, 512);
+    DEBUG_VALUE_OF(ts.frequencies());
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
     basic_model<uint64_t, 3> md(std::move(ts), std::move(adj));
@@ -203,13 +194,13 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
         }
     };*/
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(8), {10, 4, 8 }));
-    //md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));
-    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(2), { 4, 4, 8 }));
+    md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(ts.to_index(1)), {1}));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(ts.to_index(3)), { 4, 4, 8 }));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(3), { 5, 4, 8 }));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(6), { 8, 4, 8 }));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(7), { 9, 4, 8 }));
-    //md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(2), 5, { 1, 4 }));
+    //md.add_constraint(new max_consecutive_constraint<uint64_t, 3>(to_bitmask(ts.to_index(5)), 3, { 1 }));
     std::vector<uint64_t> res;
     md.solve(d_shape, std::back_inserter(res));
     vox* d_vox = vox_from_topology(res, topology<3>{d_shape}, ts);
