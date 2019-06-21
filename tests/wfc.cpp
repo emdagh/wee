@@ -182,8 +182,16 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
     }
     
     auto ts = tileset<uint64_t>::make_tileset(example.begin(), example.end());
-    ts.set_frequency(0, 4096);
+    ts.set_frequency(0, 0);//2048);
+#if 1
     ts.set_frequency(1, 0);
+    ts.set_frequency(2, 0);
+    ts.set_frequency(3, 0);
+    ts.set_frequency(4, 0);
+    ts.set_frequency(5, 0);
+    ts.set_frequency(6, 0);
+    ts.set_frequency(7, 0);
+#endif
     ts.set_frequency(8, 32);
     adjacency_list<uint64_t, 3> adj(ts.length());
     adj.add_example(example.begin(), ts, topology<3> { vdim }); 
@@ -194,8 +202,8 @@ void make_demo2(const std::array<ptrdiff_t, 3>& d_shape, OutputIt d_first) { // 
             _is_loading = false;
         }
     };*/
-    md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(8), {10, 4, 8 }));
-    md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));
+    //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(8), {10, 4, 8 }));
+    //md.add_constraint(new border_constraint<uint64_t, 3>(to_bitmask(1), {1}));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(2), { 4, 4, 8 }));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(3), { 5, 4, 8 }));
     //md.add_constraint(new fixed_tile_constraint<uint64_t, 3>(to_bitmask(4), { 6, 4, 8 }));

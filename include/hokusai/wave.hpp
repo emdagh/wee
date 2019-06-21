@@ -49,6 +49,7 @@ struct wave {
                 return i;
             }
         }
+        DEBUG_VALUE_OF(_data);
         throw std::runtime_error("wave could not collapse any further...");
     }
 
