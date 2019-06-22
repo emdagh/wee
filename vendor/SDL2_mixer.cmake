@@ -54,6 +54,6 @@ XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
 
 endif(ATOM_PLATFORM_IOS)
 
-target_link_libraries(SDL_mixer)
+target_link_libraries(SDL_mixer SDL2)
 
 install(TARGETS SDL_mixer DESTINATION .)

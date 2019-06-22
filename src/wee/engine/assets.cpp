@@ -101,7 +101,7 @@ namespace wee {
     }
 
     std::string basename(const std::string& in) {
-        auto beg = in.find_last_of(PATH_SEP);
+        auto beg = in.find_last_of('/');
         auto end = in.find_last_of(".");
         //const char* p = strrchr(in.c_str(), PATH_SEP);
         //return p ? std::string(p + 1) : in;
