@@ -4,9 +4,9 @@ PROJECT(SDL_mixer C)
 
 set(DIR_MIXER       ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_mixer)
 set(DIR_EXTERNAL    ${DIR_MIXER}/external)
-set(DIR_OGG         ${DIR_EXTERNAL}/libogg-1.3.1)
-set(DIR_VORBIS      ${DIR_EXTERNAL}/libvorbis-1.3.3)
-set(DIR_FLAC        ${DIR_EXTERNAL}/flac-1.2.1)
+set(DIR_OGG         ${DIR_EXTERNAL}/libogg-1.3.2)
+set(DIR_VORBIS      ${DIR_EXTERNAL}/libvorbis-1.3.5)
+set(DIR_FLAC        ${DIR_EXTERNAL}/flac-1.3.2)
 set(DIR_MP3         ${DIR_EXTERNAL}/smpeg2-2.0.0)
 
 include_directories(
@@ -20,9 +20,9 @@ include_directories(
 
 file(GLOB SDL_mixer_src
     ${DIR_MIXER}/*.c
-    ${DIR_OGG}/src/*.c
-    ${DIR_VORBIS}/lib/*.c
-    ${DIR_EXTERNAL}/external/libvorbisidec-1.2.1/*.c
+    #${DIR_OGG}/src/*.c
+    # ${DIR_VORBIS}/lib/*.c
+    # ${DIR_EXTERNAL}/external/libvorbisidec-1.2.1/*.c
     ${DIR_EXTERNAL}/libmodplug-0.8.8.4/*.c
     ${DIR_MIXER}/timidity/*.c
 )
@@ -33,9 +33,9 @@ list(REMOVE_ITEM SDL_mixer_src "${DIR_MIXER}/playwave.c")
 list(REMOVE_ITEM SDL_mixer_src "${DIR_MIXER}/playmus.c")
 
 add_definitions(
-    -DWAV_MUSIC
-    -DOGG_MUSIC
-    -DMID_MUSIC
+    -DMUSIC_WAV
+    #-DMUSIC_OGG
+    #-DMUSIC_MID
 #    -DMP3_MUSIC
 #    -DFLAC_MUSIC
 )
