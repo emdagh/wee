@@ -1,6 +1,3 @@
-[submodule "vendor/SDL2"]
-	path = vendor/SDL2
-	url = https://github.com/davidsiaw/SDL2.git
 [submodule "vendor/SDL2_ttf"]
 	path = vendor/SDL2_ttf
 	url = https://github.com/davidsiaw/SDL2_ttf.git
