@@ -22,3 +22,6 @@
 [submodule "vendor/tmxlite"]
 	path = vendor/tmxlite
 	url = https://github.com/fallahn/tmxlite.git
+[submodule "vendor/SDL2"]
+	path = vendor/SDL2
+	url = https://github.com/spurious/SDL-mirror.git
