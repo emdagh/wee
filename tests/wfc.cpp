@@ -28,6 +28,9 @@ int main(int, char**) {
 using namespace wee;
 #include <hokusai/hokusai.hpp>
 #include <prettyprint.hpp>
+#include <nlohmann/json.hpp>
+
+using nlohmann::json;
 
 struct input : wee::singleton<input> {
     bool mouse_down;
@@ -388,12 +391,14 @@ struct game : public applet {
             mat4 world = mat4::create_scale(0.5f);
             _shader->set_uniform<uniform4x4f>("World", world);
             for(const auto* model : _models) {
-                dev->set_vertex_buffer(model->_vertices);
+				
+                dev->set_vertex_buffer<vertex_voxel>(model->_vertices);
                 dev->set_index_buffer(model->_indices);
-                dev->set_vertex_declaration<vertex_voxel>(); // < this goes after setting the buffer objects, apparently..
+				//dev->set_vertex_declaration(); // < this goes after setting the buffer objects, apparently..
+                
                 static const primitive_type ptype = primitive_type::quads;
                 for(const auto* mesh: model->_meshes) {
-                    draw_indexed_primitives<ptype, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+                    dev->draw_indexed_primitives<ptype, index_type::unsigned_int>( mesh->base_vertex, 0, mesh->num_indices, 0);
                 }
             }
 #elif DEMO_PROGRAM == DEMO_3

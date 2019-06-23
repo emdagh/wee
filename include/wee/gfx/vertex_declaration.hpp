@@ -122,8 +122,19 @@ namespace wee {
         template <size_t P>
         using attribute = typename std::tuple_element<P, std::tuple<Ts...> >::type;
 
-        vertex() : Ts()... {}
+        vertex() : Ts()... {
+			
+		}
     };
+
+	/*static GLuint glGenVertexArray() {
+		GLuint res = 0;
+		glGenVertexArrays(1, &res);
+		return res;
+	}
+
+	template <typename... Ts>
+	GLuint vertex<Ts...>::vao = glGenVertexArray();*/
 
     template <typename T> 
     struct vertex_attribute_installer
@@ -135,15 +146,17 @@ namespace wee {
         }
     };
     template <typename T, template <typename> typename I, size_t... P>
-    void install_vertex_attributes(size_t& offset, const std::index_sequence<P...>&) {
-        const size_t stride = sizeof(T);
+	void install_vertex_attributes_impl(size_t& offset, const std::index_sequence<P...>&) {
+		const size_t stride = sizeof(T);
 #if 0
-        using expand = int[];
-        static_cast<void>(expand{0, (static_cast<void>(
-            I<typename T::template attribute<P> >()(stride, offset) // wow...
-        ), 0)...}); 
+		using expand = int[];
+		static_cast<void>(expand{ 0, (static_cast<void>(
+			I<typename T::template attribute<P> >()(stride, offset) // wow...
+		), 0)... });
 #else
+		
         (I<typename T::template attribute<P> >()(stride, offset), ...);
+		
 #endif
 
     }
@@ -151,7 +164,7 @@ namespace wee {
     template <typename T, template <typename> class I>
     void install_vertex_attributes() {
         size_t offset = 0;
-        install_vertex_attributes<T, I>(offset, std::make_index_sequence<T::kAttributeCount>{});
+		install_vertex_attributes_impl<T, I>(offset, std::make_index_sequence<T::kAttributeCount>{});
     }
     struct attributes {
 

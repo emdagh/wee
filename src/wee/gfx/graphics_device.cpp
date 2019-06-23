@@ -50,8 +50,16 @@ graphics_device::graphics_device(SDL_Renderer* renderer)
 #if 1 //!defined(_MSC_VER)
     glDebugMessageCallback( glDebugCallback, 0 );
 #endif
+
+	//glGenVertexArrays(1, &_vao);
 }
 graphics_device::~graphics_device() {
+}
+
+
+
+void graphics_device::set_index_buffer(index_buffer* buf) {
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf->_handle);
 }
 
 extern "C" int make_graphics_device(graphics_device** p) {

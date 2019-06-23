@@ -11,7 +11,7 @@
 
 #include <core/enum_cast.hpp>
 #include <core/range.hpp>
-
+#include <cassert>
 #include <stack>
 
 
@@ -81,8 +81,14 @@ namespace wee {
 
     struct shader_program;
 
+	template <typename T>
+	struct array_object {
+		inline static GLuint vao = 0;
+	};
+
     class graphics_device {
         SDL_Renderer* _renderer;
+		GLuint _vao = 0;
 
         std::stack<vertex_buffer*> _vbo;
         std::stack<index_buffer*> _ibo;
@@ -110,29 +116,40 @@ namespace wee {
             SDL_SetRenderTarget(_renderer, t);
         }
 
-        void set_vertex_buffer(vertex_buffer* buf) {
-            glBindBuffer(GL_ARRAY_BUFFER, buf->_handle);
-        }
+		void set_vertex_buffer(vertex_buffer* buf);
 
-        void set_index_buffer(index_buffer* buf) {
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf->_handle);
-        }
+		void set_index_buffer(index_buffer* buf);
 
         /*void set_shader_program(shader_program* s) {
             
         }*/
 
-        template <typename V>
-        void set_vertex_declaration() {
-            install_vertex_attributes<V, vertex_attribute_installer>();
-        }
+		template<typename T>
+		void set_vertex_buffer(vertex_buffer* buf) {
+			if (array_object<T>::vao == 0) 
+				glGenVertexArrays(1, &array_object<T>::vao);
+			_vao = array_object<T>::vao;
+
+			glBindVertexArray(_vao);
+			glBindBuffer(GL_ARRAY_BUFFER, buf->_handle);
+			install_vertex_attributes<T, vertex_attribute_installer>();
+			//glBindVertexArray(0);
+		}
+
 
         template <primitive_type P>
-        void draw_primitives(int start, size_t count, size_t primitiveCount) {
+        void draw_primitives(int first, size_t count, size_t primitiveCount) {
+			assert(_vao != 0);
+			//glBindVertexArray(_vao);
+#if 0
             for(auto i: range(primitiveCount)) {
                 glDrawArrays(glGetPrimitiveType<P>::type //<enum_cast(p)>::type
                         , start + count * i, count);
             }
+#else
+			glDrawArrays(glGetPrimitiveType<P>::type, first, count);
+#endif
+			//glBindVertexArray(0);
         }
 
         template <primitive_type P, index_type I>
@@ -140,13 +157,28 @@ namespace wee {
             int baseVertex, 
             int minIndex, 
             size_t count, 
-            int indexOffset)
+            int indexOffset
+			)
         {
+			assert(_vao != 0);
+			//glBindVertexArray(_vao);
+#if 0
+			glDrawElementsBaseVertex(
+				glGetPrimitiveType<P>::type,
+				count,
+				glGetIndexType<I>::type,
+				BUFFER_OFFSET(minIndex),
+				baseVertex
+			);
+#else
             glDrawElements(glGetPrimitiveType<P>::type,
                 count,
                 glGetIndexType<I>::type,
                 BUFFER_OFFSET(minIndex)
             );
+#endif
+			
+			//glBindVertexArray(0);
         }
     };
 	extern "C" int make_graphics_device(graphics_device**);

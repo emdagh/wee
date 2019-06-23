@@ -2,7 +2,6 @@
 #pragma once
 
 #include <core/mat4.hpp>
-#include <core/random.hpp>
 #include <core/vec3.hpp>
 #include <core/vec2.hpp>
 #include <core/quaternion.hpp>

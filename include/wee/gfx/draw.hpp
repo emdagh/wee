@@ -43,7 +43,7 @@ namespace wee {
     OPENGL_DEFINE_INDEX(index_type::unsigned_byte,   GL_UNSIGNED_BYTE);
     OPENGL_DEFINE_INDEX(index_type::unsigned_short,  GL_UNSIGNED_SHORT);
     OPENGL_DEFINE_INDEX(index_type::unsigned_int,    GL_UNSIGNED_INT);
-
+#if 0
     template <primitive_type _Primitive>
     void draw_primitives(int first, size_t count) {
         glDrawArrays(glGetPrimitiveType<_Primitive>::type, first, count);
@@ -59,4 +59,5 @@ namespace wee {
             baseVertex
         );
     }
+#endif
 }
