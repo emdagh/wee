@@ -1,12 +1,12 @@
 [submodule "vendor/SDL2_ttf"]
 	path = vendor/SDL2_ttf
-	url = https://github.com/davidsiaw/SDL2_ttf.git
+	url = https://github.com/SDL-mirror/SDL_ttf.git
 [submodule "vendor/SDL2_mixer"]
 	path = vendor/SDL2_mixer
-	url = https://github.com/davidsiaw/SDL2_mixer.git
+	url = https://github.com/SDL-mirror/SDL_mixer.git
 [submodule "vendor/SDL2_image"]
 	path = vendor/SDL2_image
-	url = https://github.com/davidsiaw/SDL2_image.git
+	url = https://github.com/SDL-mirror/SDL_image.git
 [submodule "vendor/json"]
 	path = vendor/json
 	url = https://github.com/nlohmann/json.git
@@ -24,4 +24,4 @@
 	url = https://github.com/fallahn/tmxlite.git
 [submodule "vendor/SDL2"]
 	path = vendor/SDL2
-	url = https://github.com/spurious/SDL-mirror.git
+	url = https://github.com/SDL-mirror/SDL.git

@@ -1,26 +1,8 @@
 #if 0
-#include <cassert>
-#include <iostream>
-#include <limits.h>
-#include <core/bits.hpp>
-
-using namespace wee;
+#include <wee/weegl.h>
 
 int main(int, char**) {
-	//wee::ndindexer<3> ix({ 4,3,2 });
-	//ix.linearize(0, 1, 2)
-    //;
-    
-    std::cout << popcount<unsigned int>(1) << std::endl; // 1 -> 1 
-    std::cout << popcount<unsigned int>(2) << std::endl; // 10 -> 1
-    std::cout << popcount<unsigned int>(3) << std::endl; // 11 -> 2
-    std::cout << popcount<unsigned int>(4) << std::endl; // 100 -> 1
-
-    std::cout << ctz<unsigned int>(1) << std::endl; // 1 -> 0
-    std::cout << ctz<unsigned int>(2) << std::endl; // 10 -> 1
-    std::cout << ctz<unsigned int>(3) << std::endl; // 11 -> 0
-    std::cout << ctz<unsigned int>(4) << std::endl; // 100 -> 2
-
+	
 	return 0;
 	
 }
@@ -466,6 +448,8 @@ struct game : public applet {
 
 #undef main
 
+#include <wee/weegl.h>
+
 int main(int argc, char** argv) {
     graphics_initializer init;
     init.width(800)
@@ -474,7 +458,9 @@ int main(int argc, char** argv) {
     application app(let, std::move(init));
     app.set_mouse_position(400, 300);
     ((game*)let)->set_callbacks(&app);
-    //app.resize(640, 480);
+
+	auto _glGenBuffers = wglGetProcAddress("glGenBuffers");
+
     return app.start();
 }
 #endif

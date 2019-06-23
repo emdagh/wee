@@ -35,14 +35,13 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_gfx
         wee_core
         tmxlite
-        liquidfun
-        ${OPENGL_LIBRARIES}
+        liquidfun       
         SDL2_ttf
         SDL2_image
         SDL2
 		assimp
-		glew
-        ${PLATFORM_LIBS}
+		# ${OPENGL_LIBRARIES}
+		${PLATFORM_LIBS}
 
 
     )
