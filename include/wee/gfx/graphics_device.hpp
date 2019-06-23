@@ -160,12 +160,12 @@ namespace wee {
         {
 			assert(_vao != 0);
 			//glBindVertexArray(_vao);
-#if 0
+#if 1 
 			glDrawElementsBaseVertex(
 				glGetPrimitiveType<P>::type,
 				count,
 				glGetIndexType<I>::type,
-				BUFFER_OFFSET(minIndex),
+				BUFFER_OFFSET(0),
 				baseVertex
 			);
 #else
