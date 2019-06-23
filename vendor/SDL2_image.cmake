@@ -4,14 +4,23 @@ PROJECT(SDL2_image C)
 
 add_definitions(-DLOAD_PNG)
 
-SET(PNG_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_image/external/libpng-1.6.32)
-SET(Z_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_image/external/zlib-1.2.11)
+set(LIBPNG_VERSION "1.6.37")
+set(LIBZ_VERSION "1.2.11")
+
+SET(PNG_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_image/external/libpng-${LIBPNG_VERSION})
+SET(Z_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/SDL2_image/external/zlib-${LIBZ_VERSION})
+
+message(${PNG_ROOT})
+message(${Z_ROOT})
 
 
 #if(ATOM_PLATFORM_ANDROID)
 include_directories(
-    SDL2_image/external/libpng-1.6.32
-    SDL2_image/external/zlib-1.2.11
+	${PNG_ROOT}
+	${Z_ROOT}
+
+	#SDL2_image/external/libpng-1.6.32
+	#SDL2_image/external/zlib-1.2.11
 )
 #endif(ATOM_PLATFORM_ANDROID)
 
@@ -38,26 +47,26 @@ file(GLOB SDL_IMAGE_SOURCES
 )
 
 FILE(GLOB SRC_LIBPNG 
-   SDL2_image/external/libpng-1.6.32/png.c 
-   SDL2_image/external/libpng-1.6.32/pngerror.c
-   SDL2_image/external/libpng-1.6.32/pngget.c 
-   SDL2_image/external/libpng-1.6.32/pngmem.c 
-   SDL2_image/external/libpng-1.6.32/pngpread.c 
-   SDL2_image/external/libpng-1.6.32/pngread.c 
-   SDL2_image/external/libpng-1.6.32/pngrio.c 
-   SDL2_image/external/libpng-1.6.32/pngrtran.c 
-   SDL2_image/external/libpng-1.6.32/pngrutil.c
-   SDL2_image/external/libpng-1.6.32/pngset.c 
-   SDL2_image/external/libpng-1.6.32/pngtrans.c 
-   SDL2_image/external/libpng-1.6.32/pngwio.c 
-   SDL2_image/external/libpng-1.6.32/pngwrite.c 
-   SDL2_image/external/libpng-1.6.32/pngwtran.c 
-   SDL2_image/external/libpng-1.6.32/pngwutil.c
+   ${PNG_ROOT}/png.c 
+   ${PNG_ROOT}/pngerror.c
+   ${PNG_ROOT}/pngget.c 
+   ${PNG_ROOT}/pngmem.c 
+   ${PNG_ROOT}/pngpread.c 
+   ${PNG_ROOT}/pngread.c 
+   ${PNG_ROOT}/pngrio.c 
+   ${PNG_ROOT}/pngrtran.c 
+   ${PNG_ROOT}/pngrutil.c
+   ${PNG_ROOT}/pngset.c 
+   ${PNG_ROOT}/pngtrans.c 
+   ${PNG_ROOT}/pngwio.c 
+   ${PNG_ROOT}/pngwrite.c 
+   ${PNG_ROOT}/pngwtran.c 
+   ${PNG_ROOT}/pngwutil.c
 )
 
 #if(ATOM_PLATFORM_ANDROID)
 file(GLOB SRC_LIBZ
-   SDL2_image/external/zlib-1.2.11/*.c
+	${Z_ROOT}/*.c
 )
 #endif(ATOM_PLATFORM_ANDROID)
 
@@ -68,8 +77,8 @@ file(GLOB SDL_IMAGE_SOURCES_PLATFORM
 )
 endif(ATOM_PLATFORM_IOS)
 
-add_library(z_1.2.8 STATIC  ${SRC_LIBZ})
-add_library(png_1.6.2 STATIC ${SRC_LIBPNG})
+add_library(z_${LIBZ_VERSION} STATIC  ${SRC_LIBZ})
+add_library(png_${LIBPNG_VERSION} STATIC ${SRC_LIBPNG})
 
 add_library(SDL2_image SHARED ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 
@@ -84,8 +93,8 @@ if(ATOM_PLATFORM_IOS)
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
     )
 endif(ATOM_PLATFORM_IOS)
-target_link_libraries(png_1.6.2 z_1.2.8)
-target_link_libraries(SDL2_image SDL2 png_1.6.2 z_1.2.8)
+target_link_libraries(png_${LIBPNG_VERSION} z_${LIBZ_VERSION})
+target_link_libraries(SDL2_image SDL2 png_${LIBPNG_VERSION} z_${LIBZ_VERSION})
 install(TARGETS SDL2_image DESTINATION .)
 
 

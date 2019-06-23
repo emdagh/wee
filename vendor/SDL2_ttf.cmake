@@ -3,9 +3,11 @@ cmake_minimum_required(VERSION 3.0)
 
 project(SDL2_ttf C)
 
+set(FREETYPE_VERSION "2.9.1")
+
 include_directories(
-    SDL2_ttf/external/freetype-2.4.12/include
-    SDL2_ttf/external/freetype-2.4.12/include/freetype
+	SDL2_ttf/external/freetype-${FREETYPE_VERSION}/include
+	SDL2_ttf/external/freetype-${FREETYPE_VERSION}/include/freetype
 
 )
 add_definitions(-DFT2_BUILD_LIBRARY)
@@ -14,7 +16,8 @@ file(GLOB SDL_TTF_SOURCES
     #SDL2_ttf/glfont.c
 )
 
-SET(FT2_BASE SDL2_ttf/external/freetype-2.4.12)
+
+SET(FT2_BASE SDL2_ttf/external/freetype-${FREETYPE_VERSION})
 FILE(GLOB SRC_FREETYPE
 	${FT2_BASE}/src/autofit/autofit.c
 	${FT2_BASE}/src/base/ftbase.c
