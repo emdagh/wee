@@ -3,6 +3,7 @@
 #include <hokusai/rotation.hpp>
 #include <hokusai/tileset.hpp>
 #include <hokusai/util.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #define USE_VECTOR
 
@@ -82,7 +83,7 @@ struct adjacency_list {
     const T& operator [] (size_t i) const { return _data.at(i); }
 };
 
-
+#if 0
 
 template <typename T, size_t N, typename std::enable_if<N==3, void>::type* = nullptr>
 void to_json(json& j, const adjacency_list<T,N>& a) {
@@ -123,3 +124,4 @@ void from_json(const json& j, const adjacency_list<T,N>& a) {
 
     }
 }
+#endif

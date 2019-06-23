@@ -5,7 +5,7 @@
 #include <core/range.hpp>
 #include <core/factory.hpp>
 #include <core/logstream.hpp>
-#include <nlohmann/json.hpp>
+
 #include <map>
 
 /**
@@ -45,7 +45,7 @@ namespace wee {
 
     using wee::binary_reader;
     using wee::range;
-    using nlohmann::json;
+    
 
     static const int VOX_= TAG('V', 'O', 'X', ' ');
     static const int MAIN= TAG('M', 'A', 'I', 'N');
@@ -173,31 +173,7 @@ namespace wee {
         static void to_model(const vox*, model**);
 
     };
-    void to_json(json& j, const vox::voxel& v) {
-        j = {
-            { "x", v.x },
-            { "y", v.y },
-            { "z", v.z },
-            { "i", v.i },
-        };
-    }
-    std::ostream& operator << (std::ostream& os, const vox::voxel& v) {
-        json j;
-        to_json(j, v);
-        return os << j;
-    }
-    void to_json(json& j, const vox::size& s) {
-        j = {
-            { "x", s.x },
-            { "y", s.y },
-            { "z", s.z },
-        };
-    }
-    std::ostream& operator << (std::ostream& os, const vox::size& s) {
-        json j;
-        to_json(j, s);
-        return os << j;
-    }
+
     struct vox_reader {
         using chunk = vox::chunk;
         using pack  = vox::pack;

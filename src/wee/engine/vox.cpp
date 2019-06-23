@@ -5,7 +5,9 @@
 #include <core/ndview.hpp>
 #include <gfx/model_builder.hpp>
 #include <gfx/vertex_declaration.hpp>
+#include <nlohmann/json.hpp>
 
+using nlohmann::json;
 using namespace wee;
 
 static void calculate_coords(int dim, int depth, const vec2i& a, const vec2i& b, std::array<vec3f, 4>& quad, float offset) {
@@ -225,4 +227,31 @@ typedef vertex<
         DEBUG_VALUE_OF(num_vertices);
         DEBUG_VALUE_OF(num_indices);
         *d_model = builder.build();
+}
+
+
+void to_json(json& j, const vox::voxel& v) {
+	j = {
+		{ "x", v.x },
+		{ "y", v.y },
+		{ "z", v.z },
+		{ "i", v.i },
+	};
+}
+std::ostream& operator << (std::ostream& os, const vox::voxel& v) {
+	json j;
+	to_json(j, v);
+	return os << j;
+}
+void to_json(json& j, const vox::size& s) {
+	j = {
+		{ "x", s.x },
+		{ "y", s.y },
+		{ "z", s.z },
+	};
+}
+std::ostream& operator << (std::ostream& os, const vox::size& s) {
+	json j;
+	to_json(j, s);
+	return os << j;
 }

@@ -40,7 +40,8 @@ foreach( testsourcefile ${APP_SOURCES} )
         SDL2_image
         SDL2
 		assimp
-		# ${OPENGL_LIBRARIES}
+		glew
+		${OPENGL_LIBRARIES}
 		${PLATFORM_LIBS}
 
 
