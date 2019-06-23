@@ -394,7 +394,6 @@ struct game : public applet {
 				
                 dev->set_vertex_buffer<vertex_voxel>(model->_vertices);
                 dev->set_index_buffer(model->_indices);
-				//dev->set_vertex_declaration(); // < this goes after setting the buffer objects, apparently..
                 
                 static const primitive_type ptype = primitive_type::quads;
                 for(const auto* mesh: model->_meshes) {

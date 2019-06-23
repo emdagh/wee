@@ -116,8 +116,6 @@ namespace wee {
             SDL_SetRenderTarget(_renderer, t);
         }
 
-		void set_vertex_buffer(vertex_buffer* buf);
-
 		void set_index_buffer(index_buffer* buf);
 
         /*void set_shader_program(shader_program* s) {
