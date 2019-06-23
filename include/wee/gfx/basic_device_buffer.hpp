@@ -30,13 +30,16 @@ namespace wee {
             }
         };
 
-        GLuint _handle;
+        GLuint _handle = 0;
         char_type* _pbuf;
     public:
         basic_device_buffer(size_t s) 
         : _pbuf(new char_type[s]) 
         {
-            glGenBuffers(1, &_handle);
+			if (glGenBuffers(1, &_handle); _handle == 0) {
+				DEBUG_VALUE_OF(glGetError());
+			}
+			
             scope _(_handle);
             glBufferStorage(_Set, s, NULL, 
                 GL_DYNAMIC_STORAGE_BIT //| GL_MAP_READ_BIT | GL_MAP_WRITE_BIT

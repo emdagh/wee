@@ -6,6 +6,6 @@
 # include <windows.h>
 //# include <gl/GL.h>
 #endif
-#include <SDL_opengl.h>
-#include <SDL_opengl_glext.h>
+//#include <SDL_opengl.h>
+//#include <SDL_opengl_glext.h>
 #define BUFFER_OFFSET(i) ((char *)NULL + (i)) 

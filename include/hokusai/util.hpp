@@ -12,7 +12,7 @@ constexpr auto static_for(F&& f) {
 }
 
 template <typename T>
-constexpr T to_bitmask(T idx) { return 1 << idx; }
+constexpr T to_bitmask(T idx) { return static_cast<T>(1) << idx; }
 
 
 template <typename T>

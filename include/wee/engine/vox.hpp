@@ -108,16 +108,16 @@ namespace wee {
         };
 
         struct pack : chunk {
-            int num_models;
+            int num_models = 0;
         };
         struct size : chunk {
             int x, y, z;
         };
         struct xyzi : chunk {
-            std::vector<voxel> voxels;
+			std::vector<voxel> voxels = {};
         };
         struct rgba : chunk {
-            unsigned int colors[256];
+			unsigned int colors[256] = { 0 };
         };
 
         struct unknown : chunk {

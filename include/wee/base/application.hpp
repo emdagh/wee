@@ -21,9 +21,6 @@ namespace wee {
         //int stop(); 
         void resize(int w, int h);
         void set_mouse_position(int x, int y);
-    protected:
-        int get_graphics_device(graphics_device**);
-
     public:
         event_handler<int(int, int)> on_resize;
         event_handler<int(uint16_t)> on_keypress;

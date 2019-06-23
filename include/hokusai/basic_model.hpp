@@ -14,7 +14,7 @@ struct basic_model {
     std::vector<basic_constraint<T, N>* > _constraints;
     tileset_type&& _tileset;
     adjacency_list_type&& _adjacencies;
-    T _banned;
+    T _banned = 0;
 
     std::function<void(const wave_propagator<T,N>&)> on_update;
     

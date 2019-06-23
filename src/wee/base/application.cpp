@@ -127,11 +127,6 @@ application::application(applet* a, graphics_initializer&& init)
 application::~application() {
 }
 
-int application::get_graphics_device(graphics_device** pp) {
-    
-    return 0;
-}
-
 void application::resize(int w, int h) {
     SDL_SetWindowSize(SDL_GetApplicationWindow(_handle), w, h);
     SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);

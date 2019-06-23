@@ -33,7 +33,9 @@ glDebugCallback( GLenum source,
 graphics_device::graphics_device(SDL_Renderer* renderer) 
 : _renderer(renderer) 
 {
-    if(auto err = glewInit(); err != GLEW_OK) {
+	glewExperimental = GL_TRUE;
+	auto err = glewInit();
+    if( err != GLEW_OK) {
         throw std::runtime_error("glew init failed.");//std::string(static_cast<const char*>(glewGetErrorString(err))));
     }
     DEBUG_LOG("vendor:", glGetString(GL_VENDOR));
@@ -42,10 +44,13 @@ graphics_device::graphics_device(SDL_Renderer* renderer)
 	if (glGetString(GL_SHADING_LANGUAGE_VERSION)) {
 		DEBUG_LOG(glGetString(GL_SHADING_LANGUAGE_VERSION));
 	}
+	if (glGetString(GL_EXTENSIONS)) {
+		DEBUG_LOG(glGetString(GL_EXTENSIONS));
+	}
     
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_CULL_FACE);
-#if !defined(_MSC_VER)
+#if 1 //!defined(_MSC_VER)
     glDebugMessageCallback( glDebugCallback, 0 );
 #endif
 }
