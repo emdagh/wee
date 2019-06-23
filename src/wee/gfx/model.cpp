@@ -7,7 +7,7 @@ using namespace wee;
 
 
 void model::draw(graphics_device* dev) {
-    dev->set_vertex_buffer(_vertices);
+    /*dev->set_vertex_buffer(_vertices);
     dev->set_index_buffer(_indices);
     for(const auto* mesh: _meshes) {
         //for(const auto& p: mesh._parts) {
@@ -19,7 +19,7 @@ void model::draw(graphics_device* dev) {
                 mesh->base_index
             );
         //}
-    }
+    }*/
 }
 model* read(binary_reader& reader) {
     return nullptr;
