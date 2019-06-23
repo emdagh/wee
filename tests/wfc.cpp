@@ -402,7 +402,7 @@ struct game : public applet {
                 }
             }
 #elif DEMO_PROGRAM == DEMO_3
-            dev->set_vertex_declaration<vertex_p3_n3_t2>(); // < this goes after setting the buffer objects, apparently..
+            //dev->set_vertex_declaration<vertex_p3_n3_t2>(); // < this goes after setting the buffer objects, apparently..
             ndindexer<3> ix(_dim);
             for(auto i: range(array_product(_dim))) {
                 auto coord = ix.delinearize(i);// * 1.0f;
