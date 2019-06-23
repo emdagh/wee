@@ -44,9 +44,6 @@ graphics_device::graphics_device(SDL_Renderer* renderer)
 	if (glGetString(GL_SHADING_LANGUAGE_VERSION)) {
 		DEBUG_LOG(glGetString(GL_SHADING_LANGUAGE_VERSION));
 	}
-	if (glGetString(GL_EXTENSIONS)) {
-		DEBUG_LOG(glGetString(GL_EXTENSIONS));
-	}
     
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_CULL_FACE);

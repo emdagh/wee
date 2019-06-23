@@ -458,9 +458,6 @@ int main(int argc, char** argv) {
     application app(let, std::move(init));
     app.set_mouse_position(400, 300);
     ((game*)let)->set_callbacks(&app);
-
-	auto _glGenBuffers = wglGetProcAddress("glGenBuffers");
-
     return app.start();
 }
 #endif
