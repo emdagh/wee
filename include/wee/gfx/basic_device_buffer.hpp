@@ -36,6 +36,7 @@ namespace wee {
         basic_device_buffer(size_t s) 
         : _pbuf(new char_type[s]) 
         {
+			//glewInit();
 			if (glGenBuffers(1, &_handle); _handle == 0) {
 				DEBUG_VALUE_OF(glGetError());
 			}

@@ -80,7 +80,7 @@ endif(ATOM_PLATFORM_IOS)
 add_library(z_${LIBZ_VERSION} STATIC  ${SRC_LIBZ})
 add_library(png_${LIBPNG_VERSION} STATIC ${SRC_LIBPNG})
 
-add_library(SDL2_image SHARED ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
+add_library(SDL2_image ${SDL_IMAGE_SOURCES} ${SDL_IMAGE_SOURCES_PLATFORM})
 
 if(ATOM_PLATFORM_IOS)
     set(SDL_IMAGE_COMPILE_FLAGS "-fno-objc-arc")
@@ -93,8 +93,15 @@ if(ATOM_PLATFORM_IOS)
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
     )
 endif(ATOM_PLATFORM_IOS)
+
+if(BUILD_STATIC_LIBS)
+	set(LIBSDL2 SDL2-static)
+else()
+	set(LIBSDL2 SDL2)
+endif()
+
 target_link_libraries(png_${LIBPNG_VERSION} z_${LIBZ_VERSION})
-target_link_libraries(SDL2_image SDL2 png_${LIBPNG_VERSION} z_${LIBZ_VERSION})
+target_link_libraries(SDL2_image ${LIBSDL2} png_${LIBPNG_VERSION} z_${LIBZ_VERSION})
 install(TARGETS SDL2_image DESTINATION .)
 
 

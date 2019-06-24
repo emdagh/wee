@@ -30,6 +30,9 @@ using namespace wee;
 #include <prettyprint.hpp>
 #include <nlohmann/json.hpp>
 
+
+
+
 using nlohmann::json;
 
 struct input : wee::singleton<input> {
@@ -335,6 +338,7 @@ struct game : public applet {
 
     int load_content() {
         try {
+			//glewInit();
 #if DEMO_PROGRAM == DEMO_1
             make_demo();
 #elif DEMO_PROGRAM == DEMO_2

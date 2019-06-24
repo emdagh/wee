@@ -37,7 +37,4 @@
 #cmakedefine        WINRT
 #endif
 
-#cmakedefine WEE_BUILD_SHARED
-#cmakedefine WEE_BUILD_STATIC
-
 #endif
