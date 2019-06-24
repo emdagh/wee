@@ -197,7 +197,7 @@ namespace wee {
             return res;
         }
 
-		inline static const std::map<int, vox_reader::builder> vox_reader::readers = {
+		inline static const std::map<int, builder> readers = {
 			{PACK,
 				[](vox::chunk* in, binary_reader& reader) {
 					if (auto * a = dynamic_cast<vox::pack*>(in); a != nullptr) {
