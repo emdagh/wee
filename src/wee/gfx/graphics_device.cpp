@@ -16,8 +16,7 @@ DECLARE_GLGET_TYPE(GLfloat,     glGetFloatv);
 DECLARE_GLGET_TYPE(GLint,       glGetIntegerv);
 DECLARE_GLGET_TYPE(GLint64,     glGetInteger64v);
 
-void
-glDebugCallback( GLenum source,
+void GLAPIENTRY glDebugCallback( GLenum source,
         GLenum type,
         GLuint id,
         GLenum severity,
