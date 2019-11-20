@@ -74,28 +74,28 @@ std::array<T, N> make_array(Ts... ts) {
 }
 
 template <typename T, size_t N>
-std::array<T, N> operator + (const std::array<T, N>& a, const std::array<T, N>& b) {
-    std::array<T, N> res;
+constexpr std::array<T, N> operator + (const std::array<T, N>& a, const std::array<T, N>& b) {
+    std::array<T, N> res = { 0 };
     std::transform(a.begin(), a.end(), b.begin(), res.begin(), std::plus<T>());
     return res;
     //return add(a, b);
 }
 template <typename T, size_t N>
-std::array<T, N> operator - (const std::array<T, N>& a, const std::array<T, N>& b) {
-    std::array<T, N> res;
+constexpr std::array<T, N> operator - (const std::array<T, N>& a, const std::array<T, N>& b) {
+    std::array<T, N> res = { 0 };
     std::transform(a.begin(), a.end(), b.begin(), res.begin(), std::minus<T>());
     return res;
 }
 
 template<typename T, size_t N>
-std::array<T, N> operator % (const std::array<T, N>& a, const std::array<T, N>& b) {
-    std::array<T, N> res;
+constexpr std::array<T, N> operator % (const std::array<T, N>& a, const std::array<T, N>& b) {
+    std::array<T, N> res = { 0 };
     std::transform(a.begin(), a.end(), b.begin(), res.begin(), std::modulus<T>());
     return res;
 }
 template<typename T, size_t N>
-std::array<T, N> operator * (const std::array<T, N>& a, const std::array<T, N>& b) {
-    std::array<T, N> res;
+constexpr std::array<T, N> operator * (const std::array<T, N>& a, const std::array<T, N>& b) {
+    std::array<T, N> res = { 0 };
     std::transform(a.begin(), a.end(), b.begin(), res.begin(), std::multiplies<T>());
     return res;
 }
