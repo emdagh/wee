@@ -1,2 +1,2 @@
 
-//ADD_SUBDIRECTORY(poco)
+ADD_SUBDIRECTORY(poco)

@@ -41,8 +41,8 @@ namespace wee {
         T _pop();
     public:
         running_stats(size_t);
-        add(const T&);
-        remove(const T&);
+        void add(const T&);
+        void remove(const T&);
     };
 
 }
