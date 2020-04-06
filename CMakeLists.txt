@@ -1,7 +1,12 @@
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 PROJECT(wee VERSION 1.0.0 LANGUAGES C CXX)
 
+#set(CMAKE_CXX_CLANG_TIDY
+#    clang-tidy;
+#    -header-filter=.;
+#    -checks=*;
+#)
 
 set(default_build_type "Debug")
 
@@ -16,8 +21,10 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
 
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*")
+
 IF(UNIX)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic  -Wall -Werror -std=c++17") #-Wextra
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -std=c++17 ") #-Wextra
     #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden)
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic")
 
@@ -87,4 +94,11 @@ ADD_SUBDIRECTORY(src)
 
 REMOVE_DEFINITIONS(-DBUILD_LIBRARY)
 ADD_SUBDIRECTORY(tests)
+
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*")
+
+set(CMAKE_CXX_CLANG_TIDY
+  clang-tidy;
+  -checks=*;
+  -warnings-as-errors=*;)
 

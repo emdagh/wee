@@ -4,6 +4,7 @@
 #include <core/array.hpp>
 #include <core/tuple.hpp>
 #include <core/range.hpp>
+#include <core/static_for.hpp>
 #include <algorithm>
 #include <numeric>
 #include <cassert>
@@ -18,11 +19,13 @@ namespace wee {
         auto compute_strides() {
             ptrdiff_t dsize = 1;
             static_assert(N > 0);
-            for(auto j : range(N)) {
+            static_for<0, N>([&] (size_t j) {
+            //for(auto j : range(N)) {
                 auto i = N - j - 1;
                 _strides[i] = _shape[i] != 1 ? dsize : 0;
                 dsize *= _shape[i];
-            }
+            //}
+            });
             return dsize;
         }
 

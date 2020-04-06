@@ -9,6 +9,7 @@ SET(PLATFORM_LIBS
 	pthread
 	dl
 	sndio
+    stdc++fs
     #X11
     #GLU X11 Xxf86vm Xrandr pthread Xi
 )
@@ -42,7 +43,7 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_gfx
         wee_core
         tmxlite
-        liquidfun       
+        liquidfun
         SDL2_ttf
         SDL2_image
         ${LIBDSL2}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 
 namespace wee {
     template <typename T, size_t N, size_t... Is>
