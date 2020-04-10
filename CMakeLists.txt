@@ -1,12 +1,6 @@
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 PROJECT(wee VERSION 1.0.0 LANGUAGES C CXX)
-
-#set(CMAKE_CXX_CLANG_TIDY
-#    clang-tidy;
-#    -header-filter=.;
-#    -checks=*;
-#)
 
 set(default_build_type "Debug")
 
