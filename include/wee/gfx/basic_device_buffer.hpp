@@ -80,5 +80,6 @@ namespace wee {
             return flush() == eof ? eof : 0; 
         }
     };
-
 }
+
+

@@ -117,7 +117,7 @@ namespace wee {
 
     template <typename... Ts>
     struct vertex : public Ts... {
-        enum { kAttributeCount = sizeof...(Ts) };
+        static constexpr size_t kAttributeCount = sizeof...(Ts);
 
         template <size_t P>
         using attribute = typename std::tuple_element<P, std::tuple<Ts...> >::type;
@@ -148,17 +148,7 @@ namespace wee {
     template <typename T, template <typename> typename I, size_t... P>
 	void install_vertex_attributes_impl(size_t& offset, const std::index_sequence<P...>&) {
 		const size_t stride = sizeof(T);
-#if 0
-		using expand = int[];
-		static_cast<void>(expand{ 0, (static_cast<void>(
-			I<typename T::template attribute<P> >()(stride, offset) // wow...
-		), 0)... });
-#else
-		
         (I<typename T::template attribute<P> >()(stride, offset), ...);
-		
-#endif
-
     }
 
     template <typename T, template <typename> class I>

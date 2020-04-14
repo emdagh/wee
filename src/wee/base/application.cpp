@@ -2,7 +2,7 @@
 #include <base/application.hpp>
 #include <base/applet.hpp>
 #include <engine/assets.hpp>
-#include <base/SDL_Application.h>
+#include <base/platform/SDL/SDL_Application.h>
 #include <core/logstream.hpp>
 #include <gfx/graphics_device.hpp>
 #include <gfx/graphics_initializer.hpp>
@@ -21,10 +21,30 @@ application::application(applet* a)
 
 application::application(applet* a, graphics_initializer&& init) 
     : _handle(SDL_CreateApplication())
-    , _applet(a)
     , _graphics_initializer(std::forward<graphics_initializer>(init))
 
 {
+    set_applet(a);
+
+}
+
+application::~application() {
+}
+
+void application::resize(int w, int h) {
+    SDL_SetWindowSize(SDL_GetApplicationWindow(_handle), w, h);
+    SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
+}
+
+void application::set_mouse_position(int x, int y) {
+    SDL_WarpMouseInWindow(SDL_GetApplicationWindow(_handle), x, y);
+}
+
+int application::start() {
+    return SDL_StartApplication(_handle);
+}
+void application::set_applet(applet* arg) {
+    _applet = arg;
     if(!_handle) {
         DEBUG_LOG(SDL_GetError());
         SDL_Quit();
@@ -121,21 +141,4 @@ application::application(applet* a, graphics_initializer&& init)
     assets<SDL_Texture>::instance().after= [&] (SDL_Surface* surface) {
         return SDL_CreateTextureFromSurface(SDL_GetApplicationRenderer(_handle), surface);
     };
-
-}
-
-application::~application() {
-}
-
-void application::resize(int w, int h) {
-    SDL_SetWindowSize(SDL_GetApplicationWindow(_handle), w, h);
-    SDL_RenderSetLogicalSize(SDL_GetApplicationRenderer(_handle), w, h);
-}
-
-void application::set_mouse_position(int x, int y) {
-    SDL_WarpMouseInWindow(SDL_GetApplicationWindow(_handle), x, y);
-}
-
-int application::start() {
-    return SDL_StartApplication(_handle);
 }

@@ -2,25 +2,6 @@
 
 namespace wee {
 
-    struct shared_library {
-        void* _handle;
-        
-        void open(const std::string& pt) {
-            _handle = dlopen(pt.c_str(), RTLD_NOW);
-            if(!_handle) {
-                throw std::runtime_error(std::string(dlerror()));
-            }
-        }
-        void close() {
-            dlclose(_handle);
-        }
-
-        template <typename T>
-        void sym(const std::string& fn, void** res) {
-            *res = (void*)dlsym(_handle, fn.c_str());
-        }
-    };
-
 #define PLUGIN_API_VERSION 1
         
 #ifdef WIN32

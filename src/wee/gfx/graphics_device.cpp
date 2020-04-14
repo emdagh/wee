@@ -30,7 +30,7 @@ void GLAPIENTRY glDebugCallback( GLenum source,
 }
 
 graphics_device::graphics_device(SDL_Renderer* renderer) 
-: _renderer(renderer) 
+//: _renderer(renderer) 
 {
 	glewExperimental = GL_TRUE;
 	auto err = glewInit();

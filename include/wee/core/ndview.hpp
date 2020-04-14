@@ -74,11 +74,12 @@ namespace wee {
 
         template <typename UnaryFunction>
         void iterate_all(UnaryFunction&& fun) const {
-            for(auto axis: range(N)) {
+            //for(auto axis: range(N)) {
+            static_for<0, N>([&] (auto axis) {
                 for(auto depth: range(shape()[axis])) {
                     iterate_axis(axis, depth, std::forward<UnaryFunction>(fun));
                 }
-            }
+            });
         }
 
         
@@ -187,7 +188,9 @@ namespace wee {
         }
         template <typename UnaryFunction>
         void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, UnaryFunction d_iter) const {
-            for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
+            for(size_t i=0, j=0; i < N; i++) 
+                if(i != axis) aux[j++] = this->shape()[i];
+
             this->iterate_axis(axis, depth, [&](auto s) {
                 //*d_iter++ = _data->at(s);//this->linearize(s...));
                 std::forward<UnaryFunction>(d_iter)(s);

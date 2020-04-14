@@ -29,7 +29,9 @@ namespace wee {
 		}
 
 		// last chunk
-		ranges.emplace_back(first, last);
+        if(first != last) {
+    		ranges.emplace_back(first, last);
+        }
 		return ranges;
 	}
 
@@ -40,14 +42,16 @@ namespace wee {
 		futures.reserve(n);
 		auto pairs = split(first, last, n);
 
-		for (auto& pair : pairs) {
-			futures.push_back(std::move(
-				std::async(std::launch::async, [&]() {
-					for (auto it = pair.first; it != pair.second; ++it) {
-						fun(*it);
-					}
-					})
-			));
+		for (auto& [first, second] : pairs) {
+			futures.push_back(
+                std::move(
+                    std::async(std::launch::async, [&]() {
+                        for (auto it = first; it != second; ++it) {
+                            fun(*it);
+                        }
+                    })
+			    )
+            );
 		}
 		for (const auto& f : futures) f.wait();
 	}
