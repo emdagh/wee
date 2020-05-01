@@ -3,7 +3,7 @@
 #include <array>
 #include <wee/core/ndview.hpp>
 #include <wee/core/range.hpp>
-
+#include <wee/core/static_for.hpp>
 
 
 template <size_t N>

@@ -47,10 +47,10 @@ namespace wee {
                 return compute_index(first, rest..., 1);
             } 
             else {
-                std::array<ptrdiff_t, sizeof...(Rs) + 1> idx{
+                std::array<ptrdiff_t, sizeof...(Rs) + 1> idx {{
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
-                };
+                }};
                 return wee::inner_product(_strides, idx);//first, rest...);
             }
         }
@@ -85,7 +85,7 @@ namespace wee {
         
         template <typename UnaryFunction>
         void iterate_axis(size_t d, size_t n, UnaryFunction&& fun) const {
-            shape_type idx = { 0 };
+            shape_type idx = { { 0 } };
             idx[d] = n;
 #if 1
             while(1) {

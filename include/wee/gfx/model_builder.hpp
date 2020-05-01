@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wee.hpp>
 #include <gfx/model.hpp>
 
 namespace wee {
@@ -93,7 +94,7 @@ public:
     }
 
     model_builder& triangulate() {
-        throw not_implemented("triangulate");
+        throw std::runtime_error("not implemented: triangulate");
         return *this;
     }
     model* build() {

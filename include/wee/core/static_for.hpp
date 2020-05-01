@@ -4,10 +4,10 @@
 
 namespace wee {
     template <size_t First, size_t Last, typename Fn>
-    inline void static_for(const Fn& fn) {
+    inline constexpr void static_for(Fn&& fn) {
         if constexpr(First < Last) {
             fn(First);
-            static_for<First + 1, Last>(fn);
+            static_for<First + 1, Last>(std::forward<Fn>(fn));
         }
     }
 }
