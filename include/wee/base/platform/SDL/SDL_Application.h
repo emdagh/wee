@@ -6,7 +6,6 @@
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Application;
-struct SDL_EventLoop;
 
 typedef int(*SDL_ApplicationCallback)(const struct SDL_Application*, const void*);
 

@@ -78,4 +78,11 @@ if(IOS)
 #set_xcode_property (SDL2 IPHONEOS_DEPLOYMENT_TARGET "7.1")
 endif()
 
-target_link_libraries(${PROJECT_NAME} freetype2 SDL2)
+if(BUILD_STATIC_LIBS)
+	set(LIBSDL2 SDL2-static)
+else()
+	set(LIBSDL2 SDL2)
+endif()
+
+
+target_link_libraries(${PROJECT_NAME} freetype2 ${LIBSDL2})

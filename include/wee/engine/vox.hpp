@@ -197,7 +197,38 @@ namespace wee {
             return res;
         }
 
-        static const std::map<int, builder> readers;
+		inline static const std::map<int, builder> readers = {
+			{PACK,
+				[](vox::chunk* in, binary_reader& reader) {
+					if (auto * a = dynamic_cast<vox::pack*>(in); a != nullptr) {
+						a->num_models = reader.read_object<int>();
+					}
+					return in;
+				}},
+			{wee::SIZE,
+				[](vox::chunk* in, binary_reader& reader) {
+					if (auto * a = dynamic_cast<vox::size*>(in); a != nullptr) {
+						a->x = reader.read_object<int>();
+						a->y = reader.read_object<int>();
+						a->z = reader.read_object<int>();
+					}
+					return in;
+				}},
+			{RGBA,
+				[](vox::chunk* in, binary_reader& reader) {
+					if (auto * a = dynamic_cast<vox::rgba*>(in); a != nullptr) {
+						reader.read<int>(&a->colors[0], 256);
+					}
+					return in;
+				}},
+			{XYZI,
+				[](vox::chunk* in, binary_reader& reader) {
+					if (auto * a = dynamic_cast<vox::xyzi*>(in); a != nullptr) {
+						a->voxels = vox_reader::read_voxels(reader);
+					}
+					return in;
+				}}
+		};
 
 
         static std::vector<char> read_unkown(binary_reader& reader, int n) {

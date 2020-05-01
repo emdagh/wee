@@ -1,31 +1,64 @@
 #pragma once
 
+#include <vector>
+#include <algorithm>
 #include <future>
+#include <map>
+#include <numeric>
+#include <cassert>
 
-namespace cpp {
+namespace wee {
+    template <typename InputIt>
+	auto split(InputIt first, InputIt last, size_t n) {
+		std::vector<std::pair<InputIt, InputIt>> ranges;
+		if (n == 0) return
+			ranges;
+		ranges.reserve(n);
 
-    template <typename T, typename F>
-    void scoped_lock(T& lock, F fun) {
-        std::unique_lock<T> l(lock);
-        fun();
-    }
-    
-    template <typename I, typename F>
-    void parallel_foreach(I first, I last, F fun) {
-        std::vector<std::future<void> > fut;
-        fut.reserve(std::distance(first, last));
-        for(; first != last; ++first) {
-            fut.push_back(std::move(std::async(std::launch::async, fun, *first)));
+		size_t dist = std::distance(first, last);
+		n = std::min(n, dist);
+		auto chunk = dist / n;
+		auto remainder = dist % n;
+
+		for (size_t i = 0; i < n - 1; ++i) {
+			auto next_end = std::next(first, chunk + (remainder ? 1 : 0));
+			ranges.emplace_back(first, next_end);
+
+			first = next_end;
+			if (remainder) remainder -= 1;
+		}
+
+		// last chunk
+        if(first != last) {
+    		ranges.emplace_back(first, last);
         }
-    }
-    
-    template <typename I, typename S, typename F>
-    void parallel_foreach_n(I first, S n, F fun) {
-        std::vector<std::future<void> > fut;
-        fut.reserve(n);
+		return ranges;
+	}
 
-        for(S i=0; i < n; ++first, ++i) {
-            fut.push_back(std::move(std::async(std::launch::async, fun, *first)));
-        }
-    }
+	template <typename InputIt, typename F>
+	void parallel_foreach_n(InputIt first, InputIt last, const F& fun, size_t n) {
+
+		std::vector<std::future<void> > futures;
+		futures.reserve(n);
+		auto pairs = split(first, last, n);
+
+		for (auto& [first, second] : pairs) {
+			futures.push_back(
+                std::move(
+                    std::async(std::launch::async, [&]() {
+                        for (auto it = first; it != second; ++it) {
+                            fun(*it);
+                        }
+                    })
+			    )
+            );
+		}
+		for (const auto& f : futures) f.wait();
+	}
+	
+
+	template <typename InputIt, typename F>
+	void parallel_foreach(InputIt first, InputIt last, const F& fun) {
+		parallel_foreach_n(first, last, fun, std::thread::hardware_concurrency());
+	}
 }

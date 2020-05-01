@@ -26,7 +26,7 @@ namespace csv {
         }
 
     // Iterable csv wrapper around a stream. @p T the list of types that form up a row.
-    template <class... T>
+    template <typename... T>
         class reader {
             std::istream &_in;
             const char _delim;

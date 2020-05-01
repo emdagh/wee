@@ -30,6 +30,9 @@ using namespace wee;
 #include <prettyprint.hpp>
 #include <nlohmann/json.hpp>
 
+
+
+
 using nlohmann::json;
 
 struct input : wee::singleton<input> {
@@ -335,6 +338,7 @@ struct game : public applet {
 
     int load_content() {
         try {
+			//glewInit();
 #if DEMO_PROGRAM == DEMO_1
             make_demo();
 #elif DEMO_PROGRAM == DEMO_2
@@ -391,10 +395,8 @@ struct game : public applet {
             mat4 world = mat4::create_scale(0.5f);
             _shader->set_uniform<uniform4x4f>("World", world);
             for(const auto* model : _models) {
-				
                 dev->set_vertex_buffer<vertex_voxel>(model->_vertices);
                 dev->set_index_buffer(model->_indices);
-                
                 static const primitive_type ptype = primitive_type::quads;
                 for(const auto* mesh: model->_meshes) {
                     dev->draw_indexed_primitives<ptype, index_type::unsigned_int>( mesh->base_vertex, 0, mesh->num_indices, 0);
@@ -411,9 +413,11 @@ struct game : public applet {
                 size_t tileid = _grid[i];//+ 1;
                 auto* model = _models[tileid];//_names[i]];
                 for(const auto* mesh: model->_meshes) {
-                    draw_indexed_primitives<primitive_type::triangles, index_type::unsigned_int>(mesh->num_indices, mesh->base_vertex);
+                    draw_indexed_primitives<
+                        primitive_type::triangles, 
+                        index_type::unsigned_int
+                    >(mesh->num_indices, mesh->base_vertex);
                 }
-
             }
 #endif
         }

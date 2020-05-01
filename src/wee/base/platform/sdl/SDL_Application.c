@@ -1,5 +1,5 @@
 #include <weegl.h>
-#include <base/SDL_Application.h>
+#include <base/platform/SDL/SDL_Application.h>
 #include <SDL.h>
 #include <string.h>
 

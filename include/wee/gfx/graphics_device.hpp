@@ -87,7 +87,6 @@ namespace wee {
 	};
 
     class graphics_device {
-        SDL_Renderer* _renderer;
 		GLuint _vao = 0;
 
         std::stack<vertex_buffer*> _vbo;
@@ -95,8 +94,6 @@ namespace wee {
         std::stack<shader_program*> _shaders;
 
     public:
-        SDL_Renderer* get_renderer() const { return _renderer; }
-
         explicit graphics_device(SDL_Renderer* renderer);
         virtual ~graphics_device();
 
@@ -113,25 +110,19 @@ namespace wee {
             glClear(glClearOptions);
         }
         virtual void set_rendertarget(SDL_Texture* t) {
-            SDL_SetRenderTarget(_renderer, t);
+            //SDL_SetRenderTarget(_renderer, t);
         }
 
 		void set_index_buffer(index_buffer* buf);
 
-        /*void set_shader_program(shader_program* s) {
-            
-        }*/
-
 		template<typename T>
 		void set_vertex_buffer(vertex_buffer* buf) {
-			if (array_object<T>::vao == 0) 
-				glGenVertexArrays(1, &array_object<T>::vao);
-			_vao = array_object<T>::vao;
+			if (_vao == 0) //array_object<T>::vao == 0) 
+				glGenVertexArrays(1, &_vao);//&array_object<T>::vao);
 
 			glBindVertexArray(_vao);
 			glBindBuffer(GL_ARRAY_BUFFER, buf->_handle);
 			install_vertex_attributes<T, vertex_attribute_installer>();
-			//glBindVertexArray(0);
 		}
 
 
@@ -179,7 +170,16 @@ namespace wee {
 			//glBindVertexArray(0);
         }
     };
-	extern "C" int make_graphics_device(graphics_device**);
-	extern "C" int delete_graphics_device(graphics_device*);
 }
 
+#if defined(__cpluscplus)
+using wee_graphics_device = wee::graphics_device;
+extern "C" {
+#else
+struct wee_graphics_device;
+#endif
+int create_graphics_device(wee_graphics_device**);
+void create_graphics_device(wee_graphics_device*);
+#if defined(__cpluscplus)
+}
+#endif

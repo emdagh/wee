@@ -34,27 +34,27 @@ namespace wee {
 
 #define DEFAULT_COLLISION_CALLBACK [] (const collision&) { }
 
-    typedef struct {
+    typedef struct physics_t{
         b2Body* body    = nullptr;
 
         collision_callback on_collision_enter = DEFAULT_COLLISION_CALLBACK;
         collision_callback on_collision_leave = DEFAULT_COLLISION_CALLBACK;
         collision_callback on_trigger_enter   = DEFAULT_COLLISION_CALLBACK;
         collision_callback on_trigger_leave   = DEFAULT_COLLISION_CALLBACK;
-    } physics_t;
+    } ;
 
-    typedef  struct {
+    typedef  struct transform_t{
         vec2f position = { 0.f, 0.f };
         float rotation = 0.f;
-    } transform_t;
+    } ;
 
-    typedef struct {
+    typedef struct visual_t{
         SDL_Texture*        texture     = nullptr;
         SDL_Rect            src;
         SDL_Color           color;
         SDL_RendererFlip    flip        = SDL_FLIP_NONE;
         bool                visible     = true;
-    } visual_t;
+    } ;
 
     typedef struct {
         vec2f    offset = { 0.f, 0.f};

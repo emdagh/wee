@@ -9,6 +9,7 @@ SET(PLATFORM_LIBS
 	pthread
 	dl
 	sndio
+    stdc++fs
     #X11
     #GLU X11 Xxf86vm Xrandr pthread Xi
 )
@@ -28,6 +29,13 @@ foreach( testsourcefile ${APP_SOURCES} )
         ${barename} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
+	if(BUILD_STATIC_LIBS)
+		set(LIBSDL2 SDL2-static)
+	else()
+		set(LIBSDL2 SDL2)
+	endif()
+
+
     target_link_libraries(
         ${barename}
         wee_engine
@@ -35,13 +43,13 @@ foreach( testsourcefile ${APP_SOURCES} )
         wee_gfx
         wee_core
         tmxlite
-        liquidfun       
+        liquidfun
         SDL2_ttf
         SDL2_image
-        SDL2
+        ${LIBDSL2}
 		assimp
-		glew
 		${OPENGL_LIBRARIES}
+		glew
 		${PLATFORM_LIBS}
 
 

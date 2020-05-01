@@ -8,6 +8,7 @@ namespace wee {
     public:
         virtual ~applet(){} 
         virtual int load_content() = 0;
+        //virtual void unload_content() = 0;
         virtual int update(int) = 0;
         virtual int draw(graphics_device*) = 0;
     };

@@ -35,4 +35,14 @@ namespace wee {
         return stddev(std::begin(in), std::end(in), mean);
     }
 
+    template <typename T>
+    class running_stats {
+        size_t _window_size;
+        T _pop();
+    public:
+        running_stats(size_t);
+        void add(const T&);
+        void remove(const T&);
+    };
+
 }

@@ -25,3 +25,6 @@
 [submodule "vendor/SDL2"]
 	path = vendor/SDL2
 	url = https://github.com/SDL-mirror/SDL.git
+[submodule "vendor/poco"]
+	path = vendor/poco
+	url = https://github.com/pocoproject/poco.git

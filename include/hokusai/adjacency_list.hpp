@@ -65,13 +65,6 @@ struct adjacency_list {
             for(auto d: range(kNumNeighbors)) {
                 size_t j;
                 if(topo.try_move(idx, d, &j)) {
-                    T t0 = first[idx];
-                    //T t1 = first[j];
-
-                    if(t0 == 8) {// && (d == 2 || d == 5)) {
-                        [[maybe_unused]] int k = 0;
-                    }
-
                     add(
                         ts.to_index(first[idx]), 
                         ts.to_index(first[j]), d, false

@@ -4,6 +4,7 @@
 #include <core/array.hpp>
 #include <core/tuple.hpp>
 #include <core/range.hpp>
+#include <core/static_for.hpp>
 #include <algorithm>
 #include <numeric>
 #include <cassert>
@@ -15,22 +16,16 @@ namespace wee {
         shape_t _shape;
         shape_t _strides;
     protected:
-        auto compute_strides() {
+        void compute_strides() {
             ptrdiff_t dsize = 1;
-            static_assert(N > 0);
-            for(auto j : range(N)) {
+            static_for<0, N>([&] (size_t j) {
                 auto i = N - j - 1;
                 _strides[i] = _shape[i] != 1 ? dsize : 0;
                 dsize *= _shape[i];
-            }
-            return dsize;
+            });
         }
 
         auto constexpr compute_index() const { return ptrdiff_t(0); }
-
-        /*ptrdiff_t constexpr compute_index_impl(const shape_t& idx) const {
-            return std::inner_product(_strides.begin(), _strides.end(), idx.begin(), 0);
-        }*/
 
         template <size_t... Is>
         ptrdiff_t constexpr compute_index(const shape_t& s, std::index_sequence<Is...>) {
@@ -52,10 +47,10 @@ namespace wee {
                 return compute_index(first, rest..., 1);
             } 
             else {
-                std::array<ptrdiff_t, sizeof...(Rs) + 1> idx{
+                std::array<ptrdiff_t, sizeof...(Rs) + 1> idx {{
                     static_cast<long>(first), 
                     static_cast<long>(rest)...
-                };
+                }};
                 return wee::inner_product(_strides, idx);//first, rest...);
             }
         }
@@ -77,42 +72,20 @@ namespace wee {
         constexpr const shape_type& shape() const { return _shape; }
         constexpr const size_t length() const { return array_product(_shape); }
 
-
-
-        template <typename F, typename C, bool IsConditional = false>
-        auto iterate_generic(F&& fun, C&& should_ignore, const shape_type& idx_, const shape_type& dims, size_t offset) const 
-        -> typename std::enable_if<!std::is_void<C>::value>::type
-        {
-            auto idx = idx_;
-            while(1) {
-                (std::forward<F>(fun)(offset + linearize_array(idx, std::make_index_sequence<N>{})));
-                size_t j;
-                for(j=0; j < N; j++) {
-                    size_t i = N - j - 1;
-                    if constexpr (IsConditional) {
-                        if(should_ignore(i)) continue;
-                    }
-                    idx[i]++;
-                    if(idx[i] < dims[i]) break;
-                    idx[i] = 0;
-                }
-                if(j == N) break;
-            }
-        }
-
         template <typename UnaryFunction>
         void iterate_all(UnaryFunction&& fun) const {
-            for(auto axis: range(N)) {
+            //for(auto axis: range(N)) {
+            static_for<0, N>([&] (auto axis) {
                 for(auto depth: range(shape()[axis])) {
                     iterate_axis(axis, depth, std::forward<UnaryFunction>(fun));
                 }
-            }
+            });
         }
 
         
         template <typename UnaryFunction>
         void iterate_axis(size_t d, size_t n, UnaryFunction&& fun) const {
-            shape_type idx = { 0 };
+            shape_type idx = { { 0 } };
             idx[d] = n;
 #if 1
             while(1) {
@@ -129,9 +102,9 @@ namespace wee {
             }
 #else
      
-            recursive_for<N>([this] (auto a) {
+            recursive_for<N>([&] (auto a) {
                 std::forward<UnaryFunction>(fun)(a);
-            }, 
+            });
 
 #endif
         }
@@ -152,13 +125,14 @@ namespace wee {
             size_t idx = i;
 
             shape_t out = { 0 };
-            for (auto j : range(N)) {
+            static_for<0, N>([&] (auto j) {
+            //for (auto j : range(N)) {
                 auto i = N - j - 1;
                 auto s = idx % _shape[ i ];
                 idx -= s;
                 idx /= _shape[ i ];
                 out[ i ] = s;
-            }
+            });
             return out;
 
         }
@@ -214,7 +188,9 @@ namespace wee {
         }
         template <typename UnaryFunction>
         void slice(size_t axis, size_t depth, std::array<ptrdiff_t, N-1>& aux, UnaryFunction d_iter) const {
-            for(size_t i=0, j=0; i < N; i++) if(i != axis) aux[j++] = this->shape()[i];
+            for(size_t i=0, j=0; i < N; i++) 
+                if(i != axis) aux[j++] = this->shape()[i];
+
             this->iterate_axis(axis, depth, [&](auto s) {
                 //*d_iter++ = _data->at(s);//this->linearize(s...));
                 std::forward<UnaryFunction>(d_iter)(s);

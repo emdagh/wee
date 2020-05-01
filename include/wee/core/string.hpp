@@ -5,7 +5,7 @@
 
 namespace wee {
     template <typename InputIt>
-    std::string join(InputIt begin, InputIt end, const char delim) {
+    std::string join(InputIt begin, InputIt end, const char* delim) {
         std::ostringstream ss;
         std::copy(begin, end, std::ostream_iterator<std::string>(ss, delim));
         return ss.str();

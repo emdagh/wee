@@ -33,7 +33,7 @@ namespace wee {
         }
 
         void write_string(const std::string& s) {
-            write_7bit_encoded_int(s.length());
+            write_7bit_encoded_int(static_cast<uint32_t>(s.length()));
             _os.write(s.c_str(), s.length());
         }
 

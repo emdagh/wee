@@ -10,3 +10,4 @@ INCLUDE(liquidfun.cmake)
 #INCLUDE(fmt.cmake)
 INCLUDE(tmxlite.cmake)
 INCLUDE(assimp.cmake)
+
