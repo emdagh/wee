@@ -181,9 +181,11 @@ namespace wee {
                 std::forward<E>(f)(start + linearize(args...));//, i);
                 //}
             } else {
-                for(auto i=0; i < s[I]; i++) {
+                static_for<0, s[I]>([&] (auto i) {
+                //for(auto i=0; i < s[I]; i++) {
                     recursive_for<K, I + 1>(f, start, s, args..., i);
-                }
+                //}
+                });
             }
         }
         template <typename UnaryFunction>

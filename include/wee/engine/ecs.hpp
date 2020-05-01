@@ -3,7 +3,7 @@
 #undef interface
 #endif
 
-#include <kult/kult.hpp>
+#include <engine/ecs/ecs.hpp>
 #include <Box2D/Box2D.h>
 #include <engine/easing.hpp>
 #include <core/vec2.hpp>
@@ -34,7 +34,7 @@ namespace wee {
 
 #define DEFAULT_COLLISION_CALLBACK [] (const collision&) { }
 
-    typedef struct physics_t{
+    struct physics_t{
         b2Body* body    = nullptr;
 
         collision_callback on_collision_enter = DEFAULT_COLLISION_CALLBACK;
@@ -43,12 +43,12 @@ namespace wee {
         collision_callback on_trigger_leave   = DEFAULT_COLLISION_CALLBACK;
     } ;
 
-    typedef  struct transform_t{
+    struct transform_t{
         vec2f position = { 0.f, 0.f };
         float rotation = 0.f;
     } ;
 
-    typedef struct visual_t{
+    struct visual_t{
         SDL_Texture*        texture     = nullptr;
         SDL_Rect            src;
         SDL_Color           color;
@@ -56,37 +56,37 @@ namespace wee {
         bool                visible     = true;
     } ;
 
-    typedef struct {
+    struct nested_t {
         vec2f    offset = { 0.f, 0.f};
         float    rotation = 0.0f;
-        entity_t parent = kult::none();
-    } nested_t;
+        entity_t parent = ecs::none();
+    } ;
 
     
-    typedef struct {
+    struct tween_t{
         float* dst;
         std::function<float(float)> easing_fn;
-    } tween_t;
+    } ;
 
-    typedef struct {
+    struct timeout_t {
         int time;
         int timeout;
         std::function<void(const entity_t&)> on_tick = nullptr;
         std::function<void(const entity_t&)> on_timeout = nullptr;
-    } timeout_t;
+    } ;
 
-    typedef struct {
+    struct raycast_t {
         bool  hit       = false;
         vec2f point     = { 0.f, 0.f };
         vec2f n         = { 0.f, 0.f };// normal
         float d         = -1.0f; // length of fraction
-    } raycast_t;
+    } ;
 
 
-    typedef struct {
+    struct joint_t {
         b2Joint* joint;
         //bool do_cleanup;
-    } joint_t;
+    };
     
     std::ostream& operator << (std::ostream&, const physics_t&);
     std::ostream& operator << (std::ostream&, const transform_t&);
@@ -98,14 +98,14 @@ namespace wee {
     std::ostream& operator << (std::ostream&, const joint_t&);
     
 
-    using physics   = kult::component<1,  physics_t>;
-    using transform = kult::component<2,transform_t>;
-    using visual    = kult::component<3,   visual_t>;
-    using nested    = kult::component<4,   nested_t>;
-    using tween     = kult::component<5,    tween_t>;
-    using timeout   = kult::component<6,  timeout_t>;
-    using raycast   = kult::component<7,  raycast_t>;
-    using joint     = kult::component<8,   joint_t>;
+    using physics   = ecs::component<1,  physics_t>;
+    using transform = ecs::component<2,transform_t>;
+    using visual    = ecs::component<3,   visual_t>;
+    using nested    = ecs::component<4,   nested_t>;
+    using tween     = ecs::component<5,    tween_t>;
+    using timeout   = ecs::component<6,  timeout_t>;
+    using raycast   = ecs::component<7,  raycast_t>;
+    using joint     = ecs::component<8,   joint_t>;
 
 
 

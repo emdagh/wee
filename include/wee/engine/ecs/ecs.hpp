@@ -1,22 +1,31 @@
+#ifndef __WEE_ECS_INCLUDED
+#define __WEE_ECS_INCLUDED
+
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
 #include <functional>
 #include <vector>
 
-namespace wee {
+namespace wee::ecs {
     struct entity;
 }
 
 namespace std {
     template <>
-    struct hash<wee::entity> {
-        std::size_t operator () (const wee::entity& e) const;
+    struct hash<wee::ecs::entity> {
+        std::size_t operator () (const wee::ecs::entity& e) const;
     };
+
+    template <>
+    struct equal_to<wee::ecs::entity> {
+        bool operator () (const wee::ecs::entity&, const wee::ecs::entity&) const;
+    };
+    
 }
 
 
-namespace wee {
+namespace wee::ecs {
     using id_type = intptr_t;
 
     template <typename T>
@@ -30,7 +39,12 @@ namespace wee {
         return T {};
     }
 
-    id_type id() {
+    template <typename T = id_type>
+    constexpr T none() {
+        return zero<T>();
+    }
+
+    inline id_type id() {
         static id_type i = zero<id_type>();
         return ++i;
     }
@@ -43,13 +57,15 @@ namespace wee {
             return t;
         }
         
-        entity(const id_type& id = id()) : _id(id) {
+        entity(const id_type& id_ = id()) : _id(id_) {
             all().insert(this);
         }
         
         ~entity() {
             all().erase(this);
         }
+
+        bool operator == (const entity& other) const { return _id == other._id; }
         
         operator id_type () const { return _id; }
     };
@@ -184,8 +200,4 @@ namespace wee {
     };
 }
 
-namespace std { //this is probably a Bad Idea, as std injection tends to lead to undefined behavior
-    std::size_t hash<wee::entity>::operator () (const wee::entity& e) const { 
-        return std::hash<decltype(e._id)>()(e._id); 
-    }
-}
+#endif

@@ -1,7 +1,7 @@
 #include <engine/ecs/ecs.hpp>
 #include <core/tinytest.hpp>
 
-using namespace wee;
+using namespace wee::ecs;
 
 enum {
     kName,
@@ -54,10 +54,6 @@ int main(int, char**) {
         test(join<name, mana, pos>().size() == 2);
         test(join<name, mana, foo>().size() == 0);
         
-        for(auto& id : join<name, mana, pos>()) {
-            std::cout << get<name>(id) << " has mana: " << get<mana>(id) << std::endl;
-            std::cout << get<pos>(id) << std::endl;
-        }
     }
     return 0;
         
