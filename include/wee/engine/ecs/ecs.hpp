@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <core/set.hpp>
 
 namespace wee::ecs {
     struct entity;
@@ -62,12 +63,11 @@ namespace wee::ecs {
         }
         
         ~entity() {
-            all().erase(this);
+        //    all().erase(this);
         }
 
-        bool operator == (const entity& other) const { return _id == other._id; }
-        
         operator id_type () const { return _id; }
+        
     };
 
 
@@ -85,39 +85,6 @@ namespace wee::ecs {
     };
 
 
-    template <typename T>
-    T set_difference(const T& a, const T& b) {
-        using key_type = typename T::value_type;
-        if(a.size() <= b.size()) {
-            T res;
-            std::copy_if(a.begin(), a.end(), std::inserter(res, res.end()), [&b] (const key_type& k) {
-                return b.count(k) == 0;
-            });
-            return res;
-        }
-        return set_intersect(b, a);
-    }
-
-
-    template <typename T>
-    T set_intersect(const T& a, const T& b) {
-        using key_type = typename T::value_type;
-        if(a.size() <= b.size()) {
-            T res;
-            std::copy_if(a.begin(), a.end(), std::inserter(res, res.end()), [&b] (const key_type& k) {
-                return b.count(k) != 0;
-            });
-            return res;
-        }
-        return set_intersect(b, a);
-    }
-
-    template <typename T>
-    T set_union(const T& a, const T& b) {
-        T res { a };
-        res.insert(b.begin(), b.end());
-        return res;
-    }
 
 
     template <int T>
@@ -155,7 +122,7 @@ namespace wee::ecs {
     }
 
     template <typename T>
-    typename T::value_type& add(const id_type& id) {
+    inline typename T::value_type& add(const id_type& id) {
         any<T>().insert(id);
         return get<T>(id);
     }

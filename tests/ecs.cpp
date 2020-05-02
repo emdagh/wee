@@ -33,7 +33,7 @@ int main(int, char**) {
     }
     
     suite("testing add<component>(id) syntax") {
-        int player = 1, enemy = 2;
+        entity player = 1, enemy = 2;
         test(!has<name>(player));
         test(!has<mana>(player));
         
@@ -54,6 +54,10 @@ int main(int, char**) {
         test(join<name, mana, pos>().size() == 2);
         test(join<name, mana, foo>().size() == 0);
         
+        for(auto& id : join<name, mana, pos>()) {
+            std::cout << get<name>(id) << " has mana: " << get<mana>(id) << std::endl;
+            std::cout << get<pos>(id) << std::endl;
+        }
     }
     return 0;
         
