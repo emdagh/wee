@@ -37,17 +37,19 @@ namespace wee {
         return dif;
     }
 
-    template <typename Clock = std::chrono::system_clock>
+    template <typename Clock = std::chrono::system_clock, typename Duration = std::chrono::seconds>
     static typename Clock::time_point to_time_point(double d) {
         static const auto e0 = gregorian_date<Clock>(1899, 12, 30);
         static const auto e1 = gregorian_date<Clock>(1970, 1, 1);
         static const auto de = std::chrono::duration_cast<std::chrono::seconds>(e1 - e0).count();
 
+        static const auto n_per_day = std::chrono::duration_cast<Duration>(days(1)).count();
+
         days dur(d);
-        auto dif = std::chrono::round<std::chrono::seconds>(dur).count();
+        auto dif = std::chrono::round<Duration>(dur).count();
         if(dif < 0) {
-            dif += 2 * fabs(fmod(dif, 86400));
+            dif += 2 * fabs(fmod(dif, n_per_day));
         }
-        return e1 + std::chrono::seconds(dif - de);
+        return e1 + Duration(dif - de);
     }
 }
