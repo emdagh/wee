@@ -2,7 +2,6 @@
 #include <core/tinytest.hpp>
 
 using namespace wee;
-
 /**
  * An OLE Automation date is implemented as a floating-point number whose integral component is the 
  * number of days before or after midnight, 30 December 1899, and whose fractional component represents 
@@ -12,9 +11,8 @@ using namespace wee;
  * midnight, 29 December 1899 is represented by -1.0; and 
  * 6 A.M., 29 December 1899 is represented by -1.25.
  */
-
 int main(int, char**) {
-    suite("testing OLE automation dates") {
+    suite("testing OLE automation date commutativity a -> b == b -> a") {
         auto t1 = wee::gregorian_date(1899, 12, 30);
         test(to_oadate(t1) == 0.0);
         auto t2 = wee::gregorian_date(1899, 12, 29, 6, 0, 0);
@@ -23,7 +21,11 @@ int main(int, char**) {
         test(to_oadate(t3) == 2.25);
         auto t4 = wee::gregorian_date(1899, 12, 29);
         test(to_oadate(t4) == -1.0);
-        
+
+        test(to_time_point( 0.0)  == t1);
+        test(to_time_point(-1.25) == t2);
+        test(to_time_point( 2.25) == t3);
+        test(to_time_point(-1.0)  == t4);
     }
     return 0;
 }

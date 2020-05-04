@@ -39,9 +39,9 @@ namespace wee {
 
     template <typename Clock = std::chrono::system_clock>
     static typename Clock::time_point to_time_point(double d) {
-        const auto e0 = gregorian_date<Clock>(1899, 12, 30);
-        const auto e1 = gregorian_date<Clock>(1970, 1, 1);
-        const auto de = e1 - e0;
+        static const auto e0 = gregorian_date<Clock>(1899, 12, 30);
+        static const auto e1 = gregorian_date<Clock>(1970, 1, 1);
+        static const auto de = std::chrono::duration_cast<std::chrono::seconds>(e1 - e0).count();
 
         days dur(d);
         auto dif = std::chrono::round<std::chrono::seconds>(dur).count();
