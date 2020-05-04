@@ -24,9 +24,11 @@ namespace wee {
         class iterator : public input_iterator<T> { // < an example why `public` can be important....
             //friend class range_impl;
             T i_;
-            public:
+        public:
 
-            iterator(T i) : i_ (i) { }   	
+            constexpr iterator(T i) : i_ (i) { }   	
+            ~iterator() {}
+
             T operator *() const { return i_; }
             const iterator &operator ++() { ++i_; return *this; }
             T operator - (const iterator& rhs) {

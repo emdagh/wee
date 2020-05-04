@@ -1,7 +1,8 @@
-#include <engine/ecs/ecs.hpp>
 #include <core/tinytest.hpp>
-
+#include <engine/ecs/ecs.hpp>
 using namespace wee::ecs;
+#if 0
+
 
 enum {
     kName,
@@ -62,3 +63,31 @@ int main(int, char**) {
     return 0;
         
 }
+#else
+
+
+using name = component<10, std::string>;
+using foo = component<1, int>;
+
+int main(int, char**) {
+    int player = 1;
+    add<name>(player);
+    test(has<name>(player));
+    test(!has<foo>(player));
+
+    add<foo>(player);
+
+    get<name>(player) = "player one";
+    get<foo>(player) = 10;
+
+    test(get<name>(player) == "player one");
+
+    for(auto& it : join<name, foo>()) {
+        std::cout << "name=" << get<name>(it) << std::endl;
+        std::cout << "foo=" << get<foo>(it) << std::endl;
+    }
+    
+    return 0;
+}
+
+#endif

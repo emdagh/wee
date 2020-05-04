@@ -33,7 +33,7 @@ struct topology {
         return _shape; 
     }
 
-    constexpr bool is_valid(const value_type& c) const {
+    bool is_valid(const value_type& c) const {
 #if 0 // fast and ugly
         int count = 0;
         static_for<size_t, 0, N>([&] (auto i) {

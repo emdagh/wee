@@ -58,7 +58,7 @@ namespace wee {
     */
 
     void ad_manager::cache(std::istream &is) {
-        std::istreambuf_iterator<char> eos;
+        //std::istreambuf_iterator<char> eos;
         std::string rw(std::istreambuf_iterator<char>(is), {});
 
         try {

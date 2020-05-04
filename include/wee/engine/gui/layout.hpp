@@ -4,6 +4,8 @@
 #include <SDL.h>
 #include <vector>
 #include <algorithm>
+#include <core/rect.hpp>
+#include <core/vec2.hpp>
 
 namespace wee {
 
@@ -11,12 +13,12 @@ namespace wee {
         /**
          * add a sub-rectangle to the current layout
          */
-        virtual void add(SDL_Rect*) = 0;
+        virtual void add(rect*) = 0;
         /**
          * apply the layout to all subrect within the context of 
          * a parent rect
          */
-        virtual void apply(const SDL_Rect&) = 0;
+        virtual void apply(const rect&) = 0;
     };
 
     struct flow_layout : layout {
@@ -30,18 +32,18 @@ namespace wee {
         };
 
         alignment _a = alignment::CENTER;
-        std::vector<SDL_Rect*> _r;
+        std::vector<rect*> _r;
 
 
-        virtual void add(SDL_Rect* r) {
+        virtual void add(rect* r) {
             _r.push_back(r);
         }
 
-        virtual void apply(const SDL_Rect& parent) {
+        virtual void apply(const rect& parent) {
             int y = parent.y;
 
-            std::vector<SDL_Rect*> row;
-            SDL_Point rowdim = { 0, 0 };
+            std::vector<rect*> row;
+            vec2i rowdim = { 0, 0 };
 
             for(auto* r : _r) {
                 row.push_back(r);
@@ -59,11 +61,11 @@ namespace wee {
             align(row, y, rowdim, parent);
         }
 
-        void align(const std::vector<SDL_Rect*>& row,
+        void align(const std::vector<rect*>& row,
                 int y, 
-                const SDL_Point& rowdim,
-                const SDL_Rect& parent) {
-            SDL_Point location = {
+                const vec2i& rowdim,
+                const rect& parent) {
+            vec2i location = {
                 0, 0
             };
 
@@ -103,32 +105,32 @@ namespace wee {
 
         union {
             struct {
-                SDL_Rect* north, *east, *south, *west, *center; 
+                rect* north, *east, *south, *west, *center; 
             };
-            SDL_Rect* _r[location::MAX_LOCATION];
+            rect* _r[location::MAX_LOCATION];
         };
 
 
-        virtual void add(SDL_Rect* rc, const location ix) {
+        virtual void add(rect* rc, const location ix) {
             _r[ix] = rc;
         }
 
-        virtual void add(SDL_Rect*) {
+        virtual void add(rect*) {
             throw not_implemented();
         }
 
-        void set_bounds(SDL_Rect* r, int x, int y, int w, int h) {
+        void set_bounds(rect* r, int x, int y, int w, int h) {
             r->x = x;
             r->y = y;
             r->w = w;
             r->h = h;
         }
 
-        const SDL_Rect* get(const location ix) {
+        const rect* get(const location ix) {
             return _r[ix];
         }
 
-        virtual void apply(const SDL_Rect& parent) {
+        virtual void apply(const rect& parent) {
             int top, bottom, left, right;
             top = parent.y;
             bottom = top + parent.h;

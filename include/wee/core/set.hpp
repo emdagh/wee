@@ -23,7 +23,7 @@ namespace wee {
             });
             return res;
         }
-        return set_intersect(b, a);
+        return set_difference(b, a);
     }
 
 

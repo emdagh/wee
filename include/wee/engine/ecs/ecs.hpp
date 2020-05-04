@@ -1,128 +1,74 @@
-#ifndef __WEE_ECS_INCLUDED
-#define __WEE_ECS_INCLUDED
+#pragma once
+
 
 #include <unordered_set>
 #include <unordered_map>
-#include <algorithm>
-#include <functional>
-#include <vector>
 #include <core/set.hpp>
+#include <iostream>
 
 namespace wee::ecs {
-    struct entity;
-}
 
-namespace std {
-    template <>
-    struct hash<wee::ecs::entity> {
-        std::size_t operator () (const wee::ecs::entity& e) const;
-    };
+    using id_type = uintptr_t;
 
-    template <>
-    struct equal_to<wee::ecs::entity> {
-        bool operator () (const wee::ecs::entity&, const wee::ecs::entity&) const;
-    };
-    
-}
-
-
-namespace wee::ecs {
-    using id_type = intptr_t;
-
-    template <typename T>
-    using set = std::unordered_set<T>;
-
-    template <typename K, typename V>
-    using map = std::unordered_map<K, V>;
-
-    template <typename T>
-    constexpr T zero() {
+    template <typename T = id_type>
+    T zero() {
         return T {};
     }
 
     template <typename T = id_type>
-    constexpr T none() {
+    T none() {
         return zero<T>();
     }
 
-    inline id_type id() {
-        static id_type i = zero<id_type>();
-        return ++i;
+    template <typename T = id_type>
+    T& create_entity() {
+        static T id = none<T>();
+        return ++id;
     }
 
     struct entity {
         id_type _id;
-        
-        static std::unordered_set<entity*>& all() {
-            static std::unordered_set<entity*> t;
-            return t;
+        static auto& all() {
+            static std::unordered_set<entity*> statics;
+            return statics;
         }
-        
-        entity(const id_type& id_ = id()) : _id(id_) {
-            all().insert(this);
-        }
-        
-        ~entity() {
-        //    all().erase(this);
-        }
+        entity(id_type id_ = create_entity()) : _id(id_) { all().insert(this); }
+        ~entity() { all().erase(this); }
+        operator id_type() const { return _id; }
 
-        operator id_type () const { return _id; }
-        
+        bool operator == (const entity& e) const { return _id == e._id;}
     };
 
-
+    struct entity_hash { 
+        size_t operator () (const entity& e) const { 
+            return std::hash<decltype(e._id)>()(e._id); 
+        } 
+    };
+    struct entity_equal_to { 
+        bool operator () (const entity& a, const entity& b) const { 
+            return a._id == b._id; 
+        } 
+    };
 
     template <typename T>
-    set<entity>& any() {
-        static set<entity> s;
-        return s;
-    }
-
-    enum {
-        UNION,
-        INTERSECT,
-        DIFFERENCE
-    };
-
-
-
-
-    template <int T>
-    set<entity> group_by(const set<entity>& a, const set<entity>& b) {
-        if constexpr(T == UNION) { return set_union(a, b); }
-        else if(T == INTERSECT)  { return set_intersect(a, b); }
-        else if(T == DIFFERENCE) { return set_difference(a, b); }
-        else { throw std::runtime_error("unsupported set operation"); }
-        return {};
-    }
-
-    template <typename T, typename... Ts>
-    set<entity> join() { 
-        if constexpr(sizeof...(Ts) == 0) {
-            return any<T>(); 
-        } else {
-            return group_by<INTERSECT>(any<T>(), join<Ts...>());
-        }
-    }
-
-    template <typename T, typename... Ts>
-    set<entity> join(T first, Ts... rest) {
-        return join<T, Ts...>();
+    auto& any() {
+        static std::unordered_set<entity, entity_hash, entity_equal_to> entities;
+        return entities;
     }
 
     template <typename T>
-    map<id_type, T>& components() {
-        static map<id_type, T> m;
-        return m;
+    auto& components() {
+        static std::unordered_map<id_type, T> res;
+        return res;
     }
 
     template <typename T>
     typename T::value_type& get(const id_type& id) {
-        return components<T>()[id]._val;
+        return components<T>()[id]._value;
     }
 
     template <typename T>
-    inline typename T::value_type& add(const id_type& id) {
+    typename T::value_type& add(const id_type& id) {
         any<T>().insert(id);
         return get<T>(id);
     }
@@ -132,39 +78,18 @@ namespace wee::ecs {
         return components<T>().count(id) > 0;
     }
 
-    struct interface {
-        virtual ~interface() {}
-        static std::vector<interface*>& registered() {
-            static std::vector<interface*> lst;
-            return lst;
-        }
-    };
-
     template <size_t S, typename T>
-    struct component : interface {
-        typedef T value_type;
-        value_type _val;
-        
-        component(bool reentrant = 0) {
-            if(!reentrant) {
-                static struct registerme {
-                    registerme() {
-                        interface::registered().push_back(new component(1));
-                    }
-                } _st;
-            }
-        }
-        
-        ~component() {
-            auto& lst = interface::registered();
-            for(auto& it : lst) {
-                if(this == it) {
-                    std::swap(it, lst.back());
-                    lst.pop_back();
-                }
-            }
-        }
+    struct component {
+        using value_type = T;
+        value_type _value;
     };
-}
 
-#endif
+    template <typename T, typename... Ts>
+    auto join() {
+        if constexpr(sizeof...(Ts) == 0) {
+            return any<T>();
+        } else {
+            return set_intersect(any<T>(), join<Ts...>());
+        }
+    }
+}

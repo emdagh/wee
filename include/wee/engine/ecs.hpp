@@ -2,7 +2,7 @@
 #ifdef _MSC_VER
 #undef interface
 #endif
-
+#include <functional>
 #include <engine/ecs/ecs.hpp>
 #include <Box2D/Box2D.h>
 #include <engine/easing.hpp>
@@ -22,7 +22,7 @@ namespace wee {
 
     //typedef kult::type entity_t;
     
-    typedef intptr_t entity_t;
+    typedef ecs::id_type entity_t;
 
     struct collision {
         entity_t self;
@@ -59,7 +59,7 @@ namespace wee {
     struct nested_t {
         vec2f    offset = { 0.f, 0.f};
         float    rotation = 0.0f;
-        entity_t parent = ecs::none();
+        entity_t parent = ecs::none<entity_t>();
     } ;
 
     
