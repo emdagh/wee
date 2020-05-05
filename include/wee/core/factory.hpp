@@ -9,8 +9,9 @@
 namespace wee {
     template <typename T, typename S=std::string, typename... Args>
     struct factory {
-        typedef std::function<T*(Args...)> fn;
-        std::unordered_map<S, fn> _create;
+        using fn =std::function<T*(Args...)>;
+        using map = std::unordered_map<S, fn>;
+        map _create;
 
         factory() = default;
 

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <ctime>
 #include <cmath>
+#include <random>
 
 namespace wee {
     using days = std::chrono::duration<double, std::ratio_multiply<std::ratio<24>, std::chrono::hours::period> >;
@@ -32,7 +33,8 @@ namespace wee {
         auto dif = std::chrono::duration_cast<days>(tp - epoch).count();
         double i;
         if(auto f = std::modf(dif, &i); f < 0.0) {
-            return -(1.0 + i + (1.0 - std::fabs(f)));
+            return -2.0 - f;
+            //dif += 1.0 + 2.0 * f;
         }
         return dif;
     }
@@ -41,7 +43,7 @@ namespace wee {
     static typename Clock::time_point to_time_point(double d) {
         static const auto e0 = gregorian_date<Clock>(1899, 12, 30);
         static const auto e1 = gregorian_date<Clock>(1970, 1, 1);
-        static const auto de = std::chrono::duration_cast<std::chrono::seconds>(e1 - e0).count();
+        static const auto de = std::chrono::duration_cast<Duration>(e1 - e0).count();
 
         static const auto n_per_day = std::chrono::duration_cast<Duration>(days(1)).count();
 
