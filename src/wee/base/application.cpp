@@ -14,14 +14,14 @@ using namespace wee;
 graphics_initializer default_graphics_initializer;
 
 application::application(applet* a) 
-: application(a, std::move(default_graphics_initializer))
+: application(a, default_graphics_initializer)
 {
 
 }
 
-application::application(applet* a, graphics_initializer&& init) 
+application::application(applet* a, const graphics_initializer& init) 
     : _handle(SDL_CreateApplication())
-    , _graphics_initializer(std::forward<graphics_initializer>(init))
+    , _graphics_initializer(init) //std::forward<graphics_initializer>(init))
 
 {
     set_applet(a);

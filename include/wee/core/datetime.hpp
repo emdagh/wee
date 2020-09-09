@@ -46,7 +46,6 @@ namespace wee {
     {
         double i;
         double f = std::modf(offset, &i);
-        //offset = copysign(1.0, i) * (fabs(i) + (1.0 - fabs(f)));
         return make_time_point(1899, 12, 30) + days(i) + days(std::fabs(f));
     }
 
@@ -60,6 +59,15 @@ namespace wee {
             return -(fabs(i) + (1.0 - fabs(f))) - 1.0;
         }
         return offset;//copysign(1.0, i) * (fabs(i) + (1.0 - fabs(f)));
+    }
+
+    template <typename T, typename Gen>
+    auto date_selector(const T& start, const T& end, Gen&& gen) {
+        std::chrono::seconds secs = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+        return [=] () mutable {
+            std::uniform_int_distribution<std::chrono::seconds::rep> d(0, secs.count());
+            return start + std::chrono::seconds(d(gen));
+        };
     }
 
 }
