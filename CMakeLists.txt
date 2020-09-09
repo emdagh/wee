@@ -20,7 +20,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
 #set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*")
 
 IF(UNIX)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -std=c++17 -Wno-missing-braces -ggdb -O0") #-Wextra
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Wextra -std=c++17 -ggdb -O0") #-Wextra
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic")
     #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden)
 

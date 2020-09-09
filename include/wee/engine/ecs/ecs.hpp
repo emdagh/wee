@@ -85,7 +85,7 @@ namespace wee::ecs {
     };
 
     template <typename T, typename... Ts>
-    auto join() {
+    constexpr auto join() {
         if constexpr(sizeof...(Ts) == 0) {
             return any<T>();
         } else {

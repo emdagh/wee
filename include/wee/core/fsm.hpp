@@ -19,7 +19,7 @@ namespace wee {
         void push(T* self, state<T>* s) {
             if(_s.size()) {
                 _s.top()->leave(self);
-                _s.pop();
+               // _s.pop();
             }
             _s.push(s);
             _s.top()->enter(self);

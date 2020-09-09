@@ -5,53 +5,59 @@
 #include <ctime>
 #include <cmath>
 #include <random>
+#include <cassert>
+#include <iostream>
+#include <iomanip>
+
+#if defined(MSC_VER)
+#define timegm _mkgmtime
+#endif
 
 namespace wee {
-    using days = std::chrono::duration<double, std::ratio_multiply<std::ratio<24>, std::chrono::hours::period> >;
-    using ticks = std::chrono::duration<int64_t, std::ratio_multiply<std::ratio<100>, std::nano> >;
+
+    using days = std::chrono::duration<double, std::ratio_multiply<std::ratio<24>, std::chrono::hours::period>>;
+    using dhours = std::chrono::duration<double, std::ratio<3600>>;
+
+    template <typename Clock, typename Duration>
+    std::ostream& operator << (std::ostream& os, const std::chrono::time_point<Clock, Duration>& tp) 
+    {
+        auto tp2 = std::chrono::time_point_cast<std::chrono::system_clock::duration, Clock, Duration>(tp);
+        std::time_t tc = Clock::to_time_t(tp2);
+        std::tm* tm = std::gmtime(&tc);
+        return os << std::put_time(tm, "%FT%T");
+    }
+
 
     template <typename Clock = std::chrono::system_clock>
-    typename Clock::time_point gregorian_date(int y, int mo, int d, int h = 0, int m = 0, int s = 0) {
+    auto make_time_point(int year, int mon, int mday, int hour = 0, int min = 0, int sec = 0) {
         std::tm tm;
-        std::memset(&tm, 0, sizeof(std::tm));
-        tm.tm_year = y - 1900;
-        tm.tm_mon  = mo - 1;
-        tm.tm_mday = d;
-        tm.tm_hour = h;
-        tm.tm_min  = m;
-        tm.tm_sec  = s;
-
-        std::time_t tt = mktime(&tm);
-        return Clock::from_time_t(tt);
+        memset(&tm, 0, sizeof(std::tm));
+        tm.tm_year = year - 1900;
+        tm.tm_mon  = mon - 1;
+        tm.tm_mday = mday;
+        tm.tm_hour = hour;
+        tm.tm_min  = min;
+        tm.tm_sec  = sec;
+        return Clock::from_time_t(timegm(&tm));
     }
 
     template <typename Clock = std::chrono::system_clock>
-    static double to_oadate(const typename Clock::time_point& tp) {
-        using time_point = typename Clock::time_point;
-        
-        static time_point epoch = gregorian_date<Clock>(1899, 12, 30);
-        auto dif = std::chrono::duration_cast<days>(tp - epoch).count();
+    auto to_time_point(double offset)
+    {
         double i;
-        if(auto f = std::modf(dif, &i); f < 0.0) {
-            return -2.0 - f;
-            //dif += 1.0 + 2.0 * f;
-        }
-        return dif;
+        double f = std::modf(offset, &i);
+        offset = copysign(1.0, i) * (fabs(i) + fabs(f));
+        return make_time_point(1899, 12, 30) + days(offset);//) + days(std::fabs(f));
     }
 
-    template <typename Clock = std::chrono::system_clock, typename Duration = std::chrono::seconds>
-    static typename Clock::time_point to_time_point(double d) {
-        static const auto e0 = gregorian_date<Clock>(1899, 12, 30);
-        static const auto e1 = gregorian_date<Clock>(1970, 1, 1);
-        static const auto de = std::chrono::duration_cast<Duration>(e1 - e0).count();
-
-        static const auto n_per_day = std::chrono::duration_cast<Duration>(days(1)).count();
-
-        days dur(d);
-        auto dif = std::chrono::round<Duration>(dur).count();
-        if(dif < 0) {
-            dif += 2 * fabs(fmod(dif, n_per_day));
-        }
-        return e1 + Duration(dif - de);
+    template <typename Clock, typename Duration> 
+    double to_oadate(const std::chrono::time_point<Clock, Duration>& tp) 
+    {
+        auto offset = std::chrono::duration_cast<days>(tp - make_time_point<Clock>(1899, 12, 30)).count();
+        double i;
+        double f = std::modf(offset, &i);
+        double ret = copysign(1.0, i) * (fabs(i) + fabs(f));
+        return ret;
     }
+
 }
