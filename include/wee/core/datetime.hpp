@@ -46,8 +46,8 @@ namespace wee {
     {
         double i;
         double f = std::modf(offset, &i);
-        offset = copysign(1.0, i) * (fabs(i) + fabs(f));
-        return make_time_point(1899, 12, 30) + days(offset);//) + days(std::fabs(f));
+        //offset = copysign(1.0, i) * (fabs(i) + (1.0 - fabs(f)));
+        return make_time_point(1899, 12, 30) + days(i) + days(std::fabs(f));
     }
 
     template <typename Clock, typename Duration> 
@@ -56,8 +56,10 @@ namespace wee {
         auto offset = std::chrono::duration_cast<days>(tp - make_time_point<Clock>(1899, 12, 30)).count();
         double i;
         double f = std::modf(offset, &i);
-        double ret = copysign(1.0, i) * (fabs(i) + fabs(f));
-        return ret;
+        if(offset < 0.0) {
+            return -(fabs(i) + (1.0 - fabs(f))) - 1.0;
+        }
+        return offset;//copysign(1.0, i) * (fabs(i) + (1.0 - fabs(f)));
     }
 
 }
