@@ -42,7 +42,7 @@ namespace wee {
     }
 
     template <typename Clock = std::chrono::system_clock>
-    auto to_time_point(double offset)
+    auto from_oadate(double offset)
     {
         double i;
         double f = std::modf(offset, &i);
