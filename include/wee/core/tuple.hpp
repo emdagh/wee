@@ -4,6 +4,29 @@
 #include <array>
 
 namespace wee {
+    
+    //Read the last element of the tuple without calling recursively
+    template <std::size_t idx, class... T>
+        typename std::enable_if<idx >= std::tuple_size<std::tuple<T...>>::value - 1>::type
+        read_tuple(std::istream &in, std::tuple<T...> &out, const char delimiter) {
+            std::string cell;
+            std::getline(in, cell, delimiter);
+            std::stringstream cell_stream(cell);
+            cell_stream >> std::get<idx>(out);
+        }
+
+    // Read the @p idx-th element of the tuple and then calls itself with @p idx + 1 to
+    /// read the next element of the tuple. Automatically falls in the previous case when
+    /// reaches the last element of the tuple thanks to enable_if
+    template <std::size_t idx, class... T>
+        typename std::enable_if<idx < std::tuple_size<std::tuple<T...>>::value - 1>::type
+        read_tuple(std::istream &in, std::tuple<T...> &out, const char delimiter) {
+            std::string cell;
+            std::getline(in, cell, delimiter);
+            std::stringstream cell_stream(cell);
+            cell_stream >> std::get<idx>(out);
+            read_tuple<idx + 1, T...>(in, out, delimiter);
+        }
 
     template <std::size_t... Ns, typename... Ts>
     constexpr auto head_impl(std::index_sequence<Ns...>, const std::tuple<Ts...>& t) {
