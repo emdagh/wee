@@ -1,29 +1,10 @@
 
 #pragma once
 
-namespace csv {
-    //Read the last element of the tuple without calling recursively
-    template <std::size_t idx, class... T>
-        typename std::enable_if<idx >= std::tuple_size<std::tuple<T...>>::value - 1>::type
-        read_tuple(std::istream &in, std::tuple<T...> &out, const char delimiter) {
-            std::string cell;
-            std::getline(in, cell, delimiter);
-            std::stringstream cell_stream(cell);
-            cell_stream >> std::get<idx>(out);
-        }
+#include <core/tuple.hpp>
 
-    // Read the @p idx-th element of the tuple and then calls itself with @p idx + 1 to
-    /// read the next element of the tuple. Automatically falls in the previous case when
-    /// reaches the last element of the tuple thanks to enable_if
-    template <std::size_t idx, class... T>
-        typename std::enable_if<idx < std::tuple_size<std::tuple<T...>>::value - 1>::type
-        read_tuple(std::istream &in, std::tuple<T...> &out, const char delimiter) {
-            std::string cell;
-            std::getline(in, cell, delimiter);
-            std::stringstream cell_stream(cell);
-            cell_stream >> std::get<idx>(out);
-            read_tuple<idx + 1, T...>(in, out, delimiter);
-        }
+namespace csv {
+    
 
     // Iterable csv wrapper around a stream. @p T the list of types that form up a row.
     template <typename... T>
