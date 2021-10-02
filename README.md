@@ -12,7 +12,6 @@ and run the following commands (respective of your OS)
 ### Linux
 * `cmake ..`
 
-
 ### Windows
 * `cmake .. -G"Visual Studio 15"` or whatever is your flavour of VS.
 

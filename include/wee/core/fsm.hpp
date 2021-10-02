@@ -11,7 +11,7 @@ namespace wee {
             virtual void leave(T*) = 0;
         };
 
-    template <typename T>
+        template <typename T>
         class fsm {
             std::stack<state<T>* > _s;
         public:

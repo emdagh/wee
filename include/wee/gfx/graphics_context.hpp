@@ -2,8 +2,10 @@
 
 #include <wee/wee.h>
 
-namespace wee {
-    struct graphics_context {
+namespace wee 
+{
+    struct graphics_context 
+    {
         using display_t = void*;
         using surface_t = void*;
 
