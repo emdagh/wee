@@ -14,7 +14,7 @@ namespace wee {
                 // return res;
                 storage.insert(std::make_pair(
                     arg, fn(args...)
-                ).first->second;
+                ).first->second);
             } else {
                 return it->second;
             }
