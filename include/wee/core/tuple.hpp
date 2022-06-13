@@ -4,6 +4,22 @@
 #include <array>
 
 namespace wee {
+    /**
+     * runtime invocation of function `F` for tuple `T`'s element `i`
+     */
+    template <typename T, typename F, size_t I = 0>
+    static void select(size_t i, F fun)
+    {
+        if(i == I)
+        {
+            using type = typename std::tuple_element_t<I, T>;
+            fun(type());
+        }
+        if constexpr (I + 1 < std::tuple_size<T>::value)
+        {
+            select<T, F, I + 1>(i, fun);
+        }
+    }
     
     template <typename T>
     struct flatten_tuple
