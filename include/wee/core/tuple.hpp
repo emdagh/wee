@@ -5,6 +5,24 @@
 
 namespace wee {
     
+    template <typename T>
+    struct flatten_tuple
+    {
+        using type = std::tuple<T>;
+    };
+
+    template <typename T>
+    using flatten_tuple_t = typename flatten_tuple<T>::type;
+    /**
+     * flatten a tuple of tuples, f.eks.: std::tuple<int, std::tuple<float, bool> > becomes std::tuple<int,float,bool>
+     */
+    template <typename... Ts>
+    struct flatten_tuple<std::tuple<Ts...>>{
+        using type = decltype(
+            std::tuple_cat(std::declval<flatten_tuple_t<Ts>>()...)
+        );
+    };
+    
     //Read the last element of the tuple without calling recursively
     template <std::size_t idx, class... T>
         typename std::enable_if<idx >= std::tuple_size<std::tuple<T...>>::value - 1>::type
