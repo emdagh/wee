@@ -8,16 +8,18 @@ namespace wee {
      * runtime invocation of function `F` for tuple `T`'s element `i`
      */
     template <typename T, typename F, size_t I = 0>
-    static void select(size_t i, F fun)
+    static std::invoke_result_t<F, typename std::tuple_element_t<I, T> > 
+    select(size_t i, F&& fun)
     {
+        using type = typename std::tuple_element_t<I, T>;
         if(i == I)
         {
-            using type = typename std::tuple_element_t<I, T>;
-            fun(type());
+            type arg;
+            return std::forward<F>(fun)(arg);
         }
         if constexpr (I + 1 < std::tuple_size<T>::value)
         {
-            select<T, F, I + 1>(i, fun);
+            select<T, F, I + 1>(i, std::forward<F>(fun));
         }
     }
     
