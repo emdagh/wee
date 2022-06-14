@@ -4,6 +4,44 @@
 #include <array>
 
 namespace wee {
+    
+    template <class T>
+constexpr inline std::size_t hash_combine(T const& v,
+  std::size_t const seed = {}) noexcept
+{
+  return seed ^ (std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+
+template <typename T> struct hash;
+
+template <typename ...T>
+struct hash<std::tuple<T...>>
+{
+  template <typename A1, typename ...A, std::size_t ...I>
+  static auto apply_tuple(std::tuple<A1, A...> const& t,
+    std::index_sequence<I...>) noexcept
+  {
+    if constexpr(sizeof...(A))
+    {
+      return hash_combine(std::get<0>(t),
+        hash<std::tuple<A const&...>>()({std::get<I + 1>(t)...})
+      );
+    }
+    else
+    {
+      return std::hash<std::remove_cv_t<std::remove_reference_t<A1>>>()(
+        std::get<0>(t));
+    }
+  }
+
+  auto operator()(std::tuple<T...> const& t) const noexcept
+  {
+    return apply_tuple(t,
+      std::make_index_sequence<sizeof...(T) - 1>()
+    );
+  }
+};
+    
     /**
      * runtime invocation of function `F` for tuple `T`'s element `i`
      */
