@@ -14,6 +14,12 @@ std::array<T, N> make_array(Ts... ts) {
     return std::array<T,N> { ts... };
 }
 
+    template <typename T, typename... Ts>
+    std::array<T, sizeof...(Ts)> make_array(Ts... ts) {
+    
+        return std::array<T, sizeof...(Ts)> { static_cast<T>(ts)... };
+    }
+
     template <typename T, size_t N1, size_t... Isa, size_t N2, size_t... Isb>
     constexpr std::array<T, N1 + N2> array_join_impl (
         const std::array<T, N1>& a,
