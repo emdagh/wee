@@ -9,7 +9,7 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
-#include <atom/core/singleton.h>
+#include <core/singleton.h>
 
 namespace atom {
 
