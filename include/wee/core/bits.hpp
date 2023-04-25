@@ -89,12 +89,12 @@ namespace wee {
     }
     
     template <typename T, typename std::enable_if_t<std::is_integral<T>::value>* = nullptr >
-constexpr bool is_same_sign(T a, T b)
-{
-    if constexpr (std::is_signed<T>::value)
-        return (a ^ b) >= 0;
-    return a + b >= 0; // will always evaluate to true, but we have to use a and b to prevent warnings. 
-}
+    constexpr bool is_same_sign(T a, T b)
+    {
+        if constexpr (std::is_signed<T>::value)
+            return (a ^ b) >= 0;
+        return a + b >= 0; // will always evaluate to true, but we have to use a and b to prevent warnings. 
+    }
 
 
 }
