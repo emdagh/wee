@@ -1,89 +1,115 @@
 #pragma once
-
-
-#include <algorithm>
-#include <iterator>
-#include <iostream>
 #include <tuple>
+#include <iterator>
+#include <vector>
+#include <iostream>
 
 namespace wee {
 
+template <typename It>
+using select_access = std::conditional_t<
+    std::is_same_v<It, std::vector<bool>::iterator> ||
+    std::is_same_v<It, std::vector<bool>::const_iterator>,
+    typename It::value_type,
+    typename It::reference
+>;
 
-    template<typename T>
-        class zip_impl
-        {
+template <typename T>
+using select_iterator = std::conditional_t<
+    std::is_const_v<std::remove_reference_t<T> >,
+    typename std::decay_t<T>::const_iterator,
+    typename std::decay_t<T>::iterator
+>;
 
-            public:
-
-                typedef std::vector<T> container_t;
-
-                template<typename... Args>
-                    zip_impl(const T& head, const Args&... args)
-                    : items_(head.size()),
-                    min_(head.size())
-            {
-                zip_(head, args...);
-            }
-
-                inline operator container_t() const
-                {
-                    return items_;
-                }
-
-                inline container_t operator()() const
-                {
-                    return items_;
-                }
-
-            private:
-
-                template<typename... Args>
-                    void zip_(const T& head, const Args&... tail)
-                    {
-                        // If the current item's size is less than
-                        //         // the one stored in min_, reset the min_
-                        //                 // variable to the item's size
-                        if (head.size() < min_) min_ = head.size();
-
-                        for (std::size_t i = 0; i < min_; ++i)
-                        {
-                            // Use begin iterator and advance it instead
-                            // of using the subscript operator adds support
-                            // for lists. std::advance has constant complexity
-                            // for STL containers whose iterators are
-                            // RandomAccessIterators (e.g. vector or deque)
-                            typename T::const_iterator itr = head.begin();
-
-                            std::advance(itr, i);
-
-                            items_[i].push_back(*itr);
-                        }
-
-                        // Recursive call to zip_(T, Args...)
-                        // while the expansion of tail... is not empty
-                        // else calls the overload with no parameters
-                        return zip_(tail...);
-                    }
-
-                inline void zip_()
-                {
-                    // If min_ has shrunk since the
-                    // constructor call
-                    items_.resize(min_);
-                }
-
-                /*! Holds the items for iterating. */
-                container_t items_;
-
-                /*! The minimum number of values held by all items */
-                std::size_t min_;
-
-        };
-
-    template<typename T, typename... Args>
-        typename zip_impl<T>::container_t zip(const T& head, const Args&... tail)
-        {
-            return std::tie(zip_impl<T>(head, tail...));
-        }
-
+template <typename... Args, std::size_t... Ix>
+auto any_match_impl(const std::tuple<Args...>& lhs, const std::tuple<Args...>& rhs, std::index_sequence<Ix...>) {
+    return (... | (std::get<Ix>(lhs) == std::get<Ix>(rhs)));
 }
+
+template <typename... Args>
+auto any_match(const std::tuple<Args...>& lhs, const std::tuple<Args...>& rhs) {
+    return any_match_impl(lhs, rhs, std::index_sequence_for<Args...>{});
+}
+
+template <typename... Iters>
+class zip_iterator {
+    using value_type = std::tuple<
+        select_access<Iters>...
+    >;
+    std::tuple<Iters...> _iters;
+public:
+    zip_iterator() = delete;
+
+    zip_iterator(Iters&&... iters) 
+    : _iters { std::forward<Iters>(iters)... }
+    {
+    }
+
+    auto operator ++ () { 
+        std::apply([] (auto&... args) {
+            ((args+=1), ...);
+        }, _iters);
+        return *this;
+    }
+
+    auto operator ++ (int) {
+        auto tmp = *this;
+        ++*this;
+        return tmp;
+    }
+
+    auto operator != (const zip_iterator& other) const {
+        return !(*this == other);
+    }
+
+    auto operator == (const zip_iterator& other) const {
+        return any_match(_iters, other._iters);
+    }
+
+    auto operator * () {
+        return std::apply([] (auto&&... args) {
+            return value_type(*args...);
+        }, _iters);
+    }
+};
+
+template <typename... Ts>
+class zipper {
+    using zip_type = zip_iterator<select_iterator<Ts>...>;
+    std::tuple<Ts...> _args;
+public:
+    template <typename... Args>
+    zipper(Args&&... args) 
+    : _args(std::forward<Args>(args)...) 
+    {
+    }
+
+    auto begin() {
+        return std::apply([] (auto&&... args) {
+            return zip_type(std::begin(args)...);
+        }, _args);
+    } 
+    auto end() {
+        return std::apply([] (auto&&... args) {
+            return zip_type(std::end(args)...); 
+        }, _args);
+    }
+};
+
+template <typename... Ts>
+auto zip(Ts&&... t) {
+    return zipper<Ts...> { std::forward<Ts>(t)... };
+}
+}
+/* -- example
+int main(int, char**) {
+
+    auto a = std::vector<int> { 0, 1, 2 };
+    auto b = std::vector<std::string> { "one", "two", "three" };
+
+    for(auto&& [x, y] : zip(a, b)) {
+        std::cout << x << " " << y << std::endl;
+    }
+    
+    return 0;
+}*/
