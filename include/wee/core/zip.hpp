@@ -100,7 +100,9 @@ auto zip(Ts&&... t) {
     return zipper<Ts...> { std::forward<Ts>(t)... };
 }
 } // wee
-/*
+
+
+/***
 int main(int, char**) {
    
 
