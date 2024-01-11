@@ -10,10 +10,14 @@
 #include <unistd.h>
 #include <iterator>
 
+// taken from babeltrace
+#define ALIGN(x, a)		__ALIGN_MASK(x, (typeof(x))(a) - 1)
+#define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
+
 namespace wee {
 
 template <typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
-T align_up(T n, T a) { return (n + (a-1)) & ~(a-1); }
+T align_up(T n, T a) { return ALIGN(n, a); } //(n + (a-1)) & ~(a-1); }
 
 class mmap_arena {
     void*   _mem;
