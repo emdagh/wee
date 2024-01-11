@@ -80,8 +80,8 @@ public:
         }
     }
 
-    virtual bool do_is_equal(const std::pmr::memory_resource& /*other*/) const noexcept {
-        return false;
+    virtual bool do_is_equal(const std::pmr::memory_resource& other) const noexcept {
+        return other._mem == this->_mem && other._ptr == this->_ptr;
     }
 };
 
