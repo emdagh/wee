@@ -13,7 +13,7 @@
 namespace wee {
 
 template <typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
-T align_up(T n, T a) { return (n + a) & ~(a-1); }
+T align_up(T n, T a) { return (n + (a-1)) & ~(a-1); }
 
 class mmap_arena {
     void*   _mem;
