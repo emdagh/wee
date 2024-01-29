@@ -11,8 +11,6 @@ namespace wee {
     struct basic_graph_search {
         void operator()(const T& start, const T& goal,
                         std::unordered_map<T, T>& came_from) {
-            //std::queue<T> frontier;
-            //frontier.push(start);
             S frontier = { start };
 
             while (!frontier.empty()) {
