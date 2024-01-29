@@ -7,7 +7,7 @@
 
 namespace wee {
 
-    template <typename T, typename S>
+    /*template <typename T, typename S>
     struct basic_graph_search {
         void operator()(const T& start, const T& goal,
                         std::unordered_map<T, T>& came_from) {
@@ -34,7 +34,7 @@ namespace wee {
 
     template <typename T>
     using depth_first_search = basic_graph_search<T, std::stack<T> >;
-
+    */
 
 
     template <typename T>
