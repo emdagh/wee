@@ -70,7 +70,7 @@ public:
             if(_stop)
                 throw std::runtime_error("enqueue on stopped threadpool");
 
-            _tasks.emplace([=](){ (*task)(args...); });
+            _tasks.emplace([task, &args...](){ (*task)(args...); });
         }
         _cv.notify_one();
         return res;
