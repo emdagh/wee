@@ -35,7 +35,7 @@ public:
                             [this]{ return _stop || !_tasks.empty(); });
                         if(_stop && _tasks.empty())
                             return;
-                        task = _tasks.front();
+                        task = std::move(_tasks.front());
                         _tasks.pop();
                     }
                     task();
