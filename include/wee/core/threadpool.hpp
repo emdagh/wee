@@ -13,11 +13,11 @@
 namespace atom {
 class threadpool 
 {
-    std::vector<std::thread> _workers;
+    std::vector<std::thread>           _workers;
     std::queue<std::function<void()> > _tasks;
-    std::mutex _mtx;
-    std::condition_variable _cv;
-    bool _stop;
+    std::mutex                         _mtx;
+    std::condition_variable            _cv;
+    bool                               _stop;
 public:
     threadpool() : _stop(false) 
     {
