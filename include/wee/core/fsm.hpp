@@ -7,7 +7,6 @@ template <class... Ts> struct overloaded : Ts...
 }; // (1)
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>; // (2)
 
-#if 1
 
 struct ignore_unknown_event
 {
